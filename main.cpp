@@ -1,7 +1,7 @@
 #include <iostream>
-
+#include "Instancia.h"
 int main()
 {
-    std::cout << "Hello, World!" << std::endl;
+    Instancia *instancia = new Instancia("UK_10x5_1.dat");
     return 0;
 }

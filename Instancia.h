@@ -1,6 +1,7 @@
 //
 // Created by igor on 10/09/19.
 //
+#include <iostream>
 
 #ifndef HGVRSP_INSTANCIA_H
 #define HGVRSP_INSTANCIA_H
@@ -40,10 +41,17 @@ public:
     Periodo *vetorPeriodos;
     Cliente *vetorClientes;
     Veiculo vetorVeiculos[2] = {{10000, 150, 2.2384e-005, 2.66374, 0, 540},{15000, 200, 1.79961e-005, 2.66374, 30, 540}};
+    float **matrizDistancias;
+    float ***matrizVelocidade; //k,i,j
+    double ****matrizCo2;      //v, k, i, j
 
+    int numClientes, numPeriodos, veiculosTipo1, veiculosTipo2;
 
+    Instancia(std::string arquivo);
 
+    ~Instancia();
 
+private:
 
 };
 
