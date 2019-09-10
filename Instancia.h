@@ -39,7 +39,7 @@ public:
 
     Periodo *vetorPeriodos;
     Cliente *vetorClientes;
-    Veiculo vetorVeiculos[2] = {{10001, 150, 2.2384e-005, 2.66374, 0, 540},{15000, 200, 1.79961e-005, 2.66374, 30, 540}};
+    Veiculo vetorVeiculos[2] = {{10000, 150, 2.2384e-005, 2.66374, 0, 540},{15000, 200, 1.79961e-005, 2.66374, 30, 540}};
 
 
 
