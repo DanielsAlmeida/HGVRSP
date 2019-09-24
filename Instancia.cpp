@@ -3,25 +3,233 @@
 //
 
 #include "Instancia.h"
+#include <string>
 #include <fstream>
+
+using namespace std;
 
 Instancia::Instancia(std::string arquivo)
 {
 
-    std::string clientes = arquivo.substr(3,4);
+    std::string clientes;
 
-    if(arquivo[5] >= '0' && arquivo[5]<= '9')
-        clientes += arquivo[5];
+    int index = (arquivo.length() - 1);
 
+    for(;index > 0; --index)
+    {
+        if(arquivo[index] == '/')
+        {   index +=1;
+            break;
+        }
+
+    }
+
+    index += 3;
+
+    for(;arquivo[index] != 'x'; ++index)
+    {
+        clientes = clientes + arquivo[index];
+    }
     numClientes = std::atoi(clientes.c_str());
-
-
+    numClientes +=1; //Acrescenta deposito
 
     std::ifstream file;
     file.open(arquivo, std::ios::out);
 
     if(file.is_open())
     {
+
+        vetorClientes = new Cliente[numClientes];
+
+        string lixo;
+        //Divisão de tempo
+        for(int i = 0; i < 8; ++i)
+            getline(file, lixo);
+
+        int cliente, demanda, tempoServico, inicioJanela, fimJanela;
+
+        for(int i = 0; i < numClientes;++i)
+        {
+
+            file>>cliente>> demanda>> tempoServico>> inicioJanela>> fimJanela;
+
+            vetorClientes[i].cliente = cliente;
+            vetorClientes[i].demanda = demanda;
+            vetorClientes[i].tempoServico = tempoServico;
+            vetorClientes[i].inicioJanela = inicioJanela;
+            vetorClientes[i].fimJanela = fimJanela;
+
+
+        }
+
+        getline(file, lixo);
+        getline(file, lixo);
+
+        int numVeiculos = -1;
+
+        getline(file, lixo);
+
+        while(lixo[0] != ';')
+        {
+            numVeiculos +=1;
+            getline(file, lixo);
+        }
+
+
+        if((numVeiculos % 2) == 0)
+        {
+            veiculosTipo1 = numVeiculos/2;
+            veiculosTipo2 = numVeiculos/2;
+        }
+        else
+        {
+            veiculosTipo1 = numVeiculos/2 + 1;
+            veiculosTipo2 = numVeiculos/2;
+        }
+
+
+        for(int i = 0; i < 4; ++i)
+            getline(file, lixo);
+
+        //Aloca matriz de distancias
+
+        matrizDistancias = new float* [numClientes];
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            matrizDistancias[i] = new float[numClientes];
+        }
+
+        //Leitura das distancias
+
+        long posicao = file.tellg();
+        getline(file, lixo);
+
+
+        int i,j;
+        float distancia;
+        int p = 0;
+        while(lixo[0] != ';')
+        {
+            file.seekg(posicao);
+            file>>i>>j>>distancia;
+
+            matrizDistancias[i][j] = distancia;
+            posicao = file.tellg();
+            getline(file, lixo, '\n');
+
+            if(lixo.size()==1)
+            {
+                getline(file, lixo);
+
+
+            }
+
+
+        }
+
+        //Leitura das velocidades
+
+        matrizVelocidade = new float**[numClientes];
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            matrizVelocidade[i] = new float*[numClientes];
+        }
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            for(int j = 0; j < numClientes; ++j)
+            {
+                matrizVelocidade[i][j] = new float[5];
+            }
+        }
+
+        int k, velocidade;
+        getline(file, lixo);
+
+        posicao = file.tellg();
+        getline(file, lixo);
+
+        while(lixo[0] != ';')
+        {
+            file.seekg(posicao);
+            file>>i>>j>>k>>velocidade;
+
+            matrizVelocidade[i][j][k] = velocidade;
+
+            posicao = file.tellg();
+            getline(file, lixo, '\n');
+
+            if(lixo.size()==1)
+            {
+                getline(file, lixo);
+
+
+            }
+
+
+        }
+
+        getline(file, lixo);
+
+        //Matriz de co2
+
+        matrizCo2 = new double***[numClientes];
+
+        for(i = 0; i < numClientes; ++i)
+        {
+            matrizCo2[i] = new double**[numClientes];
+        }
+
+        //Periodos
+
+        for(i = 0; i < numClientes; ++i)
+        {
+            for( j = 0; j< numClientes; ++j)
+            {
+                matrizCo2[i][j] = new double*[5];
+            }
+        }
+
+        for(i = 0; i < numClientes; ++i)
+        {
+            for(j = 0; j< numClientes; ++j)
+            {
+                for(int l = 0; l < 5; ++l)
+                matrizCo2[i][j][l] = new double[2];
+            }
+        }
+
+        double g;
+        int r;
+
+        posicao = file.tellg();
+        getline(file, lixo);
+
+        while(lixo[0] != ';')
+        {
+            file.seekg(posicao);
+            file>>i>>j>>k>>r>>g;
+
+
+
+            matrizCo2[i][j][k-1][r] = g;
+
+            posicao = file.tellg();
+            getline(file, lixo, '\n');
+
+            if(lixo.size()==1)
+            {
+                getline(file, lixo);
+
+
+            }
+
+
+        }
+
+        file.close();
 
     }
     else
@@ -34,5 +242,55 @@ Instancia::Instancia(std::string arquivo)
 
 Instancia::~Instancia()
 {
+//***********************Libera memoria*************************************************
 
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j< numClientes; ++j)
+        {
+            for(int l = 0; l < 5; ++l)
+                delete []matrizCo2[i][j][l];
+        }
+    }
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j< numClientes; ++j)
+        {
+            delete []matrizCo2[i][j];
+        }
+    }
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+        delete []matrizCo2[i];
+    }
+
+    delete matrizCo2;
+
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j < numClientes; ++j)
+        {
+            delete []matrizVelocidade[i][j];
+        }
+    }
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+        delete []matrizVelocidade[i];
+    }
+
+    delete []matrizVelocidade;
+
+    delete []vetorClientes;
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+        delete []matrizDistancias[i];
+    }
+
+    delete []matrizDistancias;
 }

@@ -38,7 +38,7 @@ class Instancia
 
 public:
 
-    Periodo *vetorPeriodos;
+    Periodo vetorPeriodos[5] = {{0, 108}, {108, 216}, {216, 324}, {324, 432}, {432, 580}};
     Cliente *vetorClientes;
     Veiculo vetorVeiculos[2] = {{10000, 150, 2.2384e-005, 2.66374, 0, 540},{15000, 200, 1.79961e-005, 2.66374, 30, 540}};
     float **matrizDistancias;
