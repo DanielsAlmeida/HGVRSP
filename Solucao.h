@@ -7,22 +7,35 @@
 
 #include <list>
 
-typedef struct
+namespace Solucao
 {
-    int cliente;
-    float distanciaPeriodo[5];  //Distancia em que o veiculo percorreu em cada periodo para chegar no cliente
-    int temoChegada;
-    int tempoSaida;
 
-}ClienteRota;
+    typedef struct
+    {
+        int cliente;
+        //float distanciaPeriodo[5];  //Distancia em que o veiculo percorreu em cada periodo para chegar no cliente
+        int temoChegada;
+        int tempoSaida;
 
-class Solucao
-{
-    std::list<ClienteRota*>* veiculos;
-    bool **vetorClientes; //Cada rota tem um vetor para quardar se atende ou não o cliente i
-    std::list<ClienteRota*> veiculoFicticio;
-    float *combustivel;
-    float *carga;
-};
+    } ClienteRota;
+
+    typedef struct
+    {
+
+        std::list<ClienteRota *> *listaClientes;
+
+
+    }Veiculo;
+
+    class Solucao
+    {
+
+        bool **vetorClientes; //Cada rota tem um vetor para quardar se atende ou não o cliente i
+        std::list<ClienteRota *> veiculoFicticio;
+        float *combustivel;
+        float *carga;
+    };
+
+}
 
 #endif //HGVRSP_SOLUCAO_H

@@ -65,27 +65,26 @@ Instancia::Instancia(std::string arquivo)
         getline(file, lixo);
         getline(file, lixo);
 
-        int numVeiculos = -1;
 
         getline(file, lixo);
 
         while(lixo[0] != ';')
         {
-            numVeiculos +=1;
+            //numVeiculos +=1;
             getline(file, lixo);
         }
 
 
-        if((numVeiculos % 2) == 0)
+/*        if((numVeiculos % 2) == 0)
         {
-            veiculosTipo1 = numVeiculos/2;
+            Numveiculos = numVeiculos/2;
             veiculosTipo2 = numVeiculos/2;
         }
         else
         {
-            veiculosTipo1 = numVeiculos/2 + 1;
+            Numveiculos = numVeiculos/2 + 1;
             veiculosTipo2 = numVeiculos/2;
-        }
+        }*/
 
 
         for(int i = 0; i < 4; ++i)
@@ -119,17 +118,12 @@ Instancia::Instancia(std::string arquivo)
             getline(file, lixo, '\n');
 
             if(lixo.size()==1)
-            {
                 getline(file, lixo);
-
-
-            }
-
-
         }
 
         //Leitura das velocidades
 
+        //Aloca matriz
         matrizVelocidade = new float**[numClientes];
 
         for(int i = 0; i < numClientes; ++i)
@@ -151,6 +145,7 @@ Instancia::Instancia(std::string arquivo)
         posicao = file.tellg();
         getline(file, lixo);
 
+        //Leitura dos valores
         while(lixo[0] != ';')
         {
             file.seekg(posicao);
@@ -175,6 +170,7 @@ Instancia::Instancia(std::string arquivo)
 
         //Matriz de co2
 
+/*
         matrizCo2 = new double***[numClientes];
 
         for(i = 0; i < numClientes; ++i)
@@ -214,7 +210,7 @@ Instancia::Instancia(std::string arquivo)
 
 
 
-            matrizCo2[i][j][k-1][r] = g;
+            //matrizCo2[i][j][k-1][r] = g;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');
@@ -228,6 +224,7 @@ Instancia::Instancia(std::string arquivo)
 
 
         }
+*/
 
         file.close();
 
@@ -245,7 +242,7 @@ Instancia::~Instancia()
 //***********************Libera memoria*************************************************
 
 
-    for(int i = 0; i < numClientes; ++i)
+/*    for(int i = 0; i < numClientes; ++i)
     {
         for(int j = 0; j< numClientes; ++j)
         {
@@ -267,7 +264,7 @@ Instancia::~Instancia()
         delete []matrizCo2[i];
     }
 
-    delete matrizCo2;
+    delete matrizCo2;*/
 
 
     for(int i = 0; i < numClientes; ++i)
