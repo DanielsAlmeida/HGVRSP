@@ -6,34 +6,64 @@
 #define HGVRSP_SOLUCAO_H
 
 #include <list>
+#include <vector>
 
 namespace Solucao
 {
 
     typedef struct
     {
-        int cliente;
+        int cliente;                  //id do cliente
         //float distanciaPeriodo[5];  //Distancia em que o veiculo percorreu em cada periodo para chegar no cliente
         int temoChegada;
         int tempoSaida;
 
-    } ClienteRota;
+    }ClienteRota;
 
-    typedef struct
+    class Veiculo
     {
 
-        std::list<ClienteRota *> *listaClientes;
+    public:
+
+        std::list<ClienteRota *> listaClientes; //Lista de clientes
+        float combustivel;                      //Quantidade gasta de combustível
+        int carga;                            //Quantidade de produtos
+
+        Veiculo()
+        {
+            combustivel = 0;
+            carga = 0;
+
+        }
+
+        ~Veiculo()
+        {
+            ClienteRota *clienteAux;
+
+            while(!listaClientes.empty())
+            {
+                clienteAux = listaClientes.front();
+                listaClientes.pop_front();
+
+                delete clienteAux;
+
+            }
+        }
 
 
-    }Veiculo;
+    };
 
     class Solucao
     {
 
-        bool **vetorClientes; //Cada rota tem um vetor para quardar se atende ou não o cliente i
-        std::list<ClienteRota *> veiculoFicticio;
-        float *combustivel;
-        float *carga;
+    public:
+        std::vector<Veiculo*> vetorVeiculos;
+
+        Solucao(int numVeiculos);
+
+        ~Solucao();
+
+
     };
 
 }

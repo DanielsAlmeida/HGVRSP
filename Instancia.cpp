@@ -7,8 +7,9 @@
 #include <fstream>
 
 using namespace std;
+//using namespace Instancia;
 
-Instancia::Instancia(std::string arquivo)
+Instancia::Instancia::Instancia(std::string arquivo)
 {
 
     std::string clientes;
@@ -237,7 +238,7 @@ Instancia::Instancia(std::string arquivo)
 
 }
 
-Instancia::~Instancia()
+Instancia::Instancia::~Instancia()
 {
 //***********************Libera memoria*************************************************
 
@@ -290,4 +291,27 @@ Instancia::~Instancia()
     }
 
     delete []matrizDistancias;
+}
+
+int Instancia::Instancia::retornaPeriodo(float hora)
+{
+
+
+    if(hora >= 0 && hora < 1.8)
+
+        return 0;
+
+    else if(hora >= 1.8 && hora < 3.6)
+        return 1;
+
+    else if(hora >= 3.6 && hora < 5.4)
+        return 2;
+
+    else if(hora >= 5.4 && hora < 7.2)
+        return 3;
+
+    else if(hora >= 7.2 && hora <= 9.67)
+        return 4;
+    else
+        return -1;
 }
