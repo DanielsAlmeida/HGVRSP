@@ -14,6 +14,8 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
     std::string clientes;
 
+    demandaTotal = 0;
+
     int index = (arquivo.length() - 1);
 
     for(;index > 0; --index)
@@ -56,10 +58,11 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
             vetorClientes[i].cliente = cliente;
             vetorClientes[i].demanda = demanda;
-            vetorClientes[i].tempoServico = tempoServico;
-            vetorClientes[i].inicioJanela = inicioJanela;
-            vetorClientes[i].fimJanela = fimJanela;
+            vetorClientes[i].tempoServico = tempoServico/60.0;
+            vetorClientes[i].inicioJanela = inicioJanela/60.0;
+            vetorClientes[i].fimJanela = fimJanela/60.0;
 
+            demandaTotal += demanda;
 
         }
 
@@ -93,11 +96,11 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         //Aloca matriz de distancias
 
-        matrizDistancias = new float* [numClientes];
+        matrizDistancias = new double* [numClientes];
 
         for(int i = 0; i < numClientes; ++i)
         {
-            matrizDistancias[i] = new float[numClientes];
+            matrizDistancias[i] = new double[numClientes];
         }
 
         //Leitura das distancias
@@ -125,18 +128,18 @@ Instancia::Instancia::Instancia(std::string arquivo)
         //Leitura das velocidades
 
         //Aloca matriz
-        matrizVelocidade = new float**[numClientes];
+        matrizVelocidade = new double**[numClientes];
 
         for(int i = 0; i < numClientes; ++i)
         {
-            matrizVelocidade[i] = new float*[numClientes];
+            matrizVelocidade[i] = new double*[numClientes];
         }
 
         for(int i = 0; i < numClientes; ++i)
         {
             for(int j = 0; j < numClientes; ++j)
             {
-                matrizVelocidade[i][j] = new float[5];
+                matrizVelocidade[i][j] = new double[5];
             }
         }
 
@@ -152,7 +155,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
             file.seekg(posicao);
             file>>i>>j>>k>>velocidade;
 
-            matrizVelocidade[i][j][k] = velocidade;
+            matrizVelocidade[i][j][k-1] = velocidade;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');

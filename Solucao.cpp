@@ -37,3 +37,18 @@ Solucao::Solucao::~Solucao()
     vetorVeiculos.erase(vetorVeiculos.begin(), vetorVeiculos.end());
 
 }
+
+void Solucao::Veiculo::inicialisaVeiculo()
+{
+
+    ClienteRota *clienteRota = new ClienteRota;
+    clienteRota->cliente = 0;
+
+    listaClientes.push_back(clienteRota);
+
+    clienteRota = new ClienteRota;
+    clienteRota->cliente = 0;
+    clienteRota->tempoSaida = -1;
+
+    listaClientes.push_back(clienteRota);
+}

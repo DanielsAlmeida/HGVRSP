@@ -13,10 +13,16 @@ namespace Solucao
 
     typedef struct
     {
+
+    public:
+
         int cliente;                  //id do cliente
         //float distanciaPeriodo[5];  //Distancia em que o veiculo percorreu em cada periodo para chegar no cliente
-        int temoChegada;
-        int tempoSaida;
+        double tempoChegada;
+        double tempoSaida;
+        double poluicao, combustivel; // Poluicao e combustivel parcial do veiculo.
+
+
 
     }ClienteRota;
 
@@ -26,13 +32,16 @@ namespace Solucao
     public:
 
         std::list<ClienteRota *> listaClientes; //Lista de clientes
-        float combustivel;                      //Quantidade gasta de combustível
+        double combustivel;                      //Quantidade gasta de combustível
+        double poluicao;
         int carga;                            //Quantidade de produtos
 
         Veiculo()
         {
-            combustivel = 0;
+            poluicao = combustivel = 0;
             carga = 0;
+
+            inicialisaVeiculo();
 
         }
 
@@ -49,6 +58,9 @@ namespace Solucao
 
             }
         }
+
+    private:
+        void inicialisaVeiculo();
 
 
     };
