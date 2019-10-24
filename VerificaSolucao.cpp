@@ -134,7 +134,7 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
                 */
 
-                if((*itCliente)->tempoChegada >= instancia->vetorClientes[(*itCliente)->cliente].inicioJanela) //Chego após o inicio da janela
+                if((*itCliente)->tempoChegada >= instancia->vetorClientes[(*itCliente)->cliente].inicioJanela) //Chegou após o inicio da janela
                 {
 
                     // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento

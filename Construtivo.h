@@ -4,6 +4,7 @@
 #include "Instancia.h"
 #include "Solucao.h"
 #include <list>
+#include "VerificaSolucao.h"
 
 #ifndef HGVRSP_CONSTRUTIVO_H
 #define HGVRSP_CONSTRUTIVO_H
@@ -11,8 +12,13 @@
 namespace Construtivo
 {
 
-    Solucao::Solucao* geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente *, Instancia::Cliente * ));
+    Solucao::Solucao* geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente , Instancia::Cliente  ));
     bool determinaHorario(const Solucao::ClienteRota* const cliente1, Solucao::ClienteRota *cliente2, Instancia::Instancia *instancia);
+    std::tuple<bool, int, float, float> viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes,
+                                                                    std::list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>>::iterator iteratorCliente,
+                                                                    Instancia::Instancia *instancia,
+                                                                    Solucao::ClienteRota *candidato,
+                                                                    double combustivelParcial, double poluicaoParcial);
 
 };
 
