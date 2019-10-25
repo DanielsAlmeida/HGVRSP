@@ -109,7 +109,7 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
         {
 /**********************************************************************************************************************
             Não conseguiu inserir o cliente em nenhuma posição. Cria um novo veiculo.
-            corrigir horário de saida do deposito, tempo de espera.
+            corrigir horário de saida do deposito, tempo de espera. brancher
 **********************************************************************************************************************/
             auto *veiculo = new Solucao::Veiculo;
             determinaHorario((*veiculo->listaClientes.begin()), candidato, instancia);
