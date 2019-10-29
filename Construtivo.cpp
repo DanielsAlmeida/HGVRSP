@@ -9,12 +9,18 @@
 using namespace Construtivo;
 using namespace std;
 
-Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente , Instancia::Cliente ))
+Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente & ))
 {
 
     //Inicializa a lista de candidatos(Clientes)
-    list<Instancia::Cliente> listaCandidatos(instancia->vetorClientes, instancia->vetorClientes + sizeof(instancia->vetorClientes)/
-                                                                                                  sizeof(Instancia::Cliente));
+    list<Instancia::Cliente> listaCandidatos;
+
+    for(int i = 0; i < instancia->numClientes; ++i)
+    {
+        if(instancia->vetorClientes[i].cliente != 0)
+            listaCandidatos.push_back(instancia->vetorClientes[i]);
+    }
+
     //Ordena de acordo com o critério
     listaCandidatos.sort(comparador);
 
@@ -34,7 +40,7 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
     auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
 
-    Solucao::ClienteRota *vetorClienteSwap;
+    Solucao::ClienteRota *vetorClienteSwap; //Ponteiro para trocar os vetores.
 
     int tamVetBest, tamVetAux;
 
@@ -46,8 +52,12 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
     * posição possível da solução, desde que a solução seja viável.
     */
 
+
+
     while(!listaCandidatos.empty())
     {
+
+
         melhorPoluicao = HUGE_VALF;
 
         //retira um cliente da lista
@@ -58,9 +68,11 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
         candidato->cliente = clienteAux.cliente;
 
 
+
         //Percorre os veículos
         for(auto veiculo = solucao->vetorVeiculos.begin(); veiculo != solucao->vetorVeiculos.end(); ++veiculo)
         {
+
 
             //Verifica se a capacidade max será atingida
             if((*veiculo)->carga + clienteAux.demanda > instancia->vetorVeiculos.capacidade)
@@ -70,23 +82,37 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
             combustivelParcial = poluicaoParcial = 0;
 
             //Percorrer os clientes.
-            for(auto clienteIt = (*veiculo)->listaClientes.begin(); clienteIt != (*veiculo)->listaClientes.end(); ++clienteIt)
+            for(auto clienteIt = (*veiculo)->listaClientes.begin(); clienteIt != (*veiculo)->listaClientes.end(); )
             {
                 //Candidato tentara ser inserido após clienteIt
+
+
 
                 combustivelParcial += (*clienteIt)->combustivel;
                 poluicaoParcial += (*clienteIt)->poluicao;
 
-                tie(viavel, tamVetAux, auxCombustivel, auxPoluicao) = viabilidadeInserirCandidato(vetorClienteAux, clienteIt, instancia, candidato, combustivelParcial, poluicaoParcial);
+
+
+
+                tie(viavel, tamVetAux, auxCombustivel, auxPoluicao) = viabilidadeInserirCandidato(vetorClienteAux,
+                                                                                                  clienteIt,
+                                                                                                  instancia, candidato,
+                                                                                                  combustivelParcial,
+                                                                                                  poluicaoParcial,
+                                                                                                  *veiculo);
 
                 if(viavel)
                 {
+
                     if(auxPoluicao < melhorPoluicao)
                     {
                         melhorVeiculo = (*veiculo);
                         melhorPoluicao = auxPoluicao;
                         melhorCombustivel = auxCombustivel;
                         tamVetBest = tamVetAux;
+                        melhorPosicao = clienteIt;
+
+
                         //trocar vetores
 
                         vetorClienteSwap = vetorClienteBest;
@@ -94,6 +120,11 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
                         vetorClienteAux = vetorClienteSwap;
                     }
                 }
+
+                ++clienteIt;
+
+                if((*clienteIt)->cliente == 0)
+                    break;
 
 
             }
@@ -107,33 +138,85 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
 
         if(melhorPoluicao == HUGE_VALF)
         {
+
 /**********************************************************************************************************************
-            Não conseguiu inserir o cliente em nenhuma posição. Cria um novo veiculo.
-            corrigir horário de saida do deposito, tempo de espera. brancher
+*           Não conseguiu inserir o cliente em nenhuma posição. Cria um novo veiculo.
+*           corrigir horário de saida do deposito, tempo de espera.
 **********************************************************************************************************************/
+
+
             auto *veiculo = new Solucao::Veiculo;
             determinaHorario((*veiculo->listaClientes.begin()), candidato, instancia);
             determinaHorario(candidato, (veiculo->listaClientes.back()), instancia);
-            veiculo->listaClientes.insert(veiculo->listaClientes.end(), candidato);
 
-            veiculo->combustivel = candidato->combustivel + (*veiculo->listaClientes.end())->combustivel;
-            veiculo->poluicao = candidato->poluicao + (*veiculo->listaClientes.end())->poluicao;
+            auto iterador = veiculo->listaClientes.begin();
+            ++iterador;
+
+            veiculo->listaClientes.insert(iterador, candidato);
+
+   /*         cout<<"Veiculo novo:\n";
+
+            for(auto itV : veiculo->listaClientes)
+            {
+                cout<<(itV->cliente)<<" ";
+            }
+
+            cout<<"\n";*/
+
+            veiculo->combustivel = candidato->combustivel + (veiculo->listaClientes.back())->combustivel;
+            veiculo->poluicao = candidato->poluicao + (veiculo->listaClientes.back())->poluicao;
 
             veiculo->carga = instancia->vetorClientes[candidato->cliente].demanda;
 
             candidato = new Solucao::ClienteRota;
 
             solucao->vetorVeiculos.push_back(veiculo);
+            solucao->poluicao += veiculo->poluicao;
 
         }
         else
         {
 
             //Inserir candidato no veiculo
+            melhorPosicao++;
+            melhorVeiculo->listaClientes.insert(melhorPosicao, candidato);
+
+
+            int j = 0;
+            --melhorPosicao;
+            --melhorPosicao;
+
+            //MelhorPossicao é igual a posicao anterior de candidato.
+
+            //Corrigi o resto do veiculo
+            for(;melhorPosicao != melhorVeiculo->listaClientes.end(); ++melhorPosicao, ++j)
+            {
+                (**melhorPosicao) = vetorClienteBest[j];
+
+            }
+
+            melhorVeiculo->poluicao = melhorPoluicao;
+            melhorVeiculo->combustivel = melhorCombustivel;
+            melhorVeiculo->carga += instancia->vetorClientes[candidato->cliente].demanda;
+
+
+            candidato = new Solucao::ClienteRota;
+            solucao->poluicao += melhorPoluicao;
+
+
+
+
+
 
 
         }
     }
+
+    delete candidato;
+    delete []vetorClienteAux;
+    delete []vetorClienteBest;
+
+    return solucao;
 
 
 }
@@ -142,8 +225,9 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
  *
  * Verifica a viabilidade (janela de tempo, tempo de espera maximo). insere informações da rota em cliente2.
  */
-bool Construtivo::determinaHorario(const Solucao::ClienteRota* const cliente1, Solucao::ClienteRota *cliente2, Instancia::Instancia *instancia)
+bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::ClienteRota *cliente2, Instancia::Instancia *instancia)
 {
+
 
     double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
     double horaPartida = cliente1->tempoSaida;
@@ -151,82 +235,104 @@ bool Construtivo::determinaHorario(const Solucao::ClienteRota* const cliente1, S
 
     int periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
 
-    do
-    {
 
-        velocidade = instancia->matrizVelocidade[cliente1->cliente][cliente2->cliente][periodoSaida];//velocidade -> km/h
-
-        horario = horaPartida + (distancia / velocidade); //Horario de chegada considerando somente uma velocidade. Horario em horas
-
-
-        if((instancia->retornaPeriodo(horario) != periodoSaida))//Periodo de chegada diferente da saida, não é possível percorrer a distancia em somente um periodo.
-        {
-            //Percorreu todo o periodoSaida e não chegou ao destino.
-
-            tempoRestantePeriodo = instancia->vetorPeriodos[periodoSaida].fim - horaPartida;
-
-            distancia -= tempoRestantePeriodo * velocidade;
-
-            horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
-
-            poluicaoAux += VerificaSolucao::calculaPoluicao(velocidade, tempoRestantePeriodo, instancia);
-            periodoSaida += 1;
-
-
-            combustivelAux += VerificaSolucao::calculaConsumo(velocidade, tempoRestantePeriodo, instancia);
-
-        }
-        else//horario é do mesmo periodo de periodoSaida, então o veículo chegou ao destino
+        do
         {
 
-            float tempoAux =distancia/velocidade;
-            poluicaoAux += VerificaSolucao::calculaPoluicao(velocidade, tempoAux, instancia);
+            velocidade = instancia->matrizVelocidade[cliente1->cliente][cliente2->cliente][periodoSaida];//velocidade -> km/h
+
+            horario = horaPartida + (distancia /
+                                     velocidade); //Horario de chegada considerando somente uma velocidade. Horario em horas
 
 
+            if ((instancia->retornaPeriodo(horario) != periodoSaida))//Periodo de chegada diferente da saida, não é possível percorrer a distancia em somente um periodo.
+            {
 
-            combustivelAux += VerificaSolucao::calculaConsumo(velocidade, tempoAux, instancia);
+                //Percorreu todo o periodoSaida e não chegou ao destino.
 
-            cliente2->poluicao = poluicaoAux;
-            cliente2->combustivel = combustivelAux;
+                tempoRestantePeriodo = instancia->vetorPeriodos[periodoSaida].fim - horaPartida;
 
-            distancia = 0;
-            horaChegada = horario;
+                distancia -= tempoRestantePeriodo * velocidade;
+
+                horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
+
+                poluicaoAux += VerificaSolucao::calculaPoluicao(velocidade, tempoRestantePeriodo, instancia);
+                periodoSaida += 1;
+
+
+                combustivelAux += VerificaSolucao::calculaConsumo(velocidade, tempoRestantePeriodo, instancia);
+
+            } else//horario é do mesmo periodo de periodoSaida, então o veículo chegou ao destino
+            {
+
+                if(cliente1->cliente == 0)
+                {
+
+                    if(horario < instancia->vetorClientes[cliente2->cliente].inicioJanela)
+                    {
+                        //Se o tempo de espera excede o tempo máximo, cliente1 tem a sua saida atrasada.
+                        if ((instancia->vetorClientes[(cliente2)->cliente].inicioJanela - horario) > instancia->EsperaMax)
+                        {
+                            cliente1->tempoSaida = (instancia->vetorClientes[(cliente2)->cliente].inicioJanela ) + instancia->EsperaMax;
+                            horaPartida = cliente1->tempoSaida;
+                            periodoSaida = instancia->retornaPeriodo(horaPartida);
+                            distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
+
+                            continue;
+
+                        }
+                    }
+                }
+
+                float tempoAux = distancia / velocidade;
+                poluicaoAux += VerificaSolucao::calculaPoluicao(velocidade, tempoAux, instancia);
+
+
+                combustivelAux += VerificaSolucao::calculaConsumo(velocidade, tempoAux, instancia);
+
+                cliente2->poluicao = poluicaoAux;
+                cliente2->combustivel = combustivelAux;
+
+                distancia = 0;
+                horaChegada = horario;
+
+            }
+
+
+        } while (distancia != 0.0);
+
+        cliente2->tempoChegada = horaChegada;
+
+        if ((cliente2)->tempoChegada >=
+            instancia->vetorClientes[(cliente2)->cliente].inicioJanela) //Chegou após o inicio da janela
+        {
+
+            // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
+
+            cliente2->tempoSaida = (cliente2)->tempoChegada + instancia->vetorClientes[(cliente2)->cliente].tempoServico;
+
+            if (cliente2->tempoSaida <= instancia->vetorClientes[(cliente2)->cliente].fimJanela)
+                return true;
+            else
+                return false;
+
+
+        } else //Chegou antes do inicio da janela
+        {
+
+            cliente2->tempoSaida =
+                    instancia->vetorClientes[(cliente2)->cliente].inicioJanela + (cliente2)->tempoChegada;
+
+            //Verifica o tempo de espera
+            if ((instancia->vetorClientes[(cliente2)->cliente].inicioJanela - (cliente2)->tempoChegada) <= instancia->EsperaMax)
+                return true;
+
+            else
+                return false;
 
         }
 
 
-
-    }while(distancia != 0.0);
-
-    cliente2->tempoChegada = horaChegada;
-
-    if((cliente2)->tempoChegada >= instancia->vetorClientes[(cliente2)->cliente].inicioJanela) //Chegou após o inicio da janela
-    {
-
-        // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
-
-        cliente2->tempoSaida = (cliente2)->tempoChegada + instancia->vetorClientes[(cliente2)->cliente].tempoServico;
-
-        if(cliente2->tempoSaida <= instancia->vetorClientes[(cliente2)->cliente].fimJanela)
-            return true;
-        else
-            return false;
-
-
-    }
-    else //Chegou antes do inicio da janela
-    {
-
-        cliente2->tempoSaida = instancia->vetorClientes[(cliente2)->cliente].inicioJanela + (cliente2)->tempoChegada;
-
-        //Verifica o tempo de espera
-        if((instancia->vetorClientes[(cliente2)->cliente].inicioJanela - (cliente2)->tempoChegada) <= instancia->EsperaMax)
-            return true;
-
-        else
-            return false;
-
-    }
 
 }
 
@@ -237,8 +343,12 @@ bool Construtivo::determinaHorario(const Solucao::ClienteRota* const cliente1, S
  * 3° parametro de retorno: combustivel.
  * 4° parametro de retorno: poluicao.
  */
-tuple<bool, int, float, float> Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>>::iterator iteratorCliente,
-                                                                        Instancia::Instancia *instancia, Solucao::ClienteRota *candidato, double combustivelParcial, double poluicaoParcial)
+std::tuple<bool, int, float, float> Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes,
+                                                                             std::list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>>::iterator iteratorCliente,
+                                                                             Instancia::Instancia *instancia,
+                                                                             Solucao::ClienteRota *candidato,
+                                                                             double combustivelParcial, double poluicaoParcial,
+                                                                             Solucao::Veiculo *veiculo)
 {
 
     //inicialisa vetor de clientes
@@ -249,6 +359,8 @@ tuple<bool, int, float, float> Construtivo::viabilidadeInserirCandidato(Solucao:
 
     float combustivel = poluicaoParcial, poluicao = poluicaoParcial;
 
+
+
     //Verifica viabilidade com candidato
     if(determinaHorario(&vetorClientes[0], &vetorClientes[1], instancia))
     {
@@ -257,15 +369,30 @@ tuple<bool, int, float, float> Construtivo::viabilidadeInserirCandidato(Solucao:
         combustivel += vetorClientes[1].combustivel;
         poluicao += vetorClientes[1].poluicao;
 
+
+
         //Percorre o resto dos clientes
-        for(i = 1; *iteratorCliente != NULL; ++i)
+        for(i = 1; (iteratorCliente) !=  veiculo->listaClientes.end(); ++i)
         {
+
+
             //Adiciona o próximo cliente da lista na nova solução
-            vetorClientes[i+1] = **iteratorCliente;
+
+            vetorClientes[i+1] = (**iteratorCliente);
+
+/*            vetorClientes[i+1].cliente = (*iteratorCliente)->cliente;
+            vetorClientes[i+1].poluicao = (*iteratorCliente)->poluicao;
+            vetorClientes[i+1].combustivel = (*iteratorCliente)->combustivel;
+            vetorClientes[i+1].tempoSaida = (*iteratorCliente)->tempoSaida;
+            vetorClientes[i+1].tempoChegada = (*iteratorCliente)->tempoChegada;*/
+
+
 
             //Verifica viabilidade
             if(!determinaHorario(&vetorClientes[i], &vetorClientes[i+1], instancia))
                 return {false, -1, -1, -1};
+
+
 
             ++iteratorCliente;
 
@@ -286,6 +413,7 @@ tuple<bool, int, float, float> Construtivo::viabilidadeInserirCandidato(Solucao:
     }
     else
     {
+
         return {false, -1, -1, -1};
     }
 

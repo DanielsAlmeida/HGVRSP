@@ -2,13 +2,21 @@
 #include "Instancia.h"
 #include "Solucao.h"
 #include "VerificaSolucao.h"
+#include "Construtivo.h"
 
 using namespace std;
 
+bool comparador(Instancia::Cliente &cliente1 , Instancia::Cliente &cliente2)
+{
+    return cliente1.fimJanela < cliente2.fimJanela;
+
+}
+
 int main()
 {
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/UK_10x5_1.dat");
 
+    /*
+    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat");
 
     auto *solucao = new Solucao::Solucao(instancia->numClientes);
     float distancia;
@@ -96,6 +104,32 @@ int main()
 
 
 
+
+    delete solucao;
+    delete instancia;
+
+    */
+
+    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_5.dat");
+
+    auto *solucao = Construtivo::geraSolucao(instancia, comparador);
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+
+
+        for (auto it : (*veiculo).listaClientes)
+        {
+            cout << (*it).cliente << " ";
+        }
+
+        cout << endl;
+
+    }
+
+    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao);
+
+    cout<<"\nVerificacao: "<<verificao<<endl;
 
     delete solucao;
     delete instancia;

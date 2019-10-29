@@ -6,7 +6,7 @@
 
 Solucao::Solucao::Solucao(int numVeiculos)
 {
-
+    poluicao = 0.0;
     vetorVeiculos.reserve(numVeiculos);
 
     Veiculo *veiculo;

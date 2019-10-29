@@ -11,7 +11,7 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
     int *vetorClientes = new int[instancia->numClientes]; //Vetor para checar se cada cliente foi visitado uma unica vez.
 
-    for(int i = 0; i < instancia->numClientes; ++i)
+    for(int i = 0; i <= instancia->numClientes; ++i)
         vetorClientes[i] = 0;
 
 
@@ -123,6 +123,8 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
             vetorClientes[(*itCliente)->cliente] = 1;
 
+            //std::cout<<(*itCliente)->cliente<<" ";
+
 
             //Verificar se horaChegada é igual a itCliente.tempoChegada.
             if(fabs((*itCliente)->tempoChegada - horaChegada) <= 0.001)
@@ -167,6 +169,8 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
                     if(instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico != (*itCliente)->tempoSaida)
                     {
                         //Solução está ERRADA.
+                        std::cout<<"Solucao Errada.\n";
+                        std::cout <<(*itCliente)->cliente<<"\n";
 
                         delete []vetorClientes;
                         return false;
@@ -193,24 +197,27 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
             return false;
         }
 
-        bool clientesVisitados = true;
 
-        for(int i = 1; i <= instancia->numClientes; ++i)
-        {
-            if(!vetorClientes[i])
-            {
-                clientesVisitados = false;
-                break;
-            }
-        }
-
-        delete []vetorClientes;
-        return clientesVisitados;
     }
 
+    bool clientesVisitados = true;
+
+    for(int i = 0; i < instancia->numClientes; ++i)
+    {
+        if(!vetorClientes[i])
+        {
+            //std::cout<<std::endl<<i<<std::endl;
+            clientesVisitados = false;
+            break;
+        }
+    }
+
+    //std::cout<<"false.\n";
 
     delete []vetorClientes;
-    return false;
+    return clientesVisitados;
+
+
 
 }
 

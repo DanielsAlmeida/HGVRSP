@@ -70,6 +70,7 @@ namespace Solucao
 
     public:
         std::vector<Veiculo*> vetorVeiculos;
+        double poluicao;
 
         Solucao(int numVeiculos);
 
