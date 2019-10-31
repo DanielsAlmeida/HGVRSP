@@ -98,9 +98,17 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         matrizDistancias = new double* [numClientes];
 
+        int k;
+
         for(int i = 0; i < numClientes; ++i)
         {
             matrizDistancias[i] = new double[numClientes];
+
+            for(k = 0; k < numClientes; ++k)
+            {
+                matrizDistancias[i][k] = 0.0;
+            }
+
         }
 
         //Leitura das distancias
@@ -143,7 +151,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
             }
         }
 
-        int k, velocidade;
+        int  velocidade;
         getline(file, lixo);
 
         posicao = file.tellg();

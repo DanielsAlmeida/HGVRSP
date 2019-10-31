@@ -45,6 +45,13 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
 
             distancia = instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente];
+
+            if(distancia == 0.0)
+            {
+                delete []vetorClientes;
+                return false;
+            }
+
             horaPartida = (*iterator)->tempoSaida;
 
             carga += instancia->vetorClientes[(*itCliente)->cliente].demanda;

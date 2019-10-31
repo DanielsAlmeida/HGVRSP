@@ -232,8 +232,10 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
     double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
     double horaPartida = cliente1->tempoSaida;
     double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux, combustivelAux, poluicao;
-
     int periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
+
+    if(distancia == 0.0)
+        return false;
 
 
         do
@@ -241,8 +243,7 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
 
             velocidade = instancia->matrizVelocidade[cliente1->cliente][cliente2->cliente][periodoSaida];//velocidade -> km/h
 
-            horario = horaPartida + (distancia /
-                                     velocidade); //Horario de chegada considerando somente uma velocidade. Horario em horas
+            horario = horaPartida + (distancia / velocidade); //Horario de chegada considerando somente uma velocidade. Horario em horas
 
 
             if ((instancia->retornaPeriodo(horario) != periodoSaida))//Periodo de chegada diferente da saida, não é possível percorrer a distancia em somente um periodo.
@@ -303,8 +304,7 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
 
         cliente2->tempoChegada = horaChegada;
 
-        if ((cliente2)->tempoChegada >=
-            instancia->vetorClientes[(cliente2)->cliente].inicioJanela) //Chegou após o inicio da janela
+        if ((cliente2)->tempoChegada >= instancia->vetorClientes[(cliente2)->cliente].inicioJanela) //Chegou após o inicio da janela
         {
 
             // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
@@ -320,8 +320,7 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
         } else //Chegou antes do inicio da janela
         {
 
-            cliente2->tempoSaida =
-                    instancia->vetorClientes[(cliente2)->cliente].inicioJanela + (cliente2)->tempoChegada;
+            cliente2->tempoSaida = instancia->vetorClientes[(cliente2)->cliente].inicioJanela + instancia->vetorClientes[(cliente2)->cliente].tempoServico;
 
             //Verifica o tempo de espera
             if ((instancia->vetorClientes[(cliente2)->cliente].inicioJanela - (cliente2)->tempoChegada) <= instancia->EsperaMax)

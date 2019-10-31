@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include "Instancia.h"
 #include "Solucao.h"
 #include "VerificaSolucao.h"
@@ -110,9 +111,13 @@ int main()
 
     */
 
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_5.dat");
+    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_4.dat");
 
     auto *solucao = Construtivo::geraSolucao(instancia, comparador);
+
+    cout << fixed << setprecision(2);
+
+    cout<<"\t\t\t(combustivel, poluicao)\n\n";
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
@@ -123,9 +128,14 @@ int main()
             cout << (*it).cliente << " ";
         }
 
-        cout << endl;
+        cout<<" ("<<(*veiculo).combustivel<<", "<<(*veiculo).poluicao<<")\n";
+
+
 
     }
+
+
+    cout<<"\n("<<solucao->poluicao<<")\n";
 
     bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao);
 
