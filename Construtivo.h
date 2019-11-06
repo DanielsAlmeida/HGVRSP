@@ -12,7 +12,8 @@
 namespace Construtivo
 {
 
-    Solucao::Solucao* geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente&  ));
+    Solucao::Solucao *geraSolucao(Instancia::Instancia *instancia,
+                                      bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa);
     bool determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::ClienteRota *cliente2, Instancia::Instancia *instancia);
     std::tuple<bool, int, float, float> viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, std::list<Solucao::ClienteRota *,
                                                                         std::allocator<Solucao::ClienteRota *>>::iterator iteratorCliente,

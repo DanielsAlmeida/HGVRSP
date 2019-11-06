@@ -163,7 +163,14 @@ Instancia::Instancia::Instancia(std::string arquivo)
             file.seekg(posicao);
             file>>i>>j>>k>>velocidade;
 
-            matrizVelocidade[i][j][k-1] = velocidade;
+            if(velocidade < 6)
+                matrizVelocidade[i][j][k-1] = 6.0;
+
+            else if(velocidade > 90)
+                matrizVelocidade[i][j][k-1] = 90.0;
+
+            else
+                matrizVelocidade[i][j][k-1] = velocidade;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');
@@ -237,6 +244,13 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         }
 */
+
+        for(int i = 1; i < numClientes; ++i)
+        {
+
+            vetorClientes[i].distanciaDeposito = matrizDistancias[0][i];
+            vetorClientes[i].periodoFimJanela = retornaPeriodo(vetorClientes[i].fimJanela);
+        }
 
         file.close();
 

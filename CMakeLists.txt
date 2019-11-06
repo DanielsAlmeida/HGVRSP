@@ -3,4 +3,4 @@ project(HGVRSP)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(HGVRSP main.cpp Instancia.cpp Instancia.h Solucao.cpp Solucao.h VerificaSolucao.cpp VerificaSolucao.h Construtivo.cpp Construtivo.h)
+add_executable(HGVRSP main.cpp Instancia.cpp Instancia.h Solucao.cpp Solucao.h VerificaSolucao.cpp VerificaSolucao.h Construtivo.cpp Construtivo.h mersenne-twister.h mersenne-twister.cpp)

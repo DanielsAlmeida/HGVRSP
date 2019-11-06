@@ -219,10 +219,24 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
         }
     }
 
-    //std::cout<<"false.\n";
+    double sumPoluicao = 0.0;
+    for(auto it : solucao->vetorVeiculos)
+    {
 
-    delete []vetorClientes;
-    return clientesVisitados;
+        sumPoluicao += (*it).poluicao;
+    }
+
+    if(fabs(sumPoluicao - solucao->poluicao) <= 0.001)
+    {
+        delete[]vetorClientes;
+        return clientesVisitados;
+
+    }
+    else
+    {
+        delete []vetorClientes;
+        return false;
+    }
 
 
 

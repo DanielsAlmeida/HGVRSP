@@ -38,7 +38,7 @@ namespace Solucao
 
         Veiculo()
         {
-            poluicao = combustivel = 0;
+            poluicao = combustivel = 0.0;
             carga = 0;
 
             inicialisaVeiculo();

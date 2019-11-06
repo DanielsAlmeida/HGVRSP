@@ -23,6 +23,8 @@ namespace Instancia
         double tempoServico;
         double inicioJanela;
         double fimJanela;
+        double distanciaDeposito;
+        int periodoFimJanela;
 
     } Cliente;
 

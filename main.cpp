@@ -4,12 +4,27 @@
 #include "Solucao.h"
 #include "VerificaSolucao.h"
 #include "Construtivo.h"
+#include "mersenne-twister.h"
+#include "time.h"
 
 using namespace std;
 
-bool comparador(Instancia::Cliente &cliente1 , Instancia::Cliente &cliente2)
+bool comparadorFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
 {
     return cliente1.fimJanela < cliente2.fimJanela;
+
+}
+
+bool comparadorDistanciaDep(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
+{
+
+    return cliente1.distanciaDeposito < cliente2.distanciaDeposito;
+
+}
+
+bool comparadorDistFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
+{
+    return (cliente1.distanciaDeposito * 0.001*cliente1.periodoFimJanela) < (cliente2.distanciaDeposito* 0.001*cliente2.periodoFimJanela);
 
 }
 
@@ -111,9 +126,13 @@ int main()
 
     */
 
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_4.dat");
+    auto semente  = time(NULL);
 
-    auto *solucao = Construtivo::geraSolucao(instancia, comparador);
+    seed(semente);
+
+    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_20.dat");
+
+    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5);//18.5
 
     cout << fixed << setprecision(2);
 
@@ -141,8 +160,37 @@ int main()
 
     cout<<"\nVerificacao: "<<verificao<<endl;
 
+    int *horaSaida = new int[instancia->numClientes];
+    horaSaida[0] = 0;
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+
+        for(auto cliente : (*veiculo).listaClientes)
+        {
+
+            if((*cliente).cliente == 0)
+                continue;
+
+            horaSaida[cliente->cliente] = instancia->retornaPeriodo(cliente->tempoSaida);
+
+
+
+
+        }
+    }
+
     delete solucao;
     delete instancia;
 
+    for(int i = 0; i < (instancia->numClientes); ++i)
+        cout<<horaSaida[i]<<endl;
+
+
+    delete []horaSaida;
+
+
     return 0;
 }
+
+// (13.21)

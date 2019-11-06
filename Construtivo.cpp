@@ -5,15 +5,17 @@
 #include "Construtivo.h"
 #include <cmath>
 #include <tuple>
+#include "mersenne-twister.h"
 
 using namespace Construtivo;
 using namespace std;
 
-Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente & ))
+Solucao::Solucao * Construtivo::geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa)
 {
 
     //Inicializa a lista de candidatos(Clientes)
     list<Instancia::Cliente> listaCandidatos;
+    list<Instancia::Cliente>::iterator iteratorLisCand;
 
     for(int i = 0; i < instancia->numClientes; ++i)
     {
@@ -47,6 +49,8 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
     double combustivelParcial, poluicaoParcial; //Acumula combustivel e poluicao da rota parcial
 
     bool viavel;
+    uint32_t tamLista;
+    uint32_t escolhido;
 
     /* Enquanto a lista de candidatos for diferente de vazio, escolha um cliente, calcule o acrescimo de poluição para cada
     * posição possível da solução, desde que a solução seja viável.
@@ -61,12 +65,23 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
         melhorPoluicao = HUGE_VALF;
 
         //retira um cliente da lista
+        tamLista = listaCandidatos.size();
+        //Escolhe um valor aleatorio
+        tamLista = uint32_t(alfa*listaCandidatos.size()) + 1;
+        escolhido = rand_u32();
 
-        clienteAux = listaCandidatos.front();
-        listaCandidatos.pop_front();
+        escolhido = escolhido % tamLista;
+
+        iteratorLisCand = listaCandidatos.begin();
+
+        //move iterator para escolhido
+        advance (iteratorLisCand, escolhido);
+        clienteAux = (*iteratorLisCand);
+
+        //Apaga escolhido da lista
+        listaCandidatos.erase(iteratorLisCand);
 
         candidato->cliente = clienteAux.cliente;
-
 
 
         //Percorre os veículos
@@ -114,7 +129,6 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
 
 
                         //trocar vetores
-
                         vetorClienteSwap = vetorClienteBest;
                         vetorClienteBest = vetorClienteAux;
                         vetorClienteAux = vetorClienteSwap;
@@ -154,14 +168,6 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
 
             veiculo->listaClientes.insert(iterador, candidato);
 
-   /*         cout<<"Veiculo novo:\n";
-
-            for(auto itV : veiculo->listaClientes)
-            {
-                cout<<(itV->cliente)<<" ";
-            }
-
-            cout<<"\n";*/
 
             veiculo->combustivel = candidato->combustivel + (veiculo->listaClientes.back())->combustivel;
             veiculo->poluicao = candidato->poluicao + (veiculo->listaClientes.back())->poluicao;
@@ -195,12 +201,15 @@ Solucao::Solucao* Construtivo::geraSolucao(Instancia::Instancia *instancia, bool
 
             }
 
+
+            double aux = melhorVeiculo->poluicao;
             melhorVeiculo->poluicao = melhorPoluicao;
             melhorVeiculo->combustivel = melhorCombustivel;
             melhorVeiculo->carga += instancia->vetorClientes[candidato->cliente].demanda;
 
 
             candidato = new Solucao::ClienteRota;
+            solucao->poluicao -= aux;
             solucao->poluicao += melhorPoluicao;
 
 
@@ -231,7 +240,7 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
 
     double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
     double horaPartida = cliente1->tempoSaida;
-    double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux, combustivelAux, poluicao;
+    double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux = 0, combustivelAux = 0, poluicao;
     int periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
 
     if(distancia == 0.0)
@@ -278,6 +287,8 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
                             horaPartida = cliente1->tempoSaida;
                             periodoSaida = instancia->retornaPeriodo(horaPartida);
                             distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
+                            poluicaoAux = 0;
+                            combustivelAux = 0;
 
                             continue;
 
