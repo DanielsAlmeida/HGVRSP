@@ -130,7 +130,7 @@ int main()
 
     seed(semente);
 
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_20.dat");
+    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_15.dat");
 
     auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5);//18.5
 
