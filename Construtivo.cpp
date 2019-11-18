@@ -10,7 +10,149 @@
 using namespace Construtivo;
 using namespace std;
 
-Solucao::Solucao * Construtivo::geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa)
+Solucao::Solucao *Construtivo::reativo(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float *vetorAlfa, int tamAlfa, const int numInteracoes, const int numIntAtualizarProb)
+{
+
+    //Vetor guarda o resto da lista. São passados para construir a solução
+    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
+    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+
+    //Vetores para o reativo
+    double *vetorProbabilidade = new double[tamAlfa];
+    int *vetorFrequencia = new int[tamAlfa];
+    double *solucaoAcumulada = new double[tamAlfa];
+    double *vetorMedia = new double[tamAlfa];
+    double *proporcao = new double[tamAlfa];
+    int somaProb;
+    int valAleatorio;
+    int minVeiculos = instancia->demandaTotal/instancia->vetorVeiculos.capacidade + 1;
+
+    //Inicializa a melhor solução
+    vetorFrequencia[0] = 1;
+    Solucao::Solucao *best = geraSolucao(instancia, comparador, vetorAlfa[0], vetorClienteBest, vetorClienteAux);
+    vetorProbabilidade[0] = 1.0/tamAlfa;
+    solucaoAcumulada[0] = best->poluicao;
+    Solucao::Solucao *solucaoAux;
+    int posicaoAlfa;
+
+    //Inicializa os vetores de todos os alfas
+    for(int i = 1; i < tamAlfa; ++i)
+    {
+        vetorProbabilidade[i] = 1/tamAlfa;
+        vetorFrequencia[i] = 1;
+
+        //Inicializa a solucaoAcumulada para o alfa
+        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[i], vetorClienteBest, vetorClienteAux);
+        solucaoAcumulada[i] = solucaoAux->poluicao;
+
+        if(solucaoAux->poluicao < best->poluicao)
+        {
+            delete best;
+            best = solucaoAux;
+            solucaoAux = NULL;
+        }
+        else
+        {
+            delete solucaoAux;
+            solucaoAux = NULL;
+        }
+
+
+    }
+
+    for(int i = 0; i < numInteracoes; ++i)
+    {
+
+        //Atualiza probabilidade
+        if((i%numIntAtualizarProb) == 0)
+            atualizaProbabilidade(vetorProbabilidade, vetorFrequencia, solucaoAcumulada, vetorMedia, proporcao, tamAlfa, best->poluicao);
+
+        //Escolher alfa, gerar solução, atualizar vetores, ....
+        somaProb = posicaoAlfa = 0;
+
+        valAleatorio = rand_u32() % 100;
+
+        for(int j=0;somaProb < valAleatorio; ++j)
+        {
+
+            somaProb+= int(100.0 * vetorProbabilidade[j]);
+            posicaoAlfa = j;
+
+        }
+
+        //Cria solução com o alfa escolhido
+        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux);
+
+        solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao;
+        vetorFrequencia[posicaoAlfa] += 1;
+
+
+        //Atualiza best
+        if(solucaoAux->poluicao < best->poluicao)
+        {
+
+            delete best;
+            best = solucaoAux;
+
+            std::cout<<"Atualizacao, best = "<<best->poluicao<<"\n";
+
+            solucaoAux = NULL;
+        }
+        else
+        {
+            delete solucaoAux;
+            solucaoAux = NULL;
+        }
+
+
+    }
+
+    //Libera memória
+    delete []vetorClienteBest;
+    delete []vetorClienteAux;
+    delete []vetorProbabilidade;
+    delete []vetorFrequencia;
+    delete []solucaoAcumulada;
+    delete []vetorMedia;
+    delete []proporcao;
+
+    return best;
+}
+
+void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao)
+{
+
+    double somaProporcoes = 0.0;
+
+    //Calcular média
+
+    for(int i = 0; i < tam; ++i)
+    {
+        vetorMedia[i] = solucaoAcumulada[i]/vetorFrequencia[i];
+
+    }
+
+
+    //Calcula proporção.
+    for(int i = 0; i < tam; ++i)
+    {
+        proporcao[i] = melhorSolucao/vetorMedia[i];
+
+        somaProporcoes += proporcao[i];
+    }
+
+    //Calcula probabilidade
+    for(int i = 0; i<tam; ++i)
+    {
+        vetorProbabilidade[i] = proporcao[i]/somaProporcoes;
+    }
+
+
+
+}
+
+Solucao::Solucao * Construtivo::geraSolucao(Instancia::Instancia *instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa, Solucao::ClienteRota *vetorClienteBest,
+                                            Solucao::ClienteRota *vetorClienteAux)
 {
 
     //Inicializa a lista de candidatos(Clientes)
@@ -37,10 +179,6 @@ Solucao::Solucao * Construtivo::geraSolucao(Instancia::Instancia *instancia, boo
 
     auto *candidato = new Solucao::ClienteRota;
     Instancia::Cliente clienteAux;
-
-    //Vetor guarda o resto da lista
-    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
-    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
 
     Solucao::ClienteRota *vetorClienteSwap; //Ponteiro para trocar os vetores.
 
@@ -222,8 +360,6 @@ Solucao::Solucao * Construtivo::geraSolucao(Instancia::Instancia *instancia, boo
     }
 
     delete candidato;
-    delete []vetorClienteAux;
-    delete []vetorClienteBest;
 
     return solucao;
 
@@ -239,11 +375,16 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
 
 
     double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
+    std::cout<<"Distancia "<<distancia<<"\n";
+
     double horaPartida = cliente1->tempoSaida;
     double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux = 0, combustivelAux = 0, poluicao;
     int periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
 
-    if(distancia == 0.0)
+    velocidade = instancia->matrizVelocidade[cliente1->cliente][cliente2->cliente][periodoSaida];
+
+
+    if((distancia == 0.0) || (velocidade == 0.0))
         return false;
 
 
@@ -385,36 +526,22 @@ std::tuple<bool, int, float, float> Construtivo::viabilidadeInserirCandidato(Sol
         for(i = 1; (iteratorCliente) !=  veiculo->listaClientes.end(); ++i)
         {
 
-
             //Adiciona o próximo cliente da lista na nova solução
-
             vetorClientes[i+1] = (**iteratorCliente);
-
-/*            vetorClientes[i+1].cliente = (*iteratorCliente)->cliente;
-            vetorClientes[i+1].poluicao = (*iteratorCliente)->poluicao;
-            vetorClientes[i+1].combustivel = (*iteratorCliente)->combustivel;
-            vetorClientes[i+1].tempoSaida = (*iteratorCliente)->tempoSaida;
-            vetorClientes[i+1].tempoChegada = (*iteratorCliente)->tempoChegada;*/
-
-
 
             //Verifica viabilidade
             if(!determinaHorario(&vetorClientes[i], &vetorClientes[i+1], instancia))
                 return {false, -1, -1, -1};
 
-
-
             ++iteratorCliente;
 
             //Armazenar combustível e poluição
-
             combustivel += vetorClientes[i+1].combustivel;
             poluicao += vetorClientes[i+1].poluicao;
 
             if(combustivel > instancia->vetorVeiculos.combustivel)
-            {
                 return {false, -1, -1, -1};
-            }
+
 
         }
 

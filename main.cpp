@@ -126,13 +126,33 @@ int main()
 
     */
 
-    auto semente  = time(NULL);
-
+    //auto semente  = time(NULL);
+    uint32_t semente  = 1573480624;
     seed(semente);
 
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_15.dat");
+    cout<<"Semente: "<<semente<<endl;
 
-    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5);//18.5
+    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_10.dat");
+
+    cout<<"velocidade 0-10 "<<instancia->matrizVelocidade[0][10][0]<<endl;
+
+
+    auto vet = instancia->vetorClientes;
+
+    cout<<"\nNo Inicio Fim\n";
+
+    for(int i = 1; i < instancia->numClientes; ++i)
+    {
+        cout<<vet[i].cliente<<" "<<vet[i].inicioJanela<<" "<<vet[i].fimJanela<<"\n";
+    }
+
+    cout<<"\n\n";
+
+    //auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5, nullptr, nullptr);//18.5
+
+    float vetAlfas[14] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7};
+
+    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 100, 10);
 
     cout << fixed << setprecision(2);
 
@@ -156,12 +176,11 @@ int main()
 
     cout<<"\n("<<solucao->poluicao<<")\n";
 
-    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao);
 
-    cout<<"\nVerificacao: "<<verificao<<endl;
+    //int *horaSaida = new int[instancia->numClientes];
+    //horaSaida[0] = 0;
 
-    int *horaSaida = new int[instancia->numClientes];
-    horaSaida[0] = 0;
+    cout<<"\n\nNO TEMPO CHEGADA TEMPO SAIDA\n";
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
@@ -172,22 +191,28 @@ int main()
             if((*cliente).cliente == 0)
                 continue;
 
-            horaSaida[cliente->cliente] = instancia->retornaPeriodo(cliente->tempoSaida);
+            //horaSaida[cliente->cliente] = instancia->retornaPeriodo(cliente->tempoSaida);
 
-
+            cout<<cliente->cliente<<" "<<cliente->tempoChegada<<" "<<cliente->tempoSaida<<"\n";
 
 
         }
     }
 
+    cout<<"\n\n\n";
+
+    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao);
+
+    cout<<"\nVerificacao: "<<verificao<<endl;
+
     delete solucao;
     delete instancia;
 
-    for(int i = 0; i < (instancia->numClientes); ++i)
-        cout<<horaSaida[i]<<endl;
+    //for(int i = 0; i < (instancia->numClientes); ++i)
+        //cout<<horaSaida[i]<<endl;
 
 
-    delete []horaSaida;
+    //delete []horaSaida;
 
 
     return 0;

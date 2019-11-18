@@ -43,6 +43,7 @@ void Solucao::Veiculo::inicialisaVeiculo()
 
     ClienteRota *clienteRota = new ClienteRota;
     clienteRota->cliente = 0;
+    clienteRota->tempoSaida = 0;
 
     listaClientes.push_back(clienteRota);
 

@@ -23,7 +23,9 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
     double distancia, velocidade, tempoRestantePeriodo, horario, horaChegada, horaPartida;
     std::list<Solucao::ClienteRota*>::iterator iterator;
 
-    double poluicaoAux, combustivelAux, poluicao;
+    double poluicaoAux, combustivelAux, poluicao, aux;
+
+    std::cout<<"No No PERIODO,TEMPO,DISTANCIA,POLUICAO\n";
 
     for(auto it : solucao->vetorVeiculos)//Percorre os veiculos da solução
     {
@@ -56,6 +58,8 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
             carga += instancia->vetorClientes[(*itCliente)->cliente].demanda;
 
+            std::cout<<(*iterator)->cliente<<" "<<(*itCliente)->cliente<<" ";
+
             periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
 
             do
@@ -72,11 +76,17 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
                     tempoRestantePeriodo = instancia->vetorPeriodos[periodoSaida].fim - horaPartida;
 
+
+
                     distancia -= tempoRestantePeriodo * velocidade;
 
                     horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
 
-                    poluicaoAux += calculaPoluicao(velocidade, tempoRestantePeriodo, instancia);
+                    aux = calculaPoluicao(velocidade, tempoRestantePeriodo, instancia);
+                    poluicaoAux += aux;
+
+                    std::cout<<periodoSaida<<","<<tempoRestantePeriodo<<","<<tempoRestantePeriodo * velocidade<<","<<aux<<" ";
+
                     periodoSaida += 1;
 
 /*                    if(fabs(poluicaoAux - (*itCliente)->poluicao) > 0.001)
@@ -100,7 +110,10 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
                 {
 
                     float tempoAux =distancia/velocidade;
-                    poluicaoAux += calculaPoluicao(velocidade, tempoAux, instancia);
+                    aux = calculaPoluicao(velocidade, tempoAux, instancia);
+                    poluicaoAux += aux;
+
+                    std::cout<<periodoSaida<<","<<tempoAux<<","<<distancia<<","<<aux<<"\n";
 
                     if(fabs(poluicaoAux - ((*itCliente)->poluicao ) > 0.001))
                     {
