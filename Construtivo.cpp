@@ -86,6 +86,7 @@ Solucao::Solucao *Construtivo::reativo(Instancia::Instancia *instancia, bool (*c
         solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao;
         vetorFrequencia[posicaoAlfa] += 1;
 
+        cout << "Verificao: " << VerificaSolucao::verificaSolucao(instancia, solucaoAux, false) << "\n\n";
 
         //Atualiza best
         if(solucaoAux->poluicao < best->poluicao)
@@ -375,7 +376,7 @@ bool Construtivo::determinaHorario( Solucao::ClienteRota*  cliente1, Solucao::Cl
 
 
     double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
-    std::cout<<"Distancia "<<distancia<<"\n";
+    //std::cout<<"Distancia "<<distancia<<"\n";
 
     double horaPartida = cliente1->tempoSaida;
     double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux = 0, combustivelAux = 0, poluicao;

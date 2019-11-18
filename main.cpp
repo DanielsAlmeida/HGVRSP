@@ -134,25 +134,47 @@ int main()
 
     Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_10.dat");
 
-    cout<<"velocidade 0-10 "<<instancia->matrizVelocidade[0][10][0]<<endl;
 
 
     auto vet = instancia->vetorClientes;
 
     cout<<"\nNo Inicio Fim\n";
 
-    for(int i = 1; i < instancia->numClientes; ++i)
+    for(int i = 0; i < instancia->numClientes; ++i)
     {
         cout<<vet[i].cliente<<" "<<vet[i].inicioJanela<<" "<<vet[i].fimJanela<<"\n";
     }
 
     cout<<"\n\n";
 
-    //auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5, nullptr, nullptr);//18.5
+//*******************************************************************************************************************************************
+
+    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
+    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+
+    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.05, vetorClienteBest, vetorClienteAux);//18.5
+
+    delete solucao;
+
+    delete []vetorClienteBest;
+    delete []vetorClienteAux;
+
+    vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
+    vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+
+    delete instancia;
+    instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_10.dat");
+
+    solucao =  Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.05, vetorClienteBest, vetorClienteAux);//18.5
+
+    delete []vetorClienteBest;
+    delete []vetorClienteAux;
+
+//*******************************************************************************************************************************************
 
     float vetAlfas[14] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7};
 
-    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 100, 10);
+   // auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 100, 10);
 
     cout << fixed << setprecision(2);
 
@@ -201,7 +223,7 @@ int main()
 
     cout<<"\n\n\n";
 
-    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao);
+    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao, false);
 
     cout<<"\nVerificacao: "<<verificao<<endl;
 

@@ -6,9 +6,10 @@
 
 using namespace VerificaSolucao;
 
-bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::Solucao *solucao)
+bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::Solucao *solucao, bool print)
 {
 
+    std::string saida;
     int *vetorClientes = new int[instancia->numClientes]; //Vetor para checar se cada cliente foi visitado uma unica vez.
 
     for(int i = 0; i <= instancia->numClientes; ++i)
@@ -25,7 +26,7 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
     double poluicaoAux, combustivelAux, poluicao, aux;
 
-    std::cout<<"No No PERIODO,TEMPO,DISTANCIA,POLUICAO\n";
+    saida +="No No PERIODO,TEMPO,DISTANCIA,POLUICAO\n";
 
     for(auto it : solucao->vetorVeiculos)//Percorre os veiculos da solução
     {
@@ -58,7 +59,7 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
 
             carga += instancia->vetorClientes[(*itCliente)->cliente].demanda;
 
-            std::cout<<(*iterator)->cliente<<" "<<(*itCliente)->cliente<<" ";
+            saida+= std::to_string((*iterator)->cliente) + " " + std::to_string((*itCliente)->cliente) + " ";
 
             periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
 
@@ -85,7 +86,7 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
                     aux = calculaPoluicao(velocidade, tempoRestantePeriodo, instancia);
                     poluicaoAux += aux;
 
-                    std::cout<<periodoSaida<<","<<tempoRestantePeriodo<<","<<tempoRestantePeriodo * velocidade<<","<<aux<<" ";
+                    saida += std::to_string(periodoSaida) + "," + std::to_string(tempoRestantePeriodo) + "," + std::to_string(tempoRestantePeriodo * velocidade) + "," + std::to_string(aux) + " ";
 
                     periodoSaida += 1;
 
@@ -113,7 +114,7 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
                     aux = calculaPoluicao(velocidade, tempoAux, instancia);
                     poluicaoAux += aux;
 
-                    std::cout<<periodoSaida<<","<<tempoAux<<","<<distancia<<","<<aux<<"\n";
+                    std::to_string(periodoSaida) + "," + std::to_string(tempoAux) + "," + std::to_string(distancia) + "," + std::to_string(aux) + "\n";
 
                     if(fabs(poluicaoAux - ((*itCliente)->poluicao ) > 0.001))
                     {
@@ -250,6 +251,9 @@ bool VerificaSolucao::verificaSolucao(Instancia::Instancia *instancia, Solucao::
         delete []vetorClientes;
         return false;
     }
+
+    if(print)
+        std::cout<<saida;
 
 
 

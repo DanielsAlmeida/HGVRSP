@@ -14,7 +14,7 @@ namespace VerificaSolucao
 {
 
 
-    bool verificaSolucao(Instancia::Instancia *instancia, Solucao::Solucao *solucao);
+    bool verificaSolucao(Instancia::Instancia *instancia, Solucao::Solucao *solucao, bool print);
     double calculaPoluicao(double velocidade, double tempoViagem, Instancia::Instancia *instancia);
     double calculaConsumo(double velocidade, double tempoViagem, Instancia::Instancia *instancia);
 }
