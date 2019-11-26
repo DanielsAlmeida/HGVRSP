@@ -16,11 +16,12 @@ namespace Solucao
 
     public:
 
-        int cliente;                  //id do cliente
-        //float distanciaPeriodo[5];  //Distancia em que o veiculo percorreu em cada periodo para chegar no cliente
+        int cliente;                    //id do cliente
+        bool percorrePeriodo[5];       //true se percorre periodo de i a j, false caso contrário.
         double tempoChegada;
         double tempoSaida;
-        double poluicao, combustivel; // Poluicao e combustivel parcial do veiculo.
+        double poluicao;                // Poluição somente de i para j.
+        double combustivel;             // Combustível somente de i para j.
 
 
 
@@ -35,11 +36,14 @@ namespace Solucao
         double combustivel;                      //Quantidade gasta de combustível
         double poluicao;
         int carga;                            //Quantidade de produtos
+        int  tipo;                            //tipo == 0 => tipo 1; tipo == 1 => tipo 2;
 
-        Veiculo()
+        Veiculo(int  tipo)
         {
-            poluicao = combustivel = 0.0;
+            poluicao = 0.0;
+            combustivel = 0.0;
             carga = 0;
+            this->tipo = tipo;
 
             inicialisaVeiculo();
 

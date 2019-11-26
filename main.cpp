@@ -1,11 +1,16 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include "Instancia.h"
 #include "Solucao.h"
 #include "VerificaSolucao.h"
 #include "Construtivo.h"
 #include "mersenne-twister.h"
 #include "time.h"
+
+/*
+ * Debug memória : g++ *.cpp -Wall -fsanitize=address -g
+ */
 
 using namespace std;
 
@@ -28,181 +33,89 @@ bool comparadorDistFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &c
 
 }
 
-int main()
+int main(int num, char **agrs)
 {
 
-    /*
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat");
+    if(num != 4)
+    {
+        cout<<"Numero incorreto de parametros.\n";
+        exit(-1);
+    }
 
-    auto *solucao = new Solucao::Solucao(instancia->numClientes);
-    float distancia;
-    int periodoSaida;
-    Solucao::ClienteRota *cliente;
-    float horaPartida, velocidade, horario;
-
-
-
-        cliente = new Solucao::ClienteRota{0, 0, 0, 0, 0};
-        solucao->vetorVeiculos[0]->listaClientes.push_back(cliente);
-
-        cliente = new Solucao::ClienteRota;
-
-        cliente->cliente = 1;
-        cliente->tempoChegada = 0.587857143;
-
-        cliente->poluicao = VerificaSolucao::calculaPoluicao(70.0,0.587857143, instancia );
-        cliente->combustivel = cliente->poluicao;
-        cliente->tempoSaida = instancia->vetorClientes[1].tempoServico + instancia->vetorClientes[1].inicioJanela ;
-        float tempoSaida = cliente->tempoSaida;
-        solucao->vetorVeiculos[0]->poluicao = cliente->poluicao;
-        solucao->vetorVeiculos[0]->combustivel = cliente->combustivel;
-
-        solucao->vetorVeiculos[0]->listaClientes.push_back(cliente);
-
-//*************************  0 -> 1 -> *******************************************************************************************
-
-        cliente = new Solucao::ClienteRota;
-        cliente->cliente = 2;
-        cliente->tempoChegada = 1.634;
-        cliente->tempoSaida  = 2.084;
-        cliente->poluicao = VerificaSolucao::calculaPoluicao(82.0, 0.634, instancia);
-        cliente->combustivel = cliente->poluicao;
-
-        solucao->vetorVeiculos[0]->poluicao += cliente->poluicao;
-        solucao->vetorVeiculos[0]->combustivel += cliente->combustivel;
-
-
-        solucao->vetorVeiculos[0]->listaClientes.push_back(cliente);
-
-        solucao->vetorVeiculos[0]->carga = instancia->vetorClientes[1].demanda + instancia->vetorClientes[2].demanda;
-
-
-//*************************** 0->1->2->*******************************************************************************************
-
-    cliente = new Solucao::ClienteRota;
-    cliente->cliente = 3;
-    cliente->tempoChegada = 3.163;
-    cliente->tempoSaida = 3.513;
-    cliente->poluicao = VerificaSolucao::calculaPoluicao(57.0, 1.079, instancia);
-    cliente->combustivel = cliente->poluicao;
-
-    solucao->vetorVeiculos[0]->poluicao += cliente->poluicao;
-    solucao->vetorVeiculos[0]->combustivel += cliente->combustivel;
-
-
-    solucao->vetorVeiculos[0]->listaClientes.push_back(cliente);
-
-    solucao->vetorVeiculos[0]->carga += instancia->vetorClientes[3].demanda;
-
-//*************************** 0->1->2->3->*******************************************************************************************
-    cliente = new Solucao::ClienteRota;
-    cliente->cliente = 0;
-    cliente->tempoChegada = 5.425;
-
-    cliente->poluicao = VerificaSolucao::calculaPoluicao(53.0, 0.087, instancia);
-    cliente->poluicao += VerificaSolucao::calculaPoluicao(27.0, 1.8, instancia);
-    cliente->poluicao += VerificaSolucao::calculaPoluicao(42.0, 0.025214286, instancia);
-
-    cliente->combustivel = cliente->poluicao;
-
-    solucao->vetorVeiculos[0]->poluicao += cliente->poluicao;
-    solucao->vetorVeiculos[0]->combustivel += cliente->combustivel;
-
-
-    solucao->vetorVeiculos[0]->listaClientes.push_back(cliente);
-
-    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao);
-
-    cout<<verificao<<endl;
+    //string strInstancia = "/home/igor/Documentos/HGVRSP/instanciasUK/UK_15x5_10.dat";
+    string strInstancia = agrs[1];
+    string saidaCompleta = agrs[2];
+    string saidaParcial = agrs[3];
+    string instanciaNome;
 
 
 
+    ofstream file;
+
+    for(int i = 0; i < strInstancia.length(); ++i)
+    {
+        if(strInstancia[i] != '/')
+        {
+
+            if(strInstancia[i] == '.')
+                break;
+            instanciaNome += strInstancia[i];
+
+        }
+
+        else
+            instanciaNome = "";
+
+    }
 
 
+    auto semente  = time(NULL);
+    //uint32_t semente  = 1573480624;
 
+    string texto;
+    std::time_t result = std::time(nullptr);
+    texto += std::asctime(std::localtime(&result));
+    texto += '\n';
 
-    delete solucao;
-    delete instancia;
+    texto += "Nome: " + instanciaNome + "\n\n";
 
-    */
-
-    //auto semente  = time(NULL);
-    uint32_t semente  = 1573480624;
     seed(semente);
 
-    cout<<"Semente: "<<semente<<endl;
+    texto += "Semente: " + std::to_string(semente) + "\n\n";
 
-    Instancia::Instancia *instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_10.dat");
+    Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
 
 
 
     auto vet = instancia->vetorClientes;
 
-    cout<<"\nNo Inicio Fim\n";
-
-    for(int i = 0; i < instancia->numClientes; ++i)
-    {
-        cout<<vet[i].cliente<<" "<<vet[i].inicioJanela<<" "<<vet[i].fimJanela<<"\n";
-    }
-
-    cout<<"\n\n";
-
-//*******************************************************************************************************************************************
-
-    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
-    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
-
-    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.05, vetorClienteBest, vetorClienteAux);//18.5
-
-    delete solucao;
-
-    delete []vetorClienteBest;
-    delete []vetorClienteAux;
-
-    vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
-    vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
-
-    delete instancia;
-    instancia = new Instancia::Instancia("/home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_10.dat");
-
-    solucao =  Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.05, vetorClienteBest, vetorClienteAux);//18.5
-
-    delete []vetorClienteBest;
-    delete []vetorClienteAux;
-
-//*******************************************************************************************************************************************
-
     float vetAlfas[14] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7};
 
-   // auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 100, 10);
+    clock_t c_start = clock();
+
+    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 1000, 100);
+
+    clock_t c_end = clock();
 
     cout << fixed << setprecision(2);
 
-    cout<<"\t\t\t(combustivel, poluicao)\n\n";
+    texto += std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
 
-
+        texto += std::to_string(veiculo->listaClientes.size()-2) + '\n';
         for (auto it : (*veiculo).listaClientes)
         {
-            cout << (*it).cliente << " ";
+            texto += std::to_string((*it).cliente) + " ";
         }
 
-        cout<<" ("<<(*veiculo).combustivel<<", "<<(*veiculo).poluicao<<")\n";
+        texto += "\n\n";
 
 
 
     }
 
-
-    cout<<"\n("<<solucao->poluicao<<")\n";
-
-
-    //int *horaSaida = new int[instancia->numClientes];
-    //horaSaida[0] = 0;
-
-    cout<<"\n\nNO TEMPO CHEGADA TEMPO SAIDA\n";
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
@@ -210,34 +123,49 @@ int main()
         for(auto cliente : (*veiculo).listaClientes)
         {
 
-            if((*cliente).cliente == 0)
-                continue;
-
-            //horaSaida[cliente->cliente] = instancia->retornaPeriodo(cliente->tempoSaida);
-
-            cout<<cliente->cliente<<" "<<cliente->tempoChegada<<" "<<cliente->tempoSaida<<"\n";
-
+            if(cliente->cliente != 0)
+                texto += std::to_string(cliente->cliente) += " " + std::to_string(cliente->tempoSaida) + " " + std::to_string(cliente->tempoSaida) + "\n";
 
         }
+
+    }
+    texto += '\n';
+
+    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto);
+    texto += '\n';
+
+
+
+    for(int i = 1; i < instancia->numClientes; ++i)
+    {
+        texto += std::to_string(vet[i].cliente) += " " + std::to_string(vet[i].inicioJanela) + " " + std::to_string(vet[i].fimJanela) + "\n";
     }
 
-    cout<<"\n\n\n";
+    texto += "-1\n\n\n";
 
-    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao, false);
 
-    cout<<"\nVerificacao: "<<verificao<<endl;
+    texto += "Tempo cpu: " + std::to_string((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) + " S\n";
+    texto += "Verificacao: " + std::to_string(verificao) + "\n";
+    texto += "Poluicao: " + std::to_string(solucao->poluicao) + '\n';
+
+    //cout<<texto;
+
+    file.open(saidaCompleta, ios::out);
+    file<< texto;
+
+    file.close();
+
+    file.open(saidaParcial, ios::out|ios::app);
+    file<<std::to_string(solucao->poluicao)<< " "<<((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0)<<'\n';
+
+    file.close();
 
     delete solucao;
     delete instancia;
 
-    //for(int i = 0; i < (instancia->numClientes); ++i)
-        //cout<<horaSaida[i]<<endl;
 
 
-    //delete []horaSaida;
 
 
     return 0;
 }
-
-// (13.21)

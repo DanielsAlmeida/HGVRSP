@@ -1,10 +1,12 @@
 //
 // Created by igor on 17/10/19.
-//
+//Corrigido 26/11/19
 
 #include "Instancia.h"
 #include "Solucao.h"
 #include <math.h>
+
+using namespace std;
 
 #ifndef HGVRSP_VERIFICASOLUCAO_H
 #define HGVRSP_VERIFICASOLUCAO_H
@@ -14,9 +16,17 @@ namespace VerificaSolucao
 {
 
 
-    bool verificaSolucao(Instancia::Instancia *instancia, Solucao::Solucao *solucao, bool print);
-    double calculaPoluicao(double velocidade, double tempoViagem, Instancia::Instancia *instancia);
-    double calculaConsumo(double velocidade, double tempoViagem, Instancia::Instancia *instancia);
+    bool verificaSolucao(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, string *texto);
+    double calculaPoluicao(double velocidade, double tempoViagem, const Instancia::Instancia *const instancia);
+    double calculaPoluicaoRestrigindoVelocidade(const Instancia::Instancia *const instancia, int no1, int no2, double horaSaida, double distancia);
+
+
+    double poluicaoRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k);
+    double poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
+
+    double combustivelRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k);
+    double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
+
 }
 
 #endif //HGVRSP_VERIFICASOLUCAO_H

@@ -50,6 +50,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
             getline(file, lixo);
 
         int cliente, demanda, tempoServico, inicioJanela, fimJanela;
+        numVeiculos = 0;
 
         for(int i = 0; i < numClientes;++i)
         {
@@ -74,21 +75,21 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         while(lixo[0] != ';')
         {
-            //numVeiculos +=1;
+            numVeiculos +=1;
             getline(file, lixo);
         }
 
 
-/*        if((numVeiculos % 2) == 0)
+        if((numVeiculos % 2) == 0)
         {
-            Numveiculos = numVeiculos/2;
+            veiculosTipo1 = numVeiculos/2;
             veiculosTipo2 = numVeiculos/2;
         }
         else
         {
-            Numveiculos = numVeiculos/2 + 1;
+            veiculosTipo1 = numVeiculos/2 + 1;
             veiculosTipo2 = numVeiculos/2;
-        }*/
+        }
 
 
         for(int i = 0; i < 4; ++i)
@@ -189,7 +190,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         //Matriz de co2
 
-/*
+
         matrizCo2 = new double***[numClientes];
 
         for(i = 0; i < numClientes; ++i)
@@ -243,7 +244,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
 
         }
-*/
+
 
         for(int i = 1; i < numClientes; ++i)
         {
@@ -268,7 +269,7 @@ Instancia::Instancia::~Instancia()
 //***********************Libera memoria*************************************************
 
 
-/*    for(int i = 0; i < numClientes; ++i)
+    for(int i = 0; i < numClientes; ++i)
     {
         for(int j = 0; j< numClientes; ++j)
         {
@@ -290,7 +291,7 @@ Instancia::Instancia::~Instancia()
         delete []matrizCo2[i];
     }
 
-    delete matrizCo2;*/
+    delete matrizCo2;
 
 
     for(int i = 0; i < numClientes; ++i)
@@ -318,7 +319,7 @@ Instancia::Instancia::~Instancia()
     delete []matrizDistancias;
 }
 
-int Instancia::Instancia::retornaPeriodo(float hora)
+int Instancia::Instancia::retornaPeriodo(float hora) const
 {
 
 
