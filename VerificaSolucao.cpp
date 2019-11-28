@@ -9,6 +9,10 @@ using namespace VerificaSolucao;
 bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, string *texto)
 {
 
+    if(solucao->veiculoFicticil)
+        return false;
+
+
     std::string saida;
     int *vetorClientes = new int[instancia->numClientes]; //Vetor para checar se cada cliente foi visitado uma unica vez.
 
@@ -208,7 +212,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
         }
 
         //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
-        if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)))
+        if((it->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)))
         {
             //Solução está ERRADA.
 
@@ -259,28 +263,6 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
     }
 
 
-
-
-}
-
-double VerificaSolucao::calculaPoluicao(double velocidade, double tempoViagem, const Instancia::Instancia *const instancia)
-{
-    double poluicao = 0.0;
-
-    for(int i = 0; i < 7; ++i)
-    {
-        poluicao += (instancia->CO[i] * pow(velocidade, i))/velocidade;
-        poluicao += (instancia->HC[i] * pow(velocidade, i))/velocidade;
-        poluicao += (instancia->NOX[i] * pow(velocidade, i))/velocidade;
-        poluicao += (instancia->CO[i] * pow(velocidade, i))/velocidade;
-        poluicao += (instancia->PM[i] * pow(velocidade, i))/velocidade;
-        poluicao += (instancia->CO2[i] * pow(velocidade, i))/velocidade;
-
-    }
-
-
-    poluicao = (poluicao*tempoViagem)/1000.0;
-    return poluicao;
 
 
 }

@@ -9,6 +9,10 @@
 #ifndef HGVRSP_CONSTRUTIVO_H
 #define HGVRSP_CONSTRUTIVO_H
 
+typedef std::list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>>::iterator ItClienteRota;
+typedef std::tuple<bool, int, double, double> TupleBID;
+
+
 namespace Construtivo
 {
     Solucao::Solucao *reativo(const Instancia::Instancia *const instancia,
@@ -19,18 +23,17 @@ namespace Construtivo
                                   bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa,
                                   Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux);
 
-    bool determinaHorario(Solucao::ClienteRota *cliente1, Solucao::ClienteRota *cliente2, const Instancia::Instancia *const instancia);
+    bool determinaHorario(Solucao::ClienteRota *cliente1, Solucao::ClienteRota *cliente2,
+                              const Instancia::Instancia *const instancia, const int peso, const int tipoVeiculo);
 
-    std::tuple<bool, int, double> viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes,
-                                                              std::list<Solucao::ClienteRota *,
-                                                                      std::allocator<Solucao::ClienteRota *>>::iterator iteratorCliente,
-                                                              const Instancia::Instancia *const instancia,
-                                                              Solucao::ClienteRota *candidato,
-                                                              double combustivelParcial, double poluicaoParcial,
-                                                              Solucao::Veiculo *veiculo);
+    TupleBID viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, ItClienteRota iteratorCliente,
+                                         const Instancia::Instancia *const instancia,
+                                         Solucao::ClienteRota *candidato, double combustivelParcial,
+                                         double poluicaoParcial, Solucao::Veiculo *veiculo, int peso);
 
-    void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada,
-                                   double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
+    void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
+
+
 
 
 };

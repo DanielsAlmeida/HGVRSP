@@ -8,15 +8,22 @@ Solucao::Solucao::Solucao(int numVeiculos)
 {
     poluicao = 0.0;
     vetorVeiculos.reserve(numVeiculos+1);
+    int tipo = 0;
+    veiculoFicticil = false;
+    poluicaoPenalidades = 0.0;
 
     Veiculo *veiculo;
 
     for(int i = 0; i < numVeiculos; ++i)
     {
 
-        veiculo = new Veiculo(false);
+        veiculo = new Veiculo(tipo);
         vetorVeiculos.push_back(veiculo);
 
+        if(tipo == 0)
+            tipo +=1;
+        else
+            tipo -= 1;
 
     }
 

@@ -35,19 +35,28 @@ bool comparadorDistFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &c
 
 int main(int num, char **agrs)
 {
+    string strInstancia;
+    string saidaCompleta;
+    string saidaParcial;
+    string instanciaNome;
 
-    if(num != 4)
+
+    if(num != 4 && num != 1)
     {
         cout<<"Numero incorreto de parametros.\n";
         exit(-1);
     }
 
-    //string strInstancia = "/home/igor/Documentos/HGVRSP/instanciasUK/UK_15x5_10.dat";
-    string strInstancia = agrs[1];
-    string saidaCompleta = agrs[2];
-    string saidaParcial = agrs[3];
-    string instanciaNome;
-
+    if(num == 1)
+    {
+        strInstancia = "/home/igor/Documentos/HGVRSP/instanciasUK/UK_15x5_10.dat";
+    }
+    else
+    {
+        strInstancia = agrs[1];
+        saidaCompleta = agrs[2];
+        saidaParcial = agrs[3];
+    }
 
 
     ofstream file;
@@ -143,29 +152,39 @@ int main(int num, char **agrs)
 
     texto += "-1\n\n\n";
 
+    string tempo;
 
-    texto += "Tempo cpu: " + std::to_string((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) + " S\n";
-    texto += "Verificacao: " + std::to_string(verificao) + "\n";
-    texto += "Poluicao: " + std::to_string(solucao->poluicao) + '\n';
+    tempo += "Tempo cpu: " + std::to_string((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) + " S\n";
+    tempo += "Verificacao: " + std::to_string(verificao) + "\n";
+    tempo += "Poluicao: " + std::to_string(solucao->poluicao) + '\n';
 
-    //cout<<texto;
+    texto += tempo;
 
-    file.open(saidaCompleta, ios::out);
-    file<< texto;
+    if(solucao->poluicao <= 0.1)
+        cout<<"Poluicao = 0\n";
 
-    file.close();
+    if(num == 1)
+    {
+        cout<<"\n\n"<<tempo<<'\n';
+    }
+    else
+    {
 
-    file.open(saidaParcial, ios::out|ios::app);
-    file<<std::to_string(solucao->poluicao)<< " "<<((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0)<<'\n';
+        file.open(saidaCompleta, ios::out);
+        file << texto;
 
-    file.close();
+        file.close();
+
+        file.open(saidaParcial, ios::out | ios::app);
+        file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)
+             << '\n';
+
+        file.close();
+
+    }
 
     delete solucao;
     delete instancia;
-
-
-
-
 
     return 0;
 }

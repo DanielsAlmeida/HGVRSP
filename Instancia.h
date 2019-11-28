@@ -2,6 +2,7 @@
 // Created by igor on 10/09/19.
 //
 #include <iostream>
+#include <cmath>
 
 #ifndef HGVRSP_INSTANCIA_H
 #define HGVRSP_INSTANCIA_H
@@ -83,7 +84,7 @@ namespace Instancia
                                           {5.4, 7.2},
                                           {7.2, 9.0}}; //Tempo em horas
         Cliente *vetorClientes;
-        const Veiculo vetorVeiculos[2] = {{10000,150,2.2384e-005,2.66374, 0.0, 9.0},{15000, 200, 1.79961e-005, 2.66374, 0.5, 9.0}};
+        const Veiculo vetorVeiculos[3] = {{10000,150,2.2384e-005,2.66374, 0.0, 9.0},{15000, 200, 1.79961e-005, 2.66374, 0.5, 9.0}, {FP_INFINITE, FP_INFINITE, 2.2384e-4, 2.66374, 0, 9}};
         double **matrizDistancias;
         double ***matrizVelocidade; //i,j,k
         double ****matrizCo2;      //i, j, k, v; k <- periodo, v <- veiculo

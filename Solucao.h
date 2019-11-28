@@ -11,7 +11,7 @@
 namespace Solucao
 {
 
-    typedef struct
+    class ClienteRota
     {
 
     public:
@@ -22,10 +22,25 @@ namespace Solucao
         double tempoSaida;
         double poluicao;                // Poluição somente de i para j.
         double combustivel;             // Combustível somente de i para j.
+        double poluicaoRota;
+        double produtoCarga;
 
+        ClienteRota(){}
+        ClienteRota(const ClienteRota &outro)
+        {
+            cliente = outro.cliente;
+            tempoChegada = outro.tempoChegada;
+            tempoSaida = outro.tempoSaida;
+            poluicao = outro.poluicao;
+            combustivel = outro.combustivel;
+            poluicaoRota = outro.poluicaoRota;
+            produtoCarga = outro.produtoCarga;
 
+            for(int i = 0; i < 5; ++i)
+                percorrePeriodo[i] = outro.percorrePeriodo[i];
+        }
 
-    }ClienteRota;
+    };
 
     class Veiculo
     {
@@ -75,6 +90,8 @@ namespace Solucao
     public:
         std::vector<Veiculo*> vetorVeiculos;
         double poluicao;
+        bool veiculoFicticil;
+        double poluicaoPenalidades;
 
         Solucao(int numVeiculos);
 
