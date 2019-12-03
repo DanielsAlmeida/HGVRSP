@@ -22,6 +22,7 @@ namespace Solucao
         double tempoSaida;
         double poluicao;                // Poluição somente de i para j.
         double combustivel;             // Combustível somente de i para j.
+        double combustivelRota;
         double poluicaoRota;
         double produtoCarga;
 
@@ -35,6 +36,7 @@ namespace Solucao
             combustivel = outro.combustivel;
             poluicaoRota = outro.poluicaoRota;
             produtoCarga = outro.produtoCarga;
+            combustivelRota = outro.combustivelRota;
 
             for(int i = 0; i < 5; ++i)
                 percorrePeriodo[i] = outro.percorrePeriodo[i];

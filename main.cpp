@@ -78,8 +78,8 @@ int main(int num, char **agrs)
     }
 
 
-    auto semente  = time(NULL);
-    //uint32_t semente  = 1573480624;
+    //auto semente  = time(NULL);
+    uint32_t semente  = 1574954068;
 
     string texto;
     std::time_t result = std::time(nullptr);
@@ -102,7 +102,17 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 1000, 100);
+    /* *******************************************************************************************************************************************************************/
+
+    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
+    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+    //auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 1000, 100);
+    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.6, vetorClienteBest, vetorClienteAux);
+
+    delete []vetorClienteAux;
+    delete []vetorClienteBest;
+
+    /* *******************************************************************************************************************************************************************/
 
     clock_t c_end = clock();
 
@@ -140,7 +150,7 @@ int main(int num, char **agrs)
     }
     texto += '\n';
 
-    bool verificao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto);
+    bool Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto);
     texto += '\n';
 
 
@@ -155,7 +165,7 @@ int main(int num, char **agrs)
     string tempo;
 
     tempo += "Tempo cpu: " + std::to_string((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) + " S\n";
-    tempo += "Verificacao: " + std::to_string(verificao) + "\n";
+    tempo += "Verificacao: " + std::to_string(Veificacao) + "\n";
     tempo += "Poluicao: " + std::to_string(solucao->poluicao) + '\n';
 
     texto += tempo;
@@ -166,6 +176,7 @@ int main(int num, char **agrs)
     if(num == 1)
     {
         cout<<"\n\n"<<tempo<<'\n';
+        cout<<"Veificacao: "<<Veificacao<<'\n';
     }
     else
     {
@@ -182,6 +193,8 @@ int main(int num, char **agrs)
         file.close();
 
     }
+
+    cout<<"Veificacao: "<<Veificacao<<'\n';
 
     delete solucao;
     delete instancia;

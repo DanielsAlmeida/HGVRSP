@@ -6,6 +6,9 @@
 #include "Solucao.h"
 #include <math.h>
 
+typedef std::list<Solucao::Veiculo*>::iterator IteratorVeiculo;
+typedef std::list<Solucao::ClienteRota*>::iterator IteratorCliente;
+
 using namespace std;
 
 #ifndef HGVRSP_VERIFICASOLUCAO_H
@@ -26,6 +29,8 @@ namespace VerificaSolucao
 
     double combustivelRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k);
     double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
+
+    bool verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
 
 }
 

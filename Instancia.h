@@ -4,8 +4,11 @@
 #include <iostream>
 #include <cmath>
 
+
 #ifndef HGVRSP_INSTANCIA_H
 #define HGVRSP_INSTANCIA_H
+
+
 
 namespace Instancia
 {
