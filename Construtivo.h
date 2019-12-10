@@ -27,9 +27,9 @@ namespace Construtivo
                               const Instancia::Instancia *const instancia, const int peso, const int tipoVeiculo);
 
     TupleBID viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, ItClienteRota iteratorCliente,
-                                         const Instancia::Instancia *const instancia,
-                                         Solucao::ClienteRota *candidato, double combustivelParcial,
-                                         double poluicaoParcial, Solucao::Veiculo *veiculo, int peso);
+                                             const Instancia::Instancia *const instancia,
+                                             Solucao::ClienteRota *candidato, double combustivelParcial,
+                                             double poluicaoParcial, Solucao::Veiculo *veiculo, int peso, int posicao);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
 

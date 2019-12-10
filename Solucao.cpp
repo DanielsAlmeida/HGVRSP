@@ -11,7 +11,8 @@ Solucao::Solucao::Solucao(int numVeiculos)
     int tipo = 0;
     veiculoFicticil = false;
     poluicaoPenalidades = 0.0;
-
+    ultimaAtualizacao = 0;
+    numSolucoesInv = 0;
     Veiculo *veiculo;
 
     for(int i = 0; i < numVeiculos; ++i)

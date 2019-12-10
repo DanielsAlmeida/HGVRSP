@@ -19,7 +19,8 @@ namespace VerificaSolucao
 {
 
 
-    bool verificaSolucao(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, string *texto);
+    bool verificaSolucao(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, string *texto,
+                             double *distanciaTotal);
     double calculaPoluicao(double velocidade, double tempoViagem, const Instancia::Instancia *const instancia);
     double calculaPoluicaoRestrigindoVelocidade(const Instancia::Instancia *const instancia, int no1, int no2, double horaSaida, double distancia);
 

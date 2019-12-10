@@ -69,13 +69,15 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         getline(file, lixo);
         getline(file, lixo);
-
+        getline(file, lixo);
 
         getline(file, lixo);
 
+
+        numVeiculos = int(ceil((numClientes-1)/5.0));
+
         while(lixo[0] != ';')
         {
-            numVeiculos +=1;
             getline(file, lixo);
         }
 
@@ -164,14 +166,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
             file.seekg(posicao);
             file>>i>>j>>k>>velocidade;
 
-            if(velocidade < 6)
-                matrizVelocidade[i][j][k-1] = 6.0;
-
-            else if(velocidade > 90)
-                matrizVelocidade[i][j][k-1] = 90.0;
-
-            else
-                matrizVelocidade[i][j][k-1] = velocidade;
+            matrizVelocidade[i][j][k-1] = velocidade;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');
@@ -230,7 +225,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
 
 
-            //matrizCo2[i][j][k-1][r] = g;
+            matrizCo2[i][j][k-1][r-1] = g;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');
@@ -340,4 +335,15 @@ int Instancia::Instancia::retornaPeriodo(float hora) const
         return 4;
     else
         return -1;
+}
+
+void Instancia::Instancia::getClientes()
+{
+
+/*    for(int i = 1; i < numClientes; ++i)
+    {
+
+        cout<<vetorClientes[i].cliente<<": "<<vetorClientes[i].demanda<<'\n';
+    }*/
+
 }

@@ -98,6 +98,8 @@ namespace Instancia
         Instancia(std::string arquivo);
         int retornaPeriodo(float hora) const ;
 
+        void getClientes();
+
         ~Instancia();
 
     private:

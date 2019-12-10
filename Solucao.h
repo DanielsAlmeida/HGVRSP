@@ -7,6 +7,7 @@
 
 #include <list>
 #include <vector>
+#include <string>
 
 namespace Solucao
 {
@@ -66,6 +67,30 @@ namespace Solucao
 
         }
 
+        std::string getRota(void)
+        {
+            std::string saida;
+
+            saida = "********************************TIPO-"+std::to_string(tipo)+"********************************************\n";
+
+            for(auto cliente : listaClientes)
+            {
+
+                saida += "Cliente: " + std::to_string(cliente->cliente) + "\n";
+                saida += "TempoChegada: " + std::to_string(cliente->tempoChegada) + "  ";
+                saida += "TempoSaida: " + std::to_string(cliente->tempoSaida) + "\n";
+                saida += "PoluicaoRota: " + std::to_string(cliente->poluicaoRota) + "  ";
+                saida += "Poluicao: " + std::to_string(cliente->poluicao) + "\n";
+                saida += "CombustivelRota: " + std::to_string(cliente->combustivelRota) + "  ";
+                saida += "Combustivel: " + std::to_string(cliente->combustivel) + "\n\n";
+
+            }
+
+            saida += "****************************************************************************\n";
+
+            return saida;
+        }
+
         ~Veiculo()
         {
             ClienteRota *clienteAux;
@@ -93,6 +118,8 @@ namespace Solucao
         std::vector<Veiculo*> vetorVeiculos;
         double poluicao;
         bool veiculoFicticil;
+        int ultimaAtualizacao;
+        int numSolucoesInv;
         double poluicaoPenalidades;
 
         Solucao(int numVeiculos);

@@ -10,6 +10,8 @@
 
 /*
  * Debug memória : g++ *.cpp -Wall -fsanitize=address -g
+ *
+ * date '+%d_%m_%Y_%k-%M-%S'
  */
 
 using namespace std;
@@ -77,10 +79,14 @@ int main(int num, char **agrs)
 
     }
 
+    //cout<<"Instancia: "<<instanciaNome<<'\n';
 
-    //auto semente  = time(NULL);
-    uint32_t semente  = 1574954068;
 
+
+    auto semente  = time(NULL);
+    //uint32_t semente  = 1575556749; 1575921816
+    //uint32_t semente = 1575921816;
+   // cout<<"Semente: "<<semente<<'\n';
     string texto;
     std::time_t result = std::time(nullptr);
     texto += std::asctime(std::localtime(&result));
@@ -94,39 +100,60 @@ int main(int num, char **agrs)
 
     Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
 
+    instancia->getClientes();
+
 
 
     auto vet = instancia->vetorClientes;
 
-    float vetAlfas[14] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7};
+    const int numAlfas = 18;
+    float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
+
+    //const int numAlfas = 11;
+    //float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55};
 
     clock_t c_start = clock();
 
     /* *******************************************************************************************************************************************************************/
-
+    /*
     auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
-    //auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, 14, 1000, 100);
     auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.6, vetorClienteBest, vetorClienteAux);
 
     delete []vetorClienteAux;
-    delete []vetorClienteBest;
+    delete []vetorClienteBest;*/
 
     /* *******************************************************************************************************************************************************************/
-
+    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, numAlfas, 1000, 100);
     clock_t c_end = clock();
 
     cout << fixed << setprecision(2);
 
     texto += std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
 
+    double tempoViagem = 0.0;
+    double inicio;
+    bool fim = false;
+
     for(auto veiculo : solucao->vetorVeiculos)
     {
+        fim = false;
 
         texto += std::to_string(veiculo->listaClientes.size()-2) + '\n';
         for (auto it : (*veiculo).listaClientes)
         {
             texto += std::to_string((*it).cliente) + " ";
+
+            if(((*it).cliente==0) && (!fim))
+            {
+                fim = true;
+                inicio = it->tempoSaida;
+            }
+
+            else if(((*it).cliente==0) && (fim))
+            {
+                tempoViagem += it->tempoChegada - inicio;
+            }
         }
 
         texto += "\n\n";
@@ -143,16 +170,19 @@ int main(int num, char **agrs)
         {
 
             if(cliente->cliente != 0)
-                texto += std::to_string(cliente->cliente) += " " + std::to_string(cliente->tempoSaida) + " " + std::to_string(cliente->tempoSaida) + "\n";
+                texto += std::to_string(cliente->cliente) += " " + std::to_string(cliente->tempoChegada) + " " + std::to_string(cliente->tempoSaida) + "\n";
 
         }
 
     }
     texto += '\n';
 
-    bool Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto);
+    double distanciaTotal;
+
+    bool Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);
     texto += '\n';
 
+    std::setprecision(2);
 
 
     for(int i = 1; i < instancia->numClientes; ++i)
@@ -162,21 +192,27 @@ int main(int num, char **agrs)
 
     texto += "-1\n\n\n";
 
-    string tempo;
+    //string tempo;
 
-    tempo += "Tempo cpu: " + std::to_string((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) + " S\n";
-    tempo += "Verificacao: " + std::to_string(Veificacao) + "\n";
-    tempo += "Poluicao: " + std::to_string(solucao->poluicao) + '\n';
+    std::stringstream tempo;
+    tempo << std::fixed << std::setprecision(2); //    std::string s = stream.str();
 
-    texto += tempo;
 
-    if(solucao->poluicao <= 0.1)
-        cout<<"Poluicao = 0\n";
+    tempo << "Tempo cpu: " << ((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) << " S\n";
+    tempo << "Verificacao: " <<(Veificacao) << "\n";
+    tempo << "Poluicao: " <<(solucao->poluicao) << '\n';
+    tempo << "Ultima atualizacao: " << (solucao->ultimaAtualizacao) << '\n';
+    tempo << "Numero de solucoes inviaveis: " << (solucao->numSolucoesInv) << '\n';
+    tempo << "Tempo total de viagem: " << (tempoViagem*60.0) << '\n';
+    tempo << "Distancia total: " << (distanciaTotal);
+    texto += tempo.str();
+
+    //if(solucao->poluicao <= 0.1)
+    //    cout<<"Poluicao = 0\n";
 
     if(num == 1)
     {
-        cout<<"\n\n"<<tempo<<'\n';
-        cout<<"Veificacao: "<<Veificacao<<'\n';
+
     }
     else
     {
@@ -185,16 +221,24 @@ int main(int num, char **agrs)
         file << texto;
 
         file.close();
-
         file.open(saidaParcial, ios::out | ios::app);
-        file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)
-             << '\n';
+
+
+        // Poluicao (kg), tempo cpu (min), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
+
+        if(Veificacao)
+            file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)/60.0 <<
+            " "<< std::to_string(solucao->ultimaAtualizacao)<<" "<<std::to_string(solucao->numSolucoesInv) <<" "<< std::to_string(tempoViagem*60.0)<<" "<< std::to_string(distanciaTotal)<< '\n';
+
+        else
+            file << std::to_string(-1) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)/60.0 <<
+            " "<< std::to_string(solucao->ultimaAtualizacao)<<" "<<std::to_string(solucao->numSolucoesInv) <<" "<< std::to_string(tempoViagem*60.0)<<" "<< std::to_string(distanciaTotal)<< '\n';
 
         file.close();
 
     }
 
-    cout<<"Veificacao: "<<Veificacao<<'\n';
+    //cout<<tempo.str();
 
     delete solucao;
     delete instancia;
