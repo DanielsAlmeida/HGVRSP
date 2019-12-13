@@ -3,7 +3,7 @@
 //
 #include <iostream>
 #include <cmath>
-
+#include <map>
 
 #ifndef HGVRSP_INSTANCIA_H
 #define HGVRSP_INSTANCIA_H
@@ -42,38 +42,6 @@ namespace Instancia
         double fimJanela;
     } Veiculo;
 
-    typedef struct
-    {
-        float a, b, c, d, e, f, g;
-
-         float operator[] (int i) const
-        {
-
-            if(i == 0)
-                return a;
-
-            else if(i==1)
-                return b;
-
-            else if(i==2)
-                return c;
-
-            else if(i==3)
-                return d;
-
-            else if(i==4)
-                return e;
-
-            else if(i==5)
-                return f;
-
-            else if(i==6)
-                return g;
-
-
-        }
-
-    } Gas;
 
     class Instancia
     {
@@ -99,6 +67,9 @@ namespace Instancia
         int retornaPeriodo(float hora) const ;
 
         void getClientes();
+
+        std::map<int, int> penalizacao;
+
 
         ~Instancia();
 

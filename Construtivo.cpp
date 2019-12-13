@@ -1,16 +1,8 @@
-/* ***************************************************************************************************************************************************************************
- *
- * Corrigir Poluição => Dependencia do peso da poluição relativo a cargas.
- * Poluição errada. ???
- *
- * Erro: rota: 0 -> 1 -> 2 -> 0 . Para incluir o cliente 3, os clientes 0 e 1 precissão ser alterados, combustível e poluição.!!!
- *
- * ***************************************************************************************************************************************************************************/
-
 #include "Construtivo.h"
 #include <cmath>
 #include <tuple>
 #include "mersenne-twister.h"
+#include <unordered_map>
 
 using namespace Construtivo;
 using namespace std;
@@ -20,9 +12,14 @@ void breakPoint()
 
 }
 
-Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instancia, bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float *vetorAlfa,
-                                       int tamAlfa, const int numInteracoes, const int numIntAtualizarProb)
+Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instancia,
+                                        bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &),
+                                        float *vetorAlfa,
+                                        int tamAlfa, const int numInteracoes, const int numIntAtualizarProb, bool log,
+                                        stringstream *strLog)
 {
+
+    unordered_map<int, int> hash;
 
     //Vetor guarda o resto da lista. São passados para construir a solução
     auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
@@ -41,7 +38,8 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
 
     //Inicializa a melhor solução
     vetorFrequencia[0] = 1;
-    Solucao::Solucao *best = geraSolucao(instancia, comparador, vetorAlfa[0], vetorClienteBest, vetorClienteAux);
+    Solucao::Solucao *best = geraSolucao(instancia, comparador, vetorAlfa[0], vetorClienteBest, vetorClienteAux,
+                                         nullptr, false);
     vetorProbabilidade[0] = 1.0/tamAlfa;
     solucaoAcumulada[0] = best->poluicao;
     Solucao::Solucao *solucaoAux;
@@ -56,7 +54,7 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
         vetorFrequencia[i] = 1;
 
         //Inicializa a solucaoAcumulada para o alfa
-        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[i], vetorClienteBest, vetorClienteAux);
+        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false);
         solucaoAcumulada[i] = solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
 
         if(best->veiculoFicticil)
@@ -67,7 +65,9 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
                 best = solucaoAux;
                 solucaoAux = NULL;
 
+                int num = int (ceil(best->poluicao));
 
+                hash[num]++;
 
             }
             else
@@ -94,6 +94,10 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
             }
             else
             {
+                int num = int (ceil(solucaoAux->poluicao));
+
+                hash[num]++;
+
                 if(solucaoAux->poluicao  < best->poluicao)
                 {
                     delete best;
@@ -112,7 +116,7 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
 
     }
     std::string texto;
-
+    std::string sequencia;
     for(int i = 0; i < numInteracoes; ++i)
     {
 
@@ -142,7 +146,11 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
 
 
         //Cria solução com o alfa escolhido
-        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux);
+
+        sequencia = "";
+
+        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux,
+                                 &sequencia, log);
 
 
 
@@ -151,6 +159,38 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
 
         if(solucaoAux->veiculoFicticil)
             numSolInviaveis += 1;
+        else
+        {
+            int num = int (ceil(solucaoAux->poluicao));
+            hash[num]++;
+
+            if(log)
+            {
+
+                texto+="***************************************************************************\n\n";
+
+                texto += "Poluicao: " + to_string(solucaoAux->poluicao) + "\n";
+                texto += "Interacao: " + to_string(i) + '\n';
+
+                texto += "Sequencia: " + sequencia + "\nRota:\n\n";
+
+                for(auto veiculo:solucaoAux->vetorVeiculos)
+                {
+
+                    for(auto it:(*veiculo).listaClientes)
+                    {
+
+                        texto+= to_string((*it).cliente) + " ";
+
+                    }
+                    texto+= "\n";
+
+                }
+
+                texto+="\n***************************************************************************\n";
+
+            }
+        }
 
         //Atualiza best
         if(best->veiculoFicticil)
@@ -162,6 +202,9 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
                 solucaoAux = NULL;
                 ultimaAtualizacao = i;
                 poluicaoUltima = best->poluicao;
+
+
+
             }
             else
             {
@@ -185,18 +228,21 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
             {
                 delete solucaoAux;
                 solucaoAux = NULL;
-                ultimaAtualizacao = i;
-                poluicaoUltima = best->poluicao;
             }
             else
             {
-                if(solucaoAux->poluicao  < best->poluicao)
+                double diferenca = (solucaoAux->poluicao - best->poluicao);
+                if( diferenca < -0.001)
                 {
+
                     delete best;
                     best = solucaoAux;
                     solucaoAux = NULL;
                     ultimaAtualizacao = i;
                     poluicaoUltima = best->poluicao;
+
+
+
                 }
                 else
                 {
@@ -236,6 +282,20 @@ Solucao::Solucao *Construtivo::reativo(const Instancia::Instancia *const instanc
     best->numSolucoesInv = numSolInviaveis;
     best->ultimaAtualizacao = ultimaAtualizacao;
 
+    if(log)
+    {
+        (*strLog) << texto;
+
+
+        (*strLog) << "\n\nPoluicao\tFrequencia\n";
+
+        for (auto it : hash)
+        {
+            (*strLog) << it.first << "\t\t\t" << it.second << '\n';
+        }
+        (*strLog) << "\n\n";
+
+    }
     return best;
 }
 
@@ -266,13 +326,7 @@ void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFr
     for(int i = 0; i<tam; ++i)
     {
         vetorProbabilidade[i] = proporcao[i]/somaProporcoes;
-
-
-
     }
-
-
-
 
 
 }
@@ -280,12 +334,15 @@ void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFr
 Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const instancia,
                                             bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa,
                                             Solucao::ClienteRota *vetorClienteBest,
-                                            Solucao::ClienteRota *vetorClienteAux)
+                                            Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log)
 {
+
+    string texto;
 
     //Inicializa a lista de candidatos(Clientes)
     list<Instancia::Cliente> listaCandidatos;
     list<Instancia::Cliente>::iterator iteratorLisCand;
+
 
     for(int i = 0; i < instancia->numClientes; ++i)
     {
@@ -341,7 +398,10 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
         listaCandidatos.erase(iteratorLisCand);                 //Apaga escolhido da lista
         candidato->cliente = clienteAux.cliente;
 
+        if(log)
+            (*sequencia) += to_string(candidato->cliente) + ' ';
 
+        texto += std::to_string(candidato->cliente) + " ";
 
         //Percorre os veículos
         for(auto veiculo = solucao->vetorVeiculos.begin(); veiculo != solucao->vetorVeiculos.end(); ++veiculo)
@@ -363,12 +423,12 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
 
             /* ************************************************************************************************************
+             *
              *Percorrer os clientes.
              *Candidato tentara ser inserido após clienteIt
              *
              **************************************************************************************************************/
 
-            bool inicio = false;
 
             for(auto clienteIt = (*veiculo)->listaClientes.begin(); clienteIt != (*veiculo)->listaClientes.end(); )
             {
@@ -407,10 +467,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             vetorClienteAux[i] = vetorClienteBest[i];
                     }
 
-                    int r = (*melhorVeiculo).poluicao;
 
-                    if(melhorVeiculo == NULL)
-                        breakPoint();
 
                     else if(((auxPoluicao - (*veiculo)->poluicao) < (melhorPoluicao - (*melhorVeiculo).poluicao)))
                     {
@@ -442,7 +499,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 if((*clienteIt)->cliente == 0)
                     break;
 
-// 0 -> 1 -> 2 -> 3 -> 0    4
 
                 posicaoVetor +=1;
 
@@ -475,13 +531,9 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                     if(vetorClienteAux[posicaoVetor].combustivel < 0 || vetorClienteAux[posicaoVetor].poluicao < 0)
                         breakPoint();
 
-
-/* ************************************************************************************************************************************************************************* */
-/* ************************************************************************************************************************************************************************* */
                     combustivelParcial += (*clienteIt)->combustivelRota;
 
                 }
-                b = (*clienteIt)->cliente;
                 if((clienteIt) != (*veiculo)->listaClientes.end())
                 {
 
@@ -496,9 +548,11 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
         }
 
-        /* Se encontrou uma solução, incluir candidato no veículo de posicao melhorVeiculo,
-         *    Caso não encontrou uma solução, criar um novo veículo com o candidato.
-         */
+        /* *********************************************************************************
+         * Se encontrou uma solução, incluir candidato no veículo de posicao melhorVeiculo,
+         * Caso não encontrou uma solução, criar um novo veículo com o candidato.
+         *
+        ***********************************************************************************/
 
 
         if(melhorPoluicao == HUGE_VALF)
@@ -507,7 +561,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
            /* *********************************************************************************************************************
             *
             * Não conseguiu inserir o cliente em nenhuma posição. Cria um novo veiculo.
-            *corrigir horário de saida do deposito, tempo de espera.
+            *corrigir horário de saida do deposito, tempo de espera. Solucao passa a ser inviavel, insere um veiculo ficticil.
             *
             ***********************************************************************************************************************/
 
@@ -533,25 +587,19 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
             candidato = new Solucao::ClienteRota;
 
+            const int valPenalizacao = instancia->penalizacao.at(instancia->numClientes - 1);
 
-            solucao->poluicaoPenalidades = 0.05 * solucao->poluicao;
-
+            solucao->poluicaoPenalidades += valPenalizacao;
+            //solucao->poluicaoPenalidades = 0.05*solucao->poluicao;
         }
         else
         {
-
-            /*
-             *
-             */
 
             //Inserir candidato no veiculo
             melhorPosicao++;
             melhorVeiculo->listaClientes.insert(melhorPosicao, candidato);
 
 
-            //int j = 0;
-            //--melhorPosicao;
-            //--melhorPosicao;
 
             //MelhorPossicao é igual a posicao anterior de candidato.
 
@@ -592,6 +640,9 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
         }
     }
 
+    if(!solucao->veiculoFicticil)
+        //cout<< texto<<"\n\n";
+
     delete candidato;
     return solucao;
 
@@ -609,9 +660,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
  */
 bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::ClienteRota *cliente2, const Instancia::Instancia *const instancia, const int peso, const int tipoVeiculo)
 {
-
-    //if(tipoVeiculo >2)
-        //breakPoint();
 
 
     double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
@@ -747,7 +795,7 @@ TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorCli
 {
 
     //inicialisa vetor de clientes
-    //vetorClientes[posicao] = **iteratorCliente;
+
     vetorClientes[posicao + 1] = *candidato;
 
     int i;
@@ -776,11 +824,6 @@ TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorCli
             //Adiciona o próximo cliente da lista na nova solução
             vetorClientes[i+1] = (**iteratorCliente);
 
-            if(vetorClientes[i].cliente ==vetorClientes[i + 1].cliente)
-            {
-                cout<<"Erro!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-                breakPoint();
-            }
 
             //Verifica viabilidade
             if(!determinaHorario(&vetorClientes[i], &vetorClientes[i + 1], instancia, peso,veiculo->tipo))

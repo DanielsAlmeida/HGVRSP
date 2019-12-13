@@ -33,8 +33,6 @@ Solucao::Solucao::Solucao(int numVeiculos)
 Solucao::Solucao::~Solucao()
 {
 
-    Veiculo *veiculoAux;
-
     for(auto it : vetorVeiculos)
     {
 
@@ -46,12 +44,17 @@ Solucao::Solucao::~Solucao()
 
 }
 
-void Solucao::Veiculo::inicialisaVeiculo()
+void Solucao::Veiculo::inicialisaVeiculo(int tipo)
 {
 
     ClienteRota *clienteRota = new ClienteRota;
     clienteRota->cliente = 0;
-    clienteRota->tempoSaida = 0;
+
+    if(tipo == 0)
+        clienteRota->tempoSaida = 0;
+    else
+        clienteRota->tempoSaida = 0.5;
+
     clienteRota->poluicao = 0.0;
 
     listaClientes.push_back(clienteRota);

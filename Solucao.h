@@ -63,7 +63,7 @@ namespace Solucao
             carga = 0;
             this->tipo = tipo;
 
-            inicialisaVeiculo();
+            inicialisaVeiculo(tipo);
 
         }
 
@@ -106,7 +106,7 @@ namespace Solucao
         }
 
     private:
-        void inicialisaVeiculo();
+        void inicialisaVeiculo(int tipo);
 
 
     };

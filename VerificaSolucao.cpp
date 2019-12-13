@@ -57,7 +57,11 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
         combustivel = 0.0;
         cargaTotal = it->carga;
 
+        auto cliente = it->listaClientes.begin();
 
+        if(it->tipo == 1)
+            if((*cliente)->tempoSaida < 0.5)
+                return false;
 
 
         for(auto itCliente = it->listaClientes.begin(); itCliente != it->listaClientes.end(); )//Percorre os clientes do veículo
@@ -80,14 +84,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
             if(distancia == 0.0)
             {
-                continue;
-                delete []vetorClientes;
-                cout<<"Erro, Distancia == 0.\n";
-                cout<<(*iterator)->cliente<<" "<<(*itCliente)->cliente;
 
-                string rota = it->getRota();
-
-                cout<<rota;
 
                 return false;
             }
@@ -256,8 +253,6 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
     }
 
-
-
     saida += "-1\n";
 
     bool clientesVisitados = true;
@@ -288,6 +283,10 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
             *texto += saida;
 
         delete[]vetorClientes;
+
+        if(!clientesVisitados)
+            cout<<"Erro, cliente nao foi visitado.\n";
+
         return clientesVisitados;
 
     }
