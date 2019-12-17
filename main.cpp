@@ -13,7 +13,7 @@
  *
  * date '+%d_%m_%Y_%k-%M-%S'
  *
- * Veiculos possuem tempo de inicio DIFERENTES !!
+ * Arquivo de log: /home/igor/Documentos/HGVRSP/saidaLog.txt
  *
  */
 
@@ -22,6 +22,7 @@ using namespace std;
 bool comparadorFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
 {
     return cliente1.fimJanela < cliente2.fimJanela;
+
 
 }
 
@@ -46,6 +47,7 @@ int main(int num, char **agrs)
     string instanciaNome;
     string log;
 
+    bool logAtivo = false;
 
     if(num != 4 && num != 1 && num != 5)
     {
@@ -64,7 +66,11 @@ int main(int num, char **agrs)
         saidaParcial = agrs[3];
 
         if(num == 5)
+        {
             log = agrs[4];
+            logAtivo = true;
+
+        }
 
     }
 
@@ -92,9 +98,9 @@ int main(int num, char **agrs)
 
 
     auto semente  = time(NULL);
-    //uint32_t semente  = 1575556749; 1575921816
-    //uint32_t semente = 1575921816;
-   // cout<<"Semente: "<<semente<<'\n';
+
+    //uint32_t semente = 1576259993;
+
     string texto;
     std::time_t result = std::time(nullptr);
     auto data = std::asctime(std::localtime(&result));
@@ -115,23 +121,30 @@ int main(int num, char **agrs)
 
     auto vet = instancia->vetorClientes;
 
-/*    const int numAlfas = 18;
-    float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};*/
+    const int numAlfas = 18;
+    float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
 
-    const int numAlfas = 4;
-    float vetAlfas[numAlfas] = {0.8, 0.85, 0.9, 0.95};
+
 
     std::stringstream strLog;
-
+    string logAux;
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, numAlfas, 1000, 100, true, &strLog);
+    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog);
+
+/*    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
+    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+
+    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.8, vetorClienteBest, vetorClienteAux, &logAux, true);*/
 
     clock_t c_end = clock();
 
+    strLog<<logAux;
+    //strLog<<"\n\nRota:\n";
 
     cout << fixed << setprecision(2);
     texto += std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
+    //strLog<<std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
 
     double tempoViagem = 0.0;
     double inicio;
@@ -142,9 +155,11 @@ int main(int num, char **agrs)
         fim = false;
 
         texto += std::to_string(veiculo->listaClientes.size()-2) + '\n';
+        //strLog<<std::to_string(veiculo->listaClientes.size()-2) + '\n';
         for (auto it : (*veiculo).listaClientes)
         {
             texto += std::to_string((*it).cliente) + " ";
+            //strLog<<std::to_string((*it).cliente) + " ";
 
             if(((*it).cliente==0) && (!fim))
             {
@@ -159,11 +174,13 @@ int main(int num, char **agrs)
         }
 
         texto += "\n\n";
+        //strLog<<"\n\n";
 
 
 
     }
 
+    //strLog<<"CLIENTE\t\tTEMPO CHEGADA\t\tTEMPO SAIDA\n";
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
@@ -172,12 +189,16 @@ int main(int num, char **agrs)
         {
 
             if(cliente->cliente != 0)
-                texto += std::to_string(cliente->cliente) += " " + std::to_string(cliente->tempoChegada) + " " + std::to_string(cliente->tempoSaida) + "\n";
+            {
+                texto += std::to_string(cliente->cliente) +" " + std::to_string(cliente->tempoChegada) + " " + std::to_string(cliente->tempoSaida) + "\n";
+                //strLog<< std::to_string(cliente->cliente) +"\t\t\t\t" + std::to_string(cliente->tempoChegada) + "\t\t\t" + std::to_string(cliente->tempoSaida) + "\n";
 
+            }
         }
 
     }
     texto += '\n';
+    //strLog<<'\n';
 
     double distanciaTotal;
 
@@ -186,14 +207,16 @@ int main(int num, char **agrs)
 
     std::setprecision(2);
 
+    //strLog<<"CLIENTE\t\tINICIO JANELA\t\tFIMJANELA\t\tTEMPO SERVICO\n";
 
     for(int i = 1; i < instancia->numClientes; ++i)
     {
-        texto += std::to_string(vet[i].cliente) += " " + std::to_string(vet[i].inicioJanela) + " " + std::to_string(vet[i].fimJanela) + "\n";
+        texto += std::to_string(vet[i].cliente) + " " + std::to_string(vet[i].inicioJanela) + " " + std::to_string(vet[i].fimJanela) + "\n";
+        //strLog<< std::to_string(vet[i].cliente) + "\t\t\t\t" + std::to_string(vet[i].inicioJanela) + "\t\t" + std::to_string(vet[i].fimJanela) + "\t\t" + std::to_string(vet[i].tempoServico)+'\n';
     }
 
     texto += "-1\n\n\n";
-
+    //strLog<<"\n\n";
     //string tempo;
 
     std::stringstream tempo;
@@ -233,7 +256,7 @@ int main(int num, char **agrs)
             " "<< std::to_string(solucao->ultimaAtualizacao)<<" "<<std::to_string(solucao->numSolucoesInv) <<" "<< std::to_string(tempoViagem*60.0)<<" "<< std::to_string(distanciaTotal)<< '\n';
 
         else
-            file << std::to_string(-1) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)/60.0 <<
+            file << std::to_string(-1) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
             " "<< std::to_string(solucao->ultimaAtualizacao)<<" "<<std::to_string(solucao->numSolucoesInv) <<" "<< std::to_string(tempoViagem*60.0)<<" "<< std::to_string(distanciaTotal)<< '\n';
 
         file.close();

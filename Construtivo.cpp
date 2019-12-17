@@ -32,8 +32,7 @@ Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instan
     double *vetorMedia = new double[tamAlfa];
     double *proporcao = new double[tamAlfa];
 
-    int somaProb;
-    int valAleatorio;
+    double somaProb, valAleatorio;
     int numSolInviaveis = 0;
 
     //Inicializa a melhor solução
@@ -137,9 +136,10 @@ Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instan
 
                 j = 0;
 
+
             }
 
-            somaProb+= int(ceil(100.0 * vetorProbabilidade[j]));
+            somaProb+= (100.0 * vetorProbabilidade[j]);
             posicaoAlfa = j;
 
         }
@@ -387,7 +387,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
 
         melhorPoluicao = HUGE_VALF;
-        tamLista = listaCandidatos.size();                      //retira um cliente da lista
+
         tamLista = uint32_t(alfa*listaCandidatos.size()) + 1;   //Escolhe um valor aleatorio
         escolhido = rand_u32();
         escolhido = escolhido % tamLista;
@@ -467,8 +467,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             vetorClienteAux[i] = vetorClienteBest[i];
                     }
 
-
-
                     else if(((auxPoluicao - (*veiculo)->poluicao) < (melhorPoluicao - (*melhorVeiculo).poluicao)))
                     {
                         //if(auxPoluicao >= 1)
@@ -519,8 +517,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                     combAux =VerificaSolucao::combustivelCarga(instancia,(*veiculo)->tipo , peso, instancia->matrizDistancias[(*clienteItAux)->cliente][(*clienteIt)->cliente]);
                     combustivelParcial += combAux;
 
-
-
                     vetorClienteAux[posicaoVetor] = **(clienteIt);
                     vetorClienteAux[posicaoVetor].combustivel = (*clienteIt)->combustivelRota + combAux;
                     vetorClienteAux[posicaoVetor].poluicao = (*clienteIt)->poluicaoRota + polAux;
@@ -528,8 +524,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                     vetorClienteAux[posicaoVetor].combustivelRota = (*clienteIt)->combustivelRota;
                     vetorClienteAux[posicaoVetor].poluicaoRota= (*clienteIt)->poluicaoRota;
 
-                    if(vetorClienteAux[posicaoVetor].combustivel < 0 || vetorClienteAux[posicaoVetor].poluicao < 0)
-                        breakPoint();
+
 
                     combustivelParcial += (*clienteIt)->combustivelRota;
 
@@ -539,8 +534,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
 
                     peso -= instancia->vetorClientes[(*clienteIt)->cliente].demanda;
-                    if(peso < 0)
-                        breakPoint();
 
 
                 }
@@ -622,9 +615,9 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
             solucao->poluicao -= aux;
             solucao->poluicao += melhorPoluicao;
 
-            /*
 
-            if(VerificaSolucao::verificaVeiculo(melhorVeiculo, instancia)==false)
+
+            if(!VerificaSolucao::verificaVeiculo(melhorVeiculo, instancia))
             {
                 std::cout<<"Solucao incorreta.\n";
 
@@ -633,7 +626,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 std::cout<<rota;
 
 
-            }*/
+            }
 
 
 

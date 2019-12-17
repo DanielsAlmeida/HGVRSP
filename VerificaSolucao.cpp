@@ -52,6 +52,9 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
         }
 
+        if(it->listaClientes.size() == 2)
+            continue;
+
         carga = 0;
         poluicao = 0.0;
         combustivel = 0.0;
