@@ -24,9 +24,11 @@ namespace Construtivo
         Solucao::Veiculo *veiculo;
         std::list<Solucao::ClienteRota *>::iterator posicao;
         Solucao::ClienteRota *candidato;
+        double folgaRota; //Menor folga do veiculo.
     };
 
     int compCandidato(const void* cand1, const void* cand2);
+    int compCandidatoFolga(const void* cand1, const void* cand2);
 
     Solucao::Solucao *reativo(const Instancia::Instancia *const instancia,
                               bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float *vetorAlfa,
@@ -47,7 +49,8 @@ namespace Construtivo
     TupleBID viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, ItClienteRota iteratorCliente,
                                              const Instancia::Instancia *const instancia,
                                              Solucao::ClienteRota *candidato, double combustivelParcial,
-                                             double poluicaoParcial, Solucao::Veiculo *veiculo, int peso, int posicao);
+                                             double poluicaoParcial, Solucao::Veiculo *veiculo, int peso,
+                                             int posicao, double *folga);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
 

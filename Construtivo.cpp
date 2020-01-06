@@ -364,6 +364,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
     bool nullMelhorVeiculo = true;
     std::list<Solucao::ClienteRota *>::iterator melhorPosicao, posicaoAux;
     double melhorPoluicao, melhorCombustivel, auxPoluicao, auxCombustivel;
+    double folgaRota, folgaRotaAux;
 
     auto *candidato = new Solucao::ClienteRota;
     Instancia::Cliente clienteAux;
@@ -400,7 +401,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
 
             melhorPoluicao = HUGE_VALF;
-
+            folgaRota = HUGE_VALF;
 
             clienteAux = (*iteratorLisCand);
 
@@ -428,6 +429,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 posicaoVetor = 0;
                 peso = (*veiculo)->carga + clienteAux.demanda;
                 vetorClienteAux[0] = **((*veiculo)->listaClientes.begin());
+                folgaRotaAux = HUGE_VALF;
 
                 //Percorrer os clientes.
                 //Candidato tentara ser inserido após clienteIt
@@ -435,7 +437,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 for (auto clienteIt = (*veiculo)->listaClientes.begin(); clienteIt != (*veiculo)->listaClientes.end();)
                 {
 
-
+                    double aux = folgaRotaAux;
                     tie(viavel, tamVetAux, auxPoluicao, auxCombustivel) = viabilidadeInserirCandidato(vetorClienteAux,
                                                                                                       clienteIt,
                                                                                                       instancia,
@@ -443,7 +445,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                                                                                                       combustivelParcial,
                                                                                                       poluicaoParcial,
                                                                                                       *veiculo, peso,
-                                                                                                      posicaoVetor);
+                                                                                                      posicaoVetor,
+                                                                                                      &aux);
 
 
                     if (viavel)
@@ -458,8 +461,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             melhorCombustivel = auxCombustivel;
                             tamVetBest = tamVetAux;
                             melhorPosicao = clienteIt;
-
-
+                            if(aux < folgaRotaAux)
+                                folgaRotaAux = aux;
 
                             //trocar vetores
                             vetorClienteSwap = vetorClienteBest;
@@ -481,6 +484,11 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             tamVetBest = tamVetAux;
                             melhorPosicao = clienteIt;
 
+                            if(aux < folgaRotaAux)
+                                folgaRota = aux;
+                            else
+
+                                folgaRota = folgaRotaAux;
 
 
                             //trocar vetores
@@ -509,6 +517,15 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
                         clienteItAux = clienteIt;
                         --clienteItAux;
+
+                        //Calcula folga:
+
+                        double folga =  (instancia->vetorClientes[(*clienteIt)->cliente].fimJanela - instancia->vetorClientes[(*clienteIt)->cliente].tempoServico) - (*clienteIt)->tempoChegada ;
+
+                        if(folga < folgaRotaAux)
+                        {
+                            folgaRotaAux = folga;
+                        }
 
                         //Poluicao da rota não muda
                         poluicaoParcial += (*clienteIt)->poluicaoRota;
@@ -608,6 +625,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 ultimo->veiculo = melhorVeiculo;
                 ultimo->candidato = candidato;
                 ultimo->posicao = melhorPosicao;
+                ultimo->folgaRota = folgaRota;
                 candidato = new Solucao::ClienteRota;
 
 
@@ -631,11 +649,15 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
             unsigned long tam = vetAux - vetorCandidatos;
 
-            std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidato);
+
 
 
             tamLista = tam * alfa + 1;
             escolhido = rand_u32() % tamLista;
+
+            std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidatoFolga);
+            std::qsort(vetorCandidatos, tamLista, sizeof(Candidato), compCandidato);
+
             auto ptrEscolhido = vetorCandidatos;
 
             for (int i = 0; i < escolhido; ++i, ptrEscolhido++);
@@ -674,6 +696,11 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 int Construtivo::compCandidato(const void* cand1, const void* cand2)
 {
     return ((const Candidato *)cand1)->incrementoPoluicao > ((const Candidato *)cand2)->incrementoPoluicao;
+}
+
+int Construtivo::compCandidatoFolga(const void* cand1, const void* cand2)
+{
+    return ((const Candidato *)cand1)->folgaRota < ((const Candidato *)cand2)->folgaRota;
 }
 
 void Construtivo::insereCandidato(Candidato *candidato, const Instancia::Instancia *instancia, Solucao::ClienteRota *vetCliente)
@@ -946,7 +973,8 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
 TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, ItClienteRota iteratorCliente,
                                                   const Instancia::Instancia *const instancia,
                                                   Solucao::ClienteRota *candidato, double combustivelParcial,
-                                                  double poluicaoParcial, Solucao::Veiculo *veiculo, int peso, int posicao)
+                                                  double poluicaoParcial, Solucao::Veiculo *veiculo, int peso,
+                                                  int posicao, double *folga)
 {
 
     //inicialisa vetor de clientes
@@ -968,7 +996,10 @@ TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorCli
         poluicao += vetorClientes[posicao+1].poluicao;
         combustivel += vetorClientes[posicao+1].combustivel;
 
+        double aux =  (instancia->vetorClientes[vetorClientes[posicao+1].cliente].fimJanela - instancia->vetorClientes[vetorClientes[posicao+1].cliente].tempoServico) -vetorClientes[posicao +1].tempoChegada;
 
+        if(aux < *folga)
+            *folga = aux;
 
         //Percorre o resto dos clientes
         for(i = posicao+1; (iteratorCliente) !=  veiculo->listaClientes.end(); ++i)
@@ -985,6 +1016,11 @@ TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorCli
                 return {false, -1, -1, -1};
 
             ++iteratorCliente;
+
+            aux =  (instancia->vetorClientes[vetorClientes[i+1].cliente].fimJanela - instancia->vetorClientes[vetorClientes[i+1].cliente].tempoServico) - vetorClientes[i +1].tempoChegada;
+
+            if(aux < *folga)
+                *folga = aux;
 
             //Armazenar combustível e poluição
             poluicao += vetorClientes[i+1].poluicao;
