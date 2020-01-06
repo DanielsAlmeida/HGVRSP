@@ -126,16 +126,25 @@ int main(int num, char **agrs)
 
 
 
+
+
     std::stringstream strLog;
     string logAux;
+
     clock_t c_start = clock();
 
     auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog);
 
 /*    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+    Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
 
-    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.8, vetorClienteBest, vetorClienteAux, &logAux, true);*/
+    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5, vetorClienteBest, vetorClienteAux, &logAux, true, vetorCandidatos);
+
+
+    delete []vetorCandidatos;
+    delete []vetorClienteAux;
+    delete []vetorClienteBest;*/
 
     clock_t c_end = clock();
 
@@ -155,11 +164,11 @@ int main(int num, char **agrs)
         fim = false;
 
         texto += std::to_string(veiculo->listaClientes.size()-2) + '\n';
-        //strLog<<std::to_string(veiculo->listaClientes.size()-2) + '\n';
+        strLog<<std::to_string(veiculo->listaClientes.size()-2) + '\n';
         for (auto it : (*veiculo).listaClientes)
         {
             texto += std::to_string((*it).cliente) + " ";
-            //strLog<<std::to_string((*it).cliente) + " ";
+            strLog<<std::to_string((*it).cliente) + " ";
 
             if(((*it).cliente==0) && (!fim))
             {
@@ -174,13 +183,13 @@ int main(int num, char **agrs)
         }
 
         texto += "\n\n";
-        //strLog<<"\n\n";
+        strLog<<"\n\n";
 
 
 
     }
 
-    //strLog<<"CLIENTE\t\tTEMPO CHEGADA\t\tTEMPO SAIDA\n";
+    strLog<<"CLIENTE\t\tTEMPO CHEGADA\t\tTEMPO SAIDA\n";
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
@@ -191,14 +200,14 @@ int main(int num, char **agrs)
             if(cliente->cliente != 0)
             {
                 texto += std::to_string(cliente->cliente) +" " + std::to_string(cliente->tempoChegada) + " " + std::to_string(cliente->tempoSaida) + "\n";
-                //strLog<< std::to_string(cliente->cliente) +"\t\t\t\t" + std::to_string(cliente->tempoChegada) + "\t\t\t" + std::to_string(cliente->tempoSaida) + "\n";
+                strLog<< std::to_string(cliente->cliente) +"\t\t\t\t" + std::to_string(cliente->tempoChegada) + "\t\t\t" + std::to_string(cliente->tempoSaida) + "\n";
 
             }
         }
 
     }
     texto += '\n';
-    //strLog<<'\n';
+    strLog<<'\n';
 
     double distanciaTotal;
 
@@ -207,16 +216,16 @@ int main(int num, char **agrs)
 
     std::setprecision(2);
 
-    //strLog<<"CLIENTE\t\tINICIO JANELA\t\tFIMJANELA\t\tTEMPO SERVICO\n";
+    strLog<<"CLIENTE\t\tINICIO JANELA\t\tFIMJANELA\t\tTEMPO SERVICO\n";
 
     for(int i = 1; i < instancia->numClientes; ++i)
     {
         texto += std::to_string(vet[i].cliente) + " " + std::to_string(vet[i].inicioJanela) + " " + std::to_string(vet[i].fimJanela) + "\n";
-        //strLog<< std::to_string(vet[i].cliente) + "\t\t\t\t" + std::to_string(vet[i].inicioJanela) + "\t\t" + std::to_string(vet[i].fimJanela) + "\t\t" + std::to_string(vet[i].tempoServico)+'\n';
+        strLog<< std::to_string(vet[i].cliente) + "\t\t\t\t" + std::to_string(vet[i].inicioJanela) + "\t\t" + std::to_string(vet[i].fimJanela) + "\t\t" + std::to_string(vet[i].tempoServico)+'\n';
     }
 
     texto += "-1\n\n\n";
-    //strLog<<"\n\n";
+    strLog<<"\n\n";
     //string tempo;
 
     std::stringstream tempo;
@@ -225,7 +234,7 @@ int main(int num, char **agrs)
 
     tempo << "Tempo cpu: " << ((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) << " S\n";
     tempo << "Verificacao: " <<(Veificacao) << "\n";
-    tempo << "Poluicao: " <<(solucao->poluicao) << '\n';
+    tempo << "Poluicao: " <<(solucao->poluicao + solucao->poluicaoPenalidades) << '\n';
     tempo << "Ultima atualizacao: " << (solucao->ultimaAtualizacao) << '\n';
     tempo << "Numero de solucoes inviaveis: " << (solucao->numSolucoesInv) << '\n';
     tempo << "Tempo total de viagem: " << (tempoViagem*60.0) << '\n';
@@ -263,8 +272,9 @@ int main(int num, char **agrs)
 
     }
 
-    cout<<"Instancia: "<<instanciaNome<<'\n';
-    cout<<tempo.str();
+    //cout<<"Instancia: "<<instanciaNome<<'\n';
+    //cout<<"Semente: "<<semente<<'\n';
+    //cout<<tempo.str();
 
     if(num == 5)
     {

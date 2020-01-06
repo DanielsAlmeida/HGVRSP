@@ -20,7 +20,7 @@ namespace Instancia
 
     } Periodo;
 
-    typedef struct
+    struct Cliente
     {
         int cliente;
         int demanda;
@@ -30,7 +30,15 @@ namespace Instancia
         double distanciaDeposito;
         int periodoFimJanela;
 
-    } Cliente;
+        bool operator == (const Cliente &cli1)
+        {
+            if(cli1.cliente == cliente)
+                return true;
+            else
+                return false;
+        }
+
+    };
 
     typedef struct
     {
