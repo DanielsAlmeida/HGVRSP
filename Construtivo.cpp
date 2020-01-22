@@ -12,11 +12,9 @@ void breakPoint()
 
 }
 
-Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instancia,
-                                        bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &),
-                                        float *vetorAlfa,
-                                        int tamAlfa, const int numInteracoes, const int numIntAtualizarProb, bool log,
-                                        stringstream *strLog)
+Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
+                                        const int numInteracoes, const int numIntAtualizarProb, bool log,
+                                        stringstream *strLog, const double parametro)
 {
 
     unordered_map<int, int> hash;
@@ -37,8 +35,8 @@ Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instan
 
     //Inicializa a melhor solução
     vetorFrequencia[0] = 1;
-    Solucao::Solucao *best = geraSolucao(instancia, comparador, vetorAlfa[0], vetorClienteBest, vetorClienteAux,
-                                         nullptr, false, vetorCandidatos);
+    Solucao::Solucao *best = geraSolucao(instancia, vetorAlfa[0], vetorClienteBest, vetorClienteAux,
+                                         nullptr, false, vetorCandidatos, parametro);
     vetorProbabilidade[0] = 1.0/tamAlfa;
     solucaoAcumulada[0] = best->poluicao;
     Solucao::Solucao *solucaoAux;
@@ -54,8 +52,8 @@ Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instan
         vetorFrequencia[i] = 1;
 
         //Inicializa a solucaoAcumulada para o alfa
-        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false,
-                                 vetorCandidatos);
+        solucaoAux = geraSolucao(instancia, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false,
+                                 vetorCandidatos, parametro);
         solucaoAcumulada[i] = solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
 
         if(best->veiculoFicticil)
@@ -151,8 +149,8 @@ Solucao::Solucao * Construtivo::reativo(const Instancia::Instancia *const instan
 
         sequencia = "";
 
-        solucaoAux = geraSolucao(instancia, comparador, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux,
-                                 &sequencia, log, vetorCandidatos);
+        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux,
+                                 &sequencia, log, vetorCandidatos, parametro);
 
 
 
@@ -333,11 +331,19 @@ void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFr
 
 }
 
-Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const instancia,
-                                            bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa,
+void Construtivo::atualizaPesos(double *beta, double *teta, int i, int numClientes, const double parametro)
+{
+    *teta = abs(sin(2*M_PI*(i)/(parametro* numClientes)));
+    *beta = 1 - *teta;
+
+/*    *teta = 0.9;
+    *beta = 1 - *teta;*/
+}
+
+Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const instancia, float alfa,
                                             Solucao::ClienteRota *vetorClienteBest,
                                             Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
-                                            Construtivo::Candidato *vetorCandidatos)
+                                            Construtivo::Candidato *vetorCandidatos, const double parametro)
 {
 
     string texto;
@@ -358,7 +364,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
     //Cria uma solução com o mínimo de veiculos
     int minVeiculos = instancia->numVeiculos;
     Solucao::Solucao *solucao = new Solucao::Solucao(minVeiculos);
-
+    double beta, teta;
+    int numClientesSol = 0;
 
     Solucao::Veiculo *melhorVeiculo;
     bool nullMelhorVeiculo = true;
@@ -394,6 +401,10 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
     while (!listaCandidatos.empty())
     {
+
+        atualizaPesos(&beta, &teta, numClientesSol, instancia->numClientes, parametro);
+        numClientesSol += 1;
+
         //Pega a melhor solucao de cada candidato.
         for (auto iteratorLisCand = listaCandidatos.begin(); iteratorLisCand != listaCandidatos.end(); )
         {
@@ -402,6 +413,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
             melhorPoluicao = HUGE_VALF;
             folgaRota = HUGE_VALF;
+            nullMelhorVeiculo = true;
 
             clienteAux = (*iteratorLisCand);
 
@@ -438,16 +450,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 {
 
                     double aux = folgaRotaAux;
-                    tie(viavel, tamVetAux, auxPoluicao, auxCombustivel) = viabilidadeInserirCandidato(vetorClienteAux,
-                                                                                                      clienteIt,
-                                                                                                      instancia,
-                                                                                                      candidato,
-                                                                                                      combustivelParcial,
-                                                                                                      poluicaoParcial,
-                                                                                                      *veiculo, peso,
-                                                                                                      posicaoVetor,
-                                                                                                      &aux);
-
+                    tie(viavel, tamVetAux, auxPoluicao, auxCombustivel) = viabilidadeInserirCandidato(vetorClienteAux, clienteIt, instancia, candidato, combustivelParcial,
+                                                                                                      poluicaoParcial, *veiculo, peso, posicaoVetor, &aux);
 
                     if (viavel)
                     {
@@ -462,7 +466,9 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             tamVetBest = tamVetAux;
                             melhorPosicao = clienteIt;
                             if(aux < folgaRotaAux)
-                                folgaRotaAux = aux;
+                                folgaRota = aux;
+                            else
+                                folgaRota = folgaRotaAux;
 
                             //trocar vetores
                             vetorClienteSwap = vetorClienteBest;
@@ -474,31 +480,56 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
                         }
 
-                        else if (((auxPoluicao - (*veiculo)->poluicao) < (melhorPoluicao - (*melhorVeiculo).poluicao)))
+                        else
                         {
+                            //Variaveis auxiliares de folga e poluicao
 
-
-                            melhorVeiculo = (*veiculo);
-                            melhorPoluicao = auxPoluicao;
-                            melhorCombustivel = auxCombustivel;
-                            tamVetBest = tamVetAux;
-                            melhorPosicao = clienteIt;
+                            double folgaSolParcial;    //Armazena a folga do veiculo da solucao parcial.
+                            double folgaBest = folgaRota;
 
                             if(aux < folgaRotaAux)
-                                folgaRota = aux;
+                                folgaSolParcial = aux;
                             else
+                                folgaSolParcial = folgaRotaAux;
 
-                                folgaRota = folgaRotaAux;
+                            //Valor que eh incrementado na funcao objetivo
+                            double incAtual = (auxPoluicao - (*veiculo)->poluicao);
+                            double incBest = (melhorPoluicao - (*melhorVeiculo).poluicao);
+
+                            //Normaliza os valores
+                            double normaAtual = pow(folgaSolParcial,2) + pow(incAtual, 2);
+                            double normaBest =  pow(folgaBest,2) + pow(incBest, 2);
+
+                            folgaSolParcial /=normaAtual;
+                            incAtual /= normaAtual;
+
+                            folgaBest /= normaBest;
+                            incBest /= normaBest;
+
+                            if ((beta*incAtual + teta*(1.0/folgaSolParcial)) < (beta*incBest + teta*(1.0/folgaBest)))
+                            {
+
+                                melhorVeiculo = (*veiculo);
+                                melhorPoluicao = auxPoluicao;
+                                melhorCombustivel = auxCombustivel;
+                                tamVetBest = tamVetAux;
+                                melhorPosicao = clienteIt;
+
+                                if (aux < folgaRotaAux)
+                                    folgaRota = aux;
+                                else
+
+                                    folgaRota = folgaRotaAux;
 
 
-                            //trocar vetores
-                            vetorClienteSwap = vetorClienteBest;
-                            vetorClienteBest = vetorClienteAux;
-                            vetorClienteAux = vetorClienteSwap;
+                                //trocar vetores
+                                vetorClienteSwap = vetorClienteBest;
+                                vetorClienteBest = vetorClienteAux;
+                                vetorClienteAux = vetorClienteSwap;
 
-                            for (int i = 0; i <= posicaoVetor; ++i)
-                                vetorClienteAux[i] = vetorClienteBest[i];
-
+                                for (int i = 0; i <= posicaoVetor; ++i)
+                                    vetorClienteAux[i] = vetorClienteBest[i];
+                            }
 
                         }
                     }

@@ -8,6 +8,8 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
+#define saida false
+// /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /*
  * Debug memória : g++ *.cpp -Wall -fsanitize=address -g
  *
@@ -121,7 +123,7 @@ int main(int num, char **agrs)
 
     auto vet = instancia->vetorClientes;
 
-    const int numAlfas = 18;
+    #define numAlfas  18
     float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
 
 
@@ -133,18 +135,10 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, comparadorFimJanela, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog);
-
-/*    auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
-    auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
-    Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
-
-    auto *solucao = Construtivo::geraSolucao(instancia, comparadorFimJanela, 0.5, vetorClienteBest, vetorClienteAux, &logAux, true, vetorCandidatos);
+    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
+                                         &strLog, 0.12);
 
 
-    delete []vetorCandidatos;
-    delete []vetorClienteAux;
-    delete []vetorClienteBest;*/
 
     clock_t c_end = clock();
 
@@ -272,9 +266,14 @@ int main(int num, char **agrs)
 
     }
 
-    //cout<<"Instancia: "<<instanciaNome<<'\n';
-    //cout<<"Semente: "<<semente<<'\n';
-    //cout<<tempo.str();
+    #if saida
+
+        cout<<"Instancia: "<<instanciaNome<<'\n';
+        cout<<tempo.str()<<'\n';
+        cout<<"Semente: "<<semente<<'\n';
+
+
+    #endif
 
     if(num == 5)
     {
@@ -294,3 +293,98 @@ int main(int num, char **agrs)
 
     return 0;
 }
+
+
+/* ***********************************************************************************************************************************************************************************
+int main(int num, char **agrs)
+{
+    string strInstancia;
+    string saidaCompleta;
+    string saidaParcial;
+    string instanciaNome;
+    string log;
+
+    bool logAtivo = false;
+
+    if(num != 6)
+    {
+        cout<<"Numero incorreto de parametros.\n Num "<<num<<'\n';
+        exit(-1);
+    }
+
+    strInstancia = agrs[1];
+
+    ofstream file;
+
+    for(int i = 0; i < strInstancia.length(); ++i)
+    {
+        if(strInstancia[i] != '/')
+        {
+
+            if(strInstancia[i] == '.')
+                break;
+            instanciaNome += strInstancia[i];
+
+        }
+
+        else
+            instanciaNome = "";
+
+    }
+
+
+    auto semente  = std::stoul(agrs[3]);
+
+    //uint32_t semente = 1576259993;
+
+    string texto;
+    std::time_t result = std::time(nullptr);
+    auto data = std::asctime(std::localtime(&result));
+    texto += data;
+    texto += '\n';
+
+    texto += "Nome: " + instanciaNome + "\n\n";
+
+    seed(semente);
+
+    texto += "Semente: " + std::to_string(semente) + "\n\n";
+
+    Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
+
+    instancia->getClientes();
+
+
+
+    auto vet = instancia->vetorClientes;
+
+    #define numAlfas  18
+    float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
+
+
+
+
+
+    std::stringstream strLog;
+    string logAux;
+
+    clock_t c_start = clock();
+
+    const double parametro = std::atof(agrs[5]);
+
+    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
+                                         &strLog, parametro);
+
+
+
+    clock_t c_end = clock();
+
+
+    cout<<solucao->numSolucoesInv<<'\n';
+
+    delete solucao;
+    delete instancia;
+
+    return 0;
+}
+
+ ************************************************************************************************************************************************************************************/

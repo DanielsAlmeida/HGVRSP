@@ -30,16 +30,14 @@ namespace Construtivo
     int compCandidato(const void* cand1, const void* cand2);
     int compCandidatoFolga(const void* cand1, const void* cand2);
 
-    Solucao::Solucao *reativo(const Instancia::Instancia *const instancia,
-                              bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float *vetorAlfa,
-                              int tamAlfa, const int numInteracoes, const int numIntAtualizarProb, bool log,
-                              stringstream *strLog);
+    Solucao::Solucao *reativo(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
+                                  const int numInteracoes, const int numIntAtualizarProb, bool log,
+                                  stringstream *strLog, const double parametro);
 
-    Solucao::Solucao *geraSolucao(const Instancia::Instancia *const instancia,
-                                      bool (*comparador)(Instancia::Cliente &, Instancia::Cliente &), float alfa,
+    Solucao::Solucao *geraSolucao(const Instancia::Instancia *const instancia, float alfa,
                                       Solucao::ClienteRota *vetorClienteBest,
                                       Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
-                                      Construtivo::Candidato *vetorCandidatos);
+                                      Construtivo::Candidato *vetorCandidatos, const double parametro);
 
     void insereCandidato(Candidato *candidato, const Instancia::Instancia *instancia, Solucao::ClienteRota *vetCliente);
 
@@ -53,6 +51,7 @@ namespace Construtivo
                                              int posicao, double *folga);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
+    void atualizaPesos(double *beta, double *teta, int i, int numClientes, const double parametro);
 
 
 
