@@ -39,9 +39,13 @@ Instancia::Instancia::Instancia(std::string arquivo)
     std::ifstream file;
     file.open(arquivo, std::ios::out);
 
-    penalizacao.insert({15, 1000});
+    penalizacao.insert({15, 1500});
     penalizacao.insert({10, 1000});
-
+    penalizacao.insert({20, 2000});
+    penalizacao.insert({25, 2000});
+    penalizacao.insert({50, 3000});
+    penalizacao.insert({75, 4000});
+    penalizacao.insert({100, 3000});
 
     if(file.is_open())
     {

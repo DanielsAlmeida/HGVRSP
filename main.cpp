@@ -16,33 +16,27 @@
  * date '+%d_%m_%Y_%k-%M-%S'
  *
  * Arquivo de log: /home/igor/Documentos/HGVRSP/saidaLog.txt
- *
+ * 
+ * Instancia 10 clientes, parametro: 0.12
+ * Instancia 15 clientes, parametro: 0.99
+ * Instancia 20 clientes, parametro: 0.67
+ * Instancia 25 clientes, parametro: 0.54
+ * Instancia 50 clientes, parametro: 0.79
+ * Instancia 75 clientes, parametro: 0.82 
  */
 
 using namespace std;
 
-bool comparadorFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
-{
-    return cliente1.fimJanela < cliente2.fimJanela;
-
-
-}
-
-bool comparadorDistanciaDep(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
-{
-
-    return cliente1.distanciaDeposito < cliente2.distanciaDeposito;
-
-}
-
-bool comparadorDistFimJanela(Instancia::Cliente &cliente1, Instancia::Cliente &cliente2)
-{
-    return (cliente1.distanciaDeposito * 0.001*cliente1.periodoFimJanela) < (cliente2.distanciaDeposito* 0.001*cliente2.periodoFimJanela);
-
-}
-
 int main(int num, char **agrs)
 {
+    std::map<int, float> parametro;
+    parametro.insert({75, 0.82});
+    parametro.insert({50, 0.79});
+    parametro.insert({25, 0.54});
+    parametro.insert({20, 0.67});
+    parametro.insert({15, 0.99});
+    parametro.insert({10, 0.12});
+
     string strInstancia;
     string saidaCompleta;
     string saidaParcial;
@@ -95,10 +89,6 @@ int main(int num, char **agrs)
 
     }
 
-
-
-
-
     auto semente  = time(NULL);
 
     //uint32_t semente = 1576259993;
@@ -136,7 +126,7 @@ int main(int num, char **agrs)
     clock_t c_start = clock();
 
     auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
-                                         &strLog, 0.12);
+                                         &strLog, parametro[instancia->numClientes - 1]);
 
 
 
@@ -251,16 +241,26 @@ int main(int num, char **agrs)
         file.close();
         file.open(saidaParcial, ios::out | ios::app);
 
+        int numVeiculosUsados = 0;
 
-        // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
+        for(auto veiculo : solucao->vetorVeiculos)
+        {
+
+            if(veiculo->listaClientes.size() > 2)
+                ++numVeiculosUsados;
+
+        }
+
+
+            // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
 
         if(Veificacao)
             file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
-            " "<< std::to_string(solucao->ultimaAtualizacao)<<" "<<std::to_string(solucao->numSolucoesInv) <<" "<< std::to_string(tempoViagem*60.0)<<" "<< std::to_string(distanciaTotal)<< '\n';
+            " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << '\n';
 
         else
-            file << std::to_string(-1) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
-            " "<< std::to_string(solucao->ultimaAtualizacao)<<" "<<std::to_string(solucao->numSolucoesInv) <<" "<< std::to_string(tempoViagem*60.0)<<" "<< std::to_string(distanciaTotal)<< '\n';
+            file << std::to_string(0.0) << " " <<((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)<<
+                 " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << '\n';
 
         file.close();
 
@@ -295,8 +295,9 @@ int main(int num, char **agrs)
 }
 
 
-/* ***********************************************************************************************************************************************************************************
-int main(int num, char **agrs)
+
+/************************************************************************************************************************************************************************************
+ int main(int num, char **agrs)
 {
     string strInstancia;
     string saidaCompleta;
@@ -386,5 +387,5 @@ int main(int num, char **agrs)
 
     return 0;
 }
+************************************************************************************************************************************************************************************************************/
 
- ************************************************************************************************************************************************************************************/
