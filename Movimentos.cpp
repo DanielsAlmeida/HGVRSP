@@ -8,8 +8,7 @@
 
 using namespace Movimentos;
 
-bool Movimentos::mvIntraRotasReinsertion(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
-                                        Solucao::ClienteRota *vetClienteRotaAux,bool pertubacao)
+bool Movimentos::mvIntraRotasReinsertion(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao)
 {
 
 
@@ -112,16 +111,19 @@ bool Movimentos::mvIntraRotasReinsertion(const Instancia::Instancia *const insta
 
 
 
+
 }
+
+// 0 - 1 - 2 - 3 - 4 - 0
 
 /* ******************************************************************************************************************************************************************************************************
  *
- * Recalcula a rota até posicaoAlvo, exclui clienteEscolhido
+ * ///Recalcula a rota até posicaoAlvo, excluindo, caso exista,  clienteEscolhido.
  *
  ******************************************************************************************************************************************************************************************************** */
 
-ResultadosRotaParcial Movimentos::recalculaRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, int posicaoClienteEscolhido, int posicaoAlvo, int peso,
-                                                Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, int begin)
+ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, int posicaoClienteEscolhido, int posicaoAlvo, int peso,
+                                         Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, int begin)
 {
 
     auto clienteEscolhido = std::next(veiculo->listaClientes.begin(), posicaoClienteEscolhido);
@@ -131,10 +133,11 @@ ResultadosRotaParcial Movimentos::recalculaRota(const Instancia::Instancia *cons
     poluicao = combustivel = 0.0;
 
 
-    // Não existe rotas em vetClienteRota. Copiar lista para vetClienteRota, até posicaoAlvo. Se clienteEscolhido for achado, deve-se calcular a rota sem ele.
+    //Copiar lista para vetClienteRota, até posicaoAlvo. Se clienteEscolhido for achado, deve-se calcular a rota sem ele.
 
     for(auto it = std::next(veiculo->listaClientes.begin(), begin); it != veiculo->listaClientes.end(); )
     {
+
         if((*it)->cliente != (*clienteEscolhido)->cliente && (*it)->cliente != (*clienteAlvo)->cliente)
         {
             //Copia it para o vetor e atualiza as variaveis.
@@ -167,7 +170,7 @@ ResultadosRotaParcial Movimentos::recalculaRota(const Instancia::Instancia *cons
             //Rota entre o cliente anterior de it e o cliente posterior de it
             if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet+1],instancia, peso, veiculo->tipo))
             {
-                ResultadosRotaParcial resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
+                ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
                 return resultado;
             }
 
@@ -189,7 +192,7 @@ ResultadosRotaParcial Movimentos::recalculaRota(const Instancia::Instancia *cons
                 vetClienteRotaAux[posicaoVet+1] = **it;
                 if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet+1],instancia, peso, veiculo->tipo))
                 {
-                    ResultadosRotaParcial resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
+                    ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
                     return resultado;
                 }
 
@@ -201,7 +204,7 @@ ResultadosRotaParcial Movimentos::recalculaRota(const Instancia::Instancia *cons
 
                 if(combustivel > instancia->vetorVeiculos[veiculo->tipo].combustivel)
                 {
-                    ResultadosRotaParcial resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
+                    ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
                     return resultado;
                 }
 
@@ -220,7 +223,45 @@ ResultadosRotaParcial Movimentos::recalculaRota(const Instancia::Instancia *cons
         ++it;
     }
 
-    ResultadosRotaParcial resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = true, .posicaoVet = posicaoVet};
+    ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = true, .posicaoVet = posicaoVet};
     return resultado;
+
+}
+
+// 0-1-2-3-4-5-0
+//0-1-3-2- => 0-1-3-2-4-5-0
+
+//Calcula rota ate o final.
+ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
+                                          int posicaoProximoCliente, int peso, Solucao::ClienteRota *vetClienteRotaAux,
+                                          int posicaoVet, double poluicao, double combustivel)
+{
+
+    posicaoVet -= 1;
+
+    //Calcular rota do ultimo cliente em vetCliente
+
+    for(auto itCliente = std::next(veiculo->listaClientes.begin(), posicaoProximoCliente); itCliente != veiculo->listaClientes.end(); ++itCliente)
+    {
+        vetClienteRotaAux[posicaoVet + 1] = **itCliente;
+
+        //Calcular rota entre posicaoVet e posicaoVet + 1
+        if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet+1], instancia, peso, veiculo->tipo))
+        {
+            ResultadosRota resultados = {.viavel=false};
+            return resultados;
+        }
+
+        peso -= instancia->vetorClientes[(*itCliente)->cliente].demanda;
+        combustivel += vetClienteRotaAux[posicaoVet+1].combustivel;
+        poluicao += vetClienteRotaAux[posicaoVet+1].poluicao;
+
+        if(peso < 0)
+        {
+
+        }
+
+
+    }
 
 }

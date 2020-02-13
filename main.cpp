@@ -16,17 +16,27 @@
  * date '+%d_%m_%Y_%k-%M-%S'
  *
  * Arquivo de log: /home/igor/Documentos/HGVRSP/saidaLog.txt
- * 
+ *
+ ****************************************************Parametro para criterio : folga -> poluicao**************************************************************
+ *
  * Instancia 10 clientes, parametro: 0.12
  * Instancia 15 clientes, parametro: 0.99
  * Instancia 20 clientes, parametro: 0.67
  * Instancia 25 clientes, parametro: 0.54
  * Instancia 50 clientes, parametro: 0.79
- * Instancia 75 clientes, parametro: 0.82 
+ * Instancia 75 clientes, parametro: 0.82
+ *
+ * ************************************************************************************************************************************************************
+ *
+ * ****************************************************Parametro para criterio : poluicao -> folga**************************************************************
+ *
+ * Instancia 10 clientes, parametro: 0.43
+ * Instancia 15 clientes, parametro: 0.27
+ *
  */
 
 using namespace std;
-
+/************************************************************************************************************************************************************************************
 int main(int num, char **agrs)
 {
     std::map<int, float> parametro;
@@ -125,8 +135,7 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
-                                         &strLog, parametro[instancia->numClientes - 1]);
+    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, parametro[instancia->numClientes - 1]);
 
 
 
@@ -293,12 +302,13 @@ int main(int num, char **agrs)
 
     return 0;
 }
+************************************************************************************************************************************************************************************************************/
 
 
 
-/************************************************************************************************************************************************************************************
  int main(int num, char **agrs)
 {
+
     string strInstancia;
     string saidaCompleta;
     string saidaParcial;
@@ -387,5 +397,5 @@ int main(int num, char **agrs)
 
     return 0;
 }
-************************************************************************************************************************************************************************************************************/
+
 

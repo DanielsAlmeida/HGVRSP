@@ -483,7 +483,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
                 {
                     //Solução está ERRADA.
                     std::cout<<"Erro tempo.\n";
-
+                    std::cout<<(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))<<"\n\n";
                     return false;
                 }
 

@@ -686,8 +686,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
             tamLista = tam * alfa + 1;
             escolhido = rand_u32() % tamLista;
 
-            std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidatoFolga);
-            std::qsort(vetorCandidatos, tamLista, sizeof(Candidato), compCandidato);
+            std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidato);
+            std::qsort(vetorCandidatos, tamLista, sizeof(Candidato), compCandidatoFolga);
 
             auto ptrEscolhido = vetorCandidatos;
 
