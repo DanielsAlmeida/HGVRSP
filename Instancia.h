@@ -68,7 +68,7 @@ namespace Instancia
         double ***matrizVelocidade; //i,j,k
         double ****matrizCo2;      //i, j, k, v; k <- periodo, v <- veiculo
         int numClientes, numPeriodos, numVeiculos, veiculosTipo1, veiculosTipo2;
-
+        double *distanciaDeposito;
         int demandaTotal;
 
         Instancia(std::string arquivo);

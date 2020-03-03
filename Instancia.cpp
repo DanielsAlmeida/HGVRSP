@@ -258,6 +258,19 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         file.close();
 
+        distanciaDeposito = new double[numClientes];
+        double maior;
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            maior = matrizDistancias[i][0];
+
+            if(matrizDistancias[0][i] > maior)
+                maior = matrizDistancias[0][i];
+
+            distanciaDeposito[i] = maior;
+        }
+
     }
     else
     {
@@ -320,6 +333,7 @@ Instancia::Instancia::~Instancia()
     }
 
     delete []matrizDistancias;
+    delete []distanciaDeposito;
 }
 
 int Instancia::Instancia::retornaPeriodo(float hora) const

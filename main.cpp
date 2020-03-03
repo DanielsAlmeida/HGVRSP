@@ -8,7 +8,9 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
-#define saida false
+#define Saida true
+#define TesteParametro true
+
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /*
  * Debug memória : g++ *.cpp -Wall -fsanitize=address -g
@@ -26,17 +28,42 @@
  * Instancia 50 clientes, parametro: 0.79
  * Instancia 75 clientes, parametro: 0.82
  *
+ *  parametro.insert({75, 0.82});
+    parametro.insert({50, 0.79});
+    parametro.insert({25, 0.54});
+    parametro.insert({20, 0.67});
+    parametro.insert({15, 0.99});
+    parametro.insert({10, 0.12});
+ *
  * ************************************************************************************************************************************************************
+ *
  *
  * ****************************************************Parametro para criterio : poluicao -> folga**************************************************************
  *
  * Instancia 10 clientes, parametro: 0.43
  * Instancia 15 clientes, parametro: 0.27
+ * Instancia 20 clientes, parametro: 0.19
+ * Instancia 25 clientes, parametro: 0.15
+ * Instancia 50 clientes, parametro: 0.94
+ * Instancia 75 clientes, parametro: 0.46
  *
- */
+    parametro.insert({10, 0.43});
+    parametro.insert({15, 0.27});
+    parametro.insert({20, 0.19});
+    parametro.insert({25, 0.15});
+    parametro.insert({50, 0.94});
+    parametro.insert({75, 0.46});
+ *******************************************************************************************************************************************************************
+ *
+ *
+ * UK_15x5_18   0.59
+ * UK_15x5_14   0.12
+ *
+ * ****************************************************************************************************************************************************************/
 
 using namespace std;
-/************************************************************************************************************************************************************************************
+
+#if not TesteParametro
 int main(int num, char **agrs)
 {
     std::map<int, float> parametro;
@@ -55,30 +82,25 @@ int main(int num, char **agrs)
 
     bool logAtivo = false;
 
-    if(num != 4 && num != 1 && num != 5)
+    if(num != 5 && num != 6)
     {
         cout<<"Numero incorreto de parametros.\n";
         exit(-1);
     }
 
-    if(num == 1)
-    {
-        strInstancia = "/home/igor/Documentos/HGVRSP/instanciasUK/UK_15x5_10.dat";
-    }
-    else
-    {
-        strInstancia = agrs[1];
-        saidaCompleta = agrs[2];
-        saidaParcial = agrs[3];
 
-        if(num == 5)
-        {
-            log = agrs[4];
-            logAtivo = true;
+    strInstancia = agrs[1];
+    saidaCompleta = agrs[2];
+    saidaParcial = agrs[3];
 
-        }
+    if(num == 6)
+    {
+        log = agrs[5];
+        logAtivo = true;
 
     }
+
+
 
 
     ofstream file;
@@ -101,7 +123,9 @@ int main(int num, char **agrs)
 
     auto semente  = time(NULL);
 
-    //uint32_t semente = 1576259993;
+    if(std::atoll(agrs[4]) != 0)
+        semente = std::atoll(agrs[4]);
+
 
     string texto;
     std::time_t result = std::time(nullptr);
@@ -117,7 +141,7 @@ int main(int num, char **agrs)
 
     Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
 
-    instancia->getClientes();
+
 
 
 
@@ -127,15 +151,12 @@ int main(int num, char **agrs)
     float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
 
 
-
-
-
     std::stringstream strLog;
     string logAux;
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, parametro[instancia->numClientes - 1]);
+    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 10000, 1000, logAtivo, &strLog, 0.27);//0.27
 
 
 
@@ -265,22 +286,27 @@ int main(int num, char **agrs)
 
         if(Veificacao)
             file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
-            " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << '\n';
+            " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << " "<<std::to_string(solucao->ultimaAtualizacao)<<'\n';
 
         else
             file << std::to_string(0.0) << " " <<((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)<<
-                 " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << '\n';
+                 " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << " "<< std::to_string(solucao->ultimaAtualizacao)<< '\n';
 
         file.close();
 
     }
 
-    #if saida
+    #if Saida
 
         cout<<"Instancia: "<<instanciaNome<<'\n';
         cout<<tempo.str()<<'\n';
         cout<<"Semente: "<<semente<<'\n';
 
+        if(solucao->veiculoFicticil)
+        {
+            auto lista = solucao->vetorVeiculos[solucao->vetorVeiculos.size()-1];
+            cout<<"Clientes sem rota: "<<lista->listaClientes.size()-2;
+        }
 
     #endif
 
@@ -302,10 +328,9 @@ int main(int num, char **agrs)
 
     return 0;
 }
-************************************************************************************************************************************************************************************************************/
 
 
-
+# else
  int main(int num, char **agrs)
 {
 
@@ -398,4 +423,4 @@ int main(int num, char **agrs)
     return 0;
 }
 
-
+#endif

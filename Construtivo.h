@@ -25,10 +25,13 @@ namespace Construtivo
         std::list<Solucao::ClienteRota *>::iterator posicao;
         Solucao::ClienteRota *candidato;
         double folgaRota; //Menor folga do veiculo.
+        double distanciaDeposito;
+        double distanciaArcos;
     };
 
     int compCandidato(const void* cand1, const void* cand2);
     int compCandidatoFolga(const void* cand1, const void* cand2);
+    int compCandidatoDist(const void* cand1, const void* cand2);
 
     Solucao::Solucao *reativo(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
                                   const int numInteracoes, const int numIntAtualizarProb, bool log,
@@ -45,13 +48,13 @@ namespace Construtivo
                               const Instancia::Instancia *const instancia, const int peso, const int tipoVeiculo);
 
     TupleBID viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, ItClienteRota iteratorCliente,
-                                             const Instancia::Instancia *const instancia,
-                                             Solucao::ClienteRota *candidato, double combustivelParcial,
-                                             double poluicaoParcial, Solucao::Veiculo *veiculo, int peso,
-                                             int posicao, double *folga);
+                                         const Instancia::Instancia *const instancia,
+                                         Solucao::ClienteRota *candidato, double combustivelParcial,
+                                         double poluicaoParcial, Solucao::Veiculo *veiculo, int peso,
+                                         int posicao, double *folga);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
-    void atualizaPesos(double *beta, double *teta, int i, int numClientes, const double parametro);
+    void atualizaPesos(double *beta, double *teta, double *gama, int i, int numClientes, const double parametro);
 
 
 

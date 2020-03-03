@@ -10,14 +10,6 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
                                       double *distanciaTotal)
 {
 
-    if(solucao->veiculoFicticil)
-    {
-        //cout<<"Veiculo Ficticil.\n";
-        return false;
-
-    }
-
-
     std::string saida;
     int *vetorClientes = new int[instancia->numClientes]; //Vetor para checar se cada cliente foi visitado uma unica vez.
 
@@ -47,6 +39,9 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
         if(it->tipo == 2)
         {
+            saida += "-1\n\n";
+            if(texto)
+                *texto += saida;
 
             return false;
 
