@@ -1,4 +1,4 @@
-//
+// Erro: verificaVeiculo
 // Created by igor on 17/10/19.
 //Corrigido 26/11/19
 
@@ -240,7 +240,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
         }
 
         //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
-        if((it->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || (combustivel > instancia->vetorVeiculos[it->tipo].combustivel))
+        if((it->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001))
         {
             //Solução está ERRADA.
             cout<<"Outros.!\n";
@@ -474,11 +474,12 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
                 float tempoSaida = (*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
 
-                if(!((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) && (fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico )) <= 0.0001)))
+                if(!(((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) || fabs(tempoSaida - instancia->vetorClientes[(*itCliente)->cliente].fimJanela) <= 0.0001) && (fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico )) <= 0.0001)))
                 {
                     //Solução está ERRADA.
                     std::cout<<"Erro tempo.\n";
-                    std::cout<<(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))<<"\n\n";
+                    std::cout<<fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))<<"\n\n";
+                    std::cout<<fabs(tempoSaida - instancia->vetorClientes[(*itCliente)->cliente].fimJanela)<<"\n\n";
                     return false;
                 }
 

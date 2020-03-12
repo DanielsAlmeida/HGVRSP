@@ -332,14 +332,29 @@ void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFr
 }
 
 void
-Construtivo::atualizaPesos(double *beta, double *teta, double *gama, int i, int numClientes, const double parametro)
+Construtivo::atualizaPesos(double *beta, double *teta, double *gama, int numClientes, const double parametro)
 {
 /*    *teta = abs(sin(2*M_PI*(i)/(parametro* numClientes)));
-    *beta = 1 - *teta;*/
+    *beta = 1 - *teta;
+*/
 
-    *beta= double(rand_u32() % int(parametro*numClientes))/numClientes;
-    *teta = (1 - *beta) * double(rand_u32() % int(parametro*numClientes))/numClientes;
-    *gama = 1 - *beta - *teta;
+    static int i = 0, j = 0;
+    static const double F = numClientes * parametro;
+    static const int max = int(numClientes);
+
+    *beta = abs(sin(2.0*M_PI*i)/F);
+    *teta = (1-*beta) * abs(sin(2.0*M_PI*j)/F);
+    *gama = 1.0 - *beta - *teta;
+
+    if(j+1 < max)
+        j += 1;
+    else
+    {   j = 0;
+        if(i+1 < max)
+            i += 1;
+        else
+            i = 0;
+    }
 }
 
 Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const instancia, float alfa,
@@ -435,7 +450,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
     while (!listaCandidatos.empty())
     {
 
-        atualizaPesos(&beta, &teta, &gama, numClientesSol, instancia->numClientes, parametro);
+        atualizaPesos(&beta, &teta, &gama, instancia->numClientes-1, parametro);
         numClientesSol += 1;
 
         //Pega a melhor solucao de cada candidato.
@@ -1172,7 +1187,7 @@ TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorCli
             combustivel += vetorClientes[i+1].combustivel;
 
             //Verifica  o combustível
-            if(combustivel > instancia->vetorVeiculos[veiculo->tipo].combustivel)
+            if((instancia->vetorVeiculos[veiculo->tipo].combustivel - combustivel) <= -0.001)
                 return {false, -1, -1, -1};
         }
 

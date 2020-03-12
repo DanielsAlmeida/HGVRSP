@@ -54,7 +54,7 @@ namespace Construtivo
                                          int posicao, double *folga);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
-    void atualizaPesos(double *beta, double *teta, double *gama, int i, int numClientes, const double parametro);
+    void atualizaPesos(double *beta, double *teta, double *gama, int numClientes, const double parametro);
 
 
 
