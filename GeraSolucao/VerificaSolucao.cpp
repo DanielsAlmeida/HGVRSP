@@ -1,0 +1,500 @@
+// Created by igor on 17/10/19.
+//Corrigido 26/11/19
+
+#include "VerificaSolucao.h"
+
+using namespace VerificaSolucao;
+
+bool VerificaSolucao::geraSolucao(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, string *texto)
+{
+
+    std::string saida;
+    int *vetorClientes = new int[instancia->numClientes]; //Vetor para checar se cada cliente foi visitado uma unica vez.
+
+    for(int i = 0; i < instancia->numClientes; ++i)
+        vetorClientes[i] = 0;
+
+
+    double distanciaTotal = 0.0;
+
+    int carga = 0, cargaTotal = 0;
+    double combustivel;
+
+    int periodoSaida, periodo;
+    double distancia, velocidade, tempoRestantePeriodo, horario, horaChegada, horaPartida;
+    std::list<Solucao::ClienteRota*>::iterator iterator;
+
+    double poluicaoAux, poluicao, aux;
+    double combustivelAux;
+    bool victicil = false;
+
+    //No No PERIODO,TEMPO,DISTANCIA,POLUICAO, Velocidade
+
+    for(auto it : solucao->vetorVeiculos)//Percorre os veiculos da solução
+    {
+
+        if(it->tipo == 2)
+        {
+
+
+            continue;
+
+        }
+
+        if(it->listaClientes.size() == 2)
+            continue;
+
+        carga = 0;
+        poluicao = 0.0;
+        combustivel = 0.0;
+        cargaTotal = it->carga;
+        it->poluicao = 0.0;
+
+        auto cliente = it->listaClientes.begin();
+
+        if(it->tipo == 1)
+            if((*cliente)->tempoSaida < 0.5)
+                return false;
+
+
+        for(auto itCliente = it->listaClientes.begin(); itCliente != it->listaClientes.end(); )//Percorre os clientes do veículo
+        {
+
+            iterator = itCliente;
+            ++itCliente;
+
+            poluicaoAux =  0.0;
+            combustivelAux = 0.0;
+
+            if(itCliente == it->listaClientes.end())//verifica se itCliente é igual a NULL
+                break;
+
+
+            distancia = instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente];
+
+            distanciaTotal += distancia;
+
+            if(distancia == 0.0)
+            {
+
+
+                return false;
+            }
+
+            horaPartida = (*iterator)->tempoSaida;
+
+            carga += instancia->vetorClientes[(*itCliente)->cliente].demanda;
+
+            saida+= std::to_string((*iterator)->cliente) + " " + std::to_string((*itCliente)->cliente) + " ";
+
+            periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
+
+            do
+            {
+
+                velocidade = instancia->matrizVelocidade[(*iterator)->cliente][(*itCliente)->cliente][periodoSaida];//velocidade -> km/h
+                horario = horaPartida + (distancia / velocidade); //Horario de chegada considerando somente uma velocidade. Horario em horas
+                
+                (*itCliente)->percorrePeriodo[periodoSaida] = true;
+
+                if((instancia->retornaPeriodo(horario) != periodoSaida))//Periodo de chegada diferente da saida, não é possível percorrer a distancia em somente um periodo.
+                {
+                    // percorreu todo o periodoSaida e não chegou ao destino.
+
+                    tempoRestantePeriodo = instancia->vetorPeriodos[periodoSaida].fim - horaPartida;
+                    distancia -= tempoRestantePeriodo * velocidade;
+                    horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
+                    aux = poluicaoRota(instancia, it->tipo, tempoRestantePeriodo*velocidade, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                    poluicaoAux += aux;
+
+                    combustivelAux += combustivelRota(instancia, it->tipo, tempoRestantePeriodo*velocidade, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                    saida += std::to_string(periodoSaida) + "," + std::to_string(tempoRestantePeriodo) + "," + std::to_string(tempoRestantePeriodo * velocidade) + "," + std::to_string(aux) + "," + std::to_string(velocidade) +",";
+                    saida += std::to_string(0) + ' ';
+                    periodoSaida += 1;
+
+                }
+                else//horario é do mesmo periodo de periodoSaida, então o veículo chegou ao destino
+                {
+
+                    float tempoAux =distancia/velocidade;
+
+                    aux = poluicaoRota(instancia, it->tipo, distancia, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                    aux += poluicaoCarga(instancia, it->tipo, cargaTotal, instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente]);
+                    poluicaoAux += aux;
+                    combustivelAux += combustivelRota(instancia, it->tipo, distancia, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                    combustivelAux += combustivelCarga(instancia, it->tipo, cargaTotal, instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente]);
+
+                    combustivel += combustivelAux;
+                    poluicao += poluicaoAux;
+
+                    saida += std::to_string(periodoSaida) + "," + std::to_string(tempoAux) + "," + std::to_string(distancia) + "," + std::to_string(aux) + "," +std::to_string(velocidade) + ",";
+                    saida += std::to_string(0) + '\n';
+
+                    (*itCliente)->poluicao = poluicaoAux;
+                    (*itCliente)->combustivel = combustivelAux;
+                    (*itCliente)->tempoChegada = horario;
+
+                    distancia = 0;
+                    horaChegada = horario;
+
+                }
+
+
+
+            }while(distancia != 0.0);
+
+            vetorClientes[(*itCliente)->cliente] = 1;
+            cargaTotal -= instancia->vetorClientes[(*itCliente)->cliente].demanda;
+
+
+            //Verificar se horaChegada é igual a itCliente.tempoChegada.
+
+
+
+
+                if((*itCliente)->tempoChegada >= instancia->vetorClientes[(*itCliente)->cliente].inicioJanela) //Chegou após o inicio da janela
+                {
+
+                    // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
+
+                    float tempoSaida = (*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
+
+                    if(!((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela)))
+                    {
+                        //Solução está ERRADA.
+                        cout<<"Erro, Tempo\n";
+                        delete []vetorClientes;
+
+                        cout<<"Cliente: "<<(*itCliente)->cliente<<'\n';
+                        cout<<"TempoSaida "<<tempoSaida<<"\tFim janela"<<instancia->vetorClientes[(*itCliente)->cliente].fimJanela<<'\n';
+
+
+                        return false;
+                    }
+                    else
+                    {
+                        (*itCliente)->tempoSaida = tempoSaida;
+                    }
+                    
+
+
+                }
+                else //Chegou antes do inicio da janela
+                {
+
+                    //Verificar tempo de saida
+
+                    (*itCliente)->tempoSaida = instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
+                }
+
+
+
+        }
+
+        //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
+        if((carga > instancia->vetorVeiculos[it->tipo].capacidade))
+        {
+            //Solução está ERRADA.
+            cout<<"Carga maxima\n";
+            delete []vetorClientes;
+            return false;
+        }
+        else if(((instancia->vetorVeiculos[it->tipo].combustivel - combustivel) <= -0.001 ))
+        {
+            cout<<"Combustivel\n";
+            cout<<"Capacidade: "<<instancia->vetorVeiculos[it->tipo].combustivel<<"\nUtilizado: "<<combustivel<<'\n';
+            
+            auto aux3 = it->listaClientes.begin();
+            aux3++;
+            cout<<"Primeiro cliente: "<<(*aux3)->cliente<<'\n';
+
+            delete []vetorClientes;
+            return false;
+        }
+
+        it->poluicao = poluicao;
+        it->carga = carga;
+        it->combustivel = combustivel;
+
+    }
+
+    double sumPoluicao = 0.0;
+    for(auto it : solucao->vetorVeiculos)
+    {
+
+        sumPoluicao += (*it).poluicao;
+
+    }
+
+    solucao->poluicao = sumPoluicao;
+    
+    bool viavel = true;
+
+    for(auto *ptr = vetorClientes; ptr < &vetorClientes[instancia->numClientes]; ptr++)
+    {
+        if(*ptr == 0)
+        {
+            viavel = false;
+            break;
+        }
+    }
+
+    solucao->veiculoFicticil = !viavel;
+    *texto = saida;
+    delete []vetorClientes;
+
+    return viavel;
+
+
+
+}
+
+double VerificaSolucao::poluicaoRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k)
+{
+
+    double c = instancia->vetorVeiculos[tipoVeiculo].cVeiculo;
+
+    return c * instancia->matrizCo2[i][j][k][tipoVeiculo] * distanciaParcial;
+
+}
+
+double VerificaSolucao::poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal)
+{
+
+    double c = instancia->vetorVeiculos[tipoVeiculo].cVeiculo;
+    double p = instancia->vetorVeiculos[tipoVeiculo].pVeiculo;
+
+    return c * p * carga * distanciaTotal;
+
+}
+
+double VerificaSolucao::combustivelRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k)
+{
+    return instancia->matrizCo2[i][j][k][tipoVeiculo] * distanciaParcial;
+}
+
+double VerificaSolucao::combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal)
+{
+
+    double p = instancia->vetorVeiculos[tipoVeiculo].pVeiculo;
+
+    return p * carga * distanciaTotal;
+}
+
+bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia)
+{
+    int carga = 0;
+    float poluicao = 0.0;
+    float combustivel = 0.0;
+    float cargaTotal = veiculo->carga;
+    double poluicaoAux = 0.0;
+    double combustivelAux = 0.0;
+    double distancia;
+    IteratorCliente iterator;
+    double hora, horaPartida, saida, horario, aux, tempoRestantePeriodo, horaChegada;
+    int periodoSaida;
+    float velocidade;
+
+
+
+    for(auto itCliente = veiculo->listaClientes.begin(); itCliente != veiculo->listaClientes.end(); )//Percorre os clientes do veículo
+    {
+
+        iterator = itCliente;
+        ++itCliente;
+
+        poluicaoAux =  0.0;
+        combustivelAux = 0.0;
+
+        if(itCliente == veiculo->listaClientes.end())//verifica se itCliente é igual a NULL
+            break;
+
+
+        distancia = instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente];
+
+        if(distancia == 0.0)
+        {
+            cout<<"Dis = 0.\n";
+            return false;
+        }
+
+        horaPartida = (*iterator)->tempoSaida;
+
+        carga += instancia->vetorClientes[(*itCliente)->cliente].demanda;
+
+
+
+        periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
+
+        do
+        {
+
+            velocidade = instancia->matrizVelocidade[(*iterator)->cliente][(*itCliente)->cliente][periodoSaida];//velocidade -> km/h
+            horario = horaPartida + (distancia / velocidade); //Horario de chegada considerando somente uma velocidade. Horario em horas
+
+
+            if(!(*itCliente)->percorrePeriodo[periodoSaida])
+            {
+                horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
+                periodoSaida += 1;
+
+                if(periodoSaida >= 5 )
+                {
+                    cout<<"Periodo.\n";
+                    return false;
+                }
+            }
+//Aqui.
+            else if((instancia->retornaPeriodo(horario) != periodoSaida))//Periodo de chegada diferente da saida, não é possível percorrer a distancia em somente um periodo.
+            {
+                // percorreu todo o periodoSaida e não chegou ao destino.
+
+                tempoRestantePeriodo = instancia->vetorPeriodos[periodoSaida].fim - horaPartida;
+                distancia -= tempoRestantePeriodo * velocidade;
+                horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
+                aux = poluicaoRota(instancia, veiculo->tipo, tempoRestantePeriodo*velocidade, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                poluicaoAux += aux;
+
+                combustivelAux += combustivelRota(instancia, veiculo->tipo, tempoRestantePeriodo*velocidade, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+
+                periodoSaida += 1;
+
+            }
+            else//horario é do mesmo periodo de periodoSaida, então o veículo chegou ao destino
+            {
+
+                float tempoAux =distancia/velocidade;
+
+                aux = poluicaoRota(instancia, veiculo->tipo, distancia, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                aux += poluicaoCarga(instancia, veiculo->tipo, cargaTotal, instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente]);
+                poluicaoAux += aux;
+                combustivelAux += combustivelRota(instancia, veiculo->tipo, distancia, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
+                combustivelAux += combustivelCarga(instancia, veiculo->tipo, cargaTotal, instancia->matrizDistancias[(*iterator)->cliente][(*itCliente)->cliente]);
+
+                combustivel += combustivelAux;
+                poluicao += poluicaoAux;
+
+                if(fabs(poluicaoAux - ((*itCliente)->poluicao ) > 0.001))
+                {
+                    cout<<"Poluicao diferente.\n";
+                    cout<<"Diferenca = "<<std::to_string(fabs(poluicaoAux - ((*itCliente)->poluicao )))<<'\n';
+                    cout<<(*iterator)->cliente << ' ' <<(*itCliente)->cliente<<'\n';
+                    return false;
+                }
+
+                if(fabs(combustivelAux - (*itCliente)->combustivel) > 0.001)
+                {
+                    cout<<"Combustivel diferente.\n";
+                    cout<<"Diferenca = "<<std::to_string(fabs(poluicaoAux - ((*itCliente)->poluicao )))<<'\n';
+                    cout<<(*iterator)->cliente << ' ' <<(*itCliente)->cliente<<'\n';
+
+                    return false;
+                }
+
+                distancia = 0;
+                horaChegada = horario;
+
+            }
+
+
+
+        }while(distancia != 0.0);
+
+
+        cargaTotal -= instancia->vetorClientes[(*itCliente)->cliente].demanda;
+
+
+        //Verificar se horaChegada é igual a itCliente.tempoChegada.
+        if(fabs((*itCliente)->tempoChegada - horaChegada) <= 0.001)
+        {
+
+            /* **********************************************************
+             * tempoChegada está correto.
+             * Verificar janela de tempo, tempo de espera, combustível ...
+             *
+            ***********************************************************/
+
+
+
+            if((*itCliente)->tempoChegada >= instancia->vetorClientes[(*itCliente)->cliente].inicioJanela) //Chegou após o inicio da janela
+            {
+
+                // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
+
+                float tempoSaida = (*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
+
+                if(!(((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) || fabs(tempoSaida - instancia->vetorClientes[(*itCliente)->cliente].fimJanela) <= 0.0001) && (fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico )) <= 0.0001)))
+                {
+                    //Solução está ERRADA.
+                    std::cout<<"Erro tempo.\n";
+                    std::cout<<fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))<<"\n\n";
+                    std::cout<<fabs(tempoSaida - instancia->vetorClientes[(*itCliente)->cliente].fimJanela)<<"\n\n";
+                    return false;
+                }
+
+
+            }
+            else //Chegou antes do inicio da janela
+            {
+
+                //Verificar tempo de saida
+
+                if(instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico != (*itCliente)->tempoSaida)
+                {
+                    //Solução está ERRADA.
+                    std::cout<<"Erro, Tempo de saida\n";
+                    std::cout <<(*itCliente)->cliente<<"\n";
+
+                    return false;
+
+                }
+            }
+
+        }
+        else
+        {
+            //Solução está ERRADA.
+
+            std::cout<<"Hora de chegada eh diferente de horaChegada.\n";
+            return false;
+        }
+
+    }
+
+    //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
+    if((veiculo->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(veiculo->poluicao - poluicao) > 0.001)) || ((fabs(veiculo->combustivel - combustivel) > 0.001)))
+    {
+        //Solução está ERRADA.
+        std::cout<<"Outro.\n";
+
+        if(veiculo->carga != carga)
+            cout<<"Carga.\n";
+
+        if(carga > instancia->vetorVeiculos->capacidade)
+            cout<<"Capacidade.\n";
+
+        if((fabs(veiculo->combustivel - combustivel) >= 0.001))
+        {
+            std::cout << "Combustivel.\n";
+            cout<<"Diferenca: "<<fabs(veiculo->combustivel - combustivel)<<'\n';
+            cout<<"Veiculo: "<<veiculo->combustivel<<'\n'<<"Real: "<<combustivel<<'\n';
+        }
+
+        if(fabs(veiculo->poluicao - poluicao) > 0.001)
+        {
+            std::cout << "Poluicao.\n";
+            cout<<"Diferenca: "<<(fabs(veiculo->poluicao - poluicao) > 0.001)<<'\n';
+            cout<<"Veiculo: "<<veiculo->poluicao<<'\n'<<"Real: "<<poluicao<<'\n';
+        }
+
+
+        return false;
+
+    }
+    else
+        return true;
+
+
+}
+
+
