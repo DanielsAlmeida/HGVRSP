@@ -8,7 +8,7 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
-#define Saida false
+#define Saida true
 #define TesteParametro false
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
@@ -28,7 +28,7 @@
  * Instancia 50 clientes, parametro: 0.79
  * Instancia 75 clientes, parametro: 0.82
  *
- *  parametro.insert({75, 0.82});
+    parametro.insert({75, 0.82});
     parametro.insert({50, 0.79});
     parametro.insert({25, 0.54});
     parametro.insert({20, 0.67});
@@ -63,13 +63,12 @@ using namespace std;
 int main(int num, char **agrs)
 {
     std::map<int, float> parametro;
-    parametro.insert({100, 0.7});
-    parametro.insert({75, 0.48});
-    parametro.insert({50, 0.51});
-    parametro.insert({25, 0.5});
-    parametro.insert({20, 0.95});
-    parametro.insert({15, 0.99});
-    parametro.insert({10, 0.7});
+    parametro.insert({75, 0.82});
+    parametro.insert({50, 0.79});
+    parametro.insert({25, 0.54});
+    parametro.insert({20, 0.67});
+    parametro.insert({15, 0.63});
+    parametro.insert({10, 0.12});
 
     string strInstancia;
     string saidaCompleta;
@@ -153,7 +152,7 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, parametro[instancia->numClientes-1]);
+    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 10000, 1000, logAtivo, &strLog, parametro[instancia->numClientes-1]);
 
 
 

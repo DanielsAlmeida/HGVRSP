@@ -13,6 +13,7 @@
 typedef std::list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>>::iterator ItClienteRota;
 typedef std::tuple<bool, int, double, double> TupleBID;
 
+#define HEURIST_DIST true
 
 namespace Construtivo
 {
@@ -54,7 +55,8 @@ namespace Construtivo
                                          int posicao, double *folga);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
-    void atualizaPesos(double *beta, double *teta, double *gama, int numClientes, const double parametro);
+    void atualizaPesos(double *beta, double *teta, int numClientes, const double parametro, const int k,
+                       double *gama);
 
 
 
