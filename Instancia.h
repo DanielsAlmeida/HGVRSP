@@ -50,7 +50,7 @@ namespace Instancia
         double fimJanela;
     } Veiculo;
 
-
+    /// Classe Instancia ...
     class Instancia
     {
 

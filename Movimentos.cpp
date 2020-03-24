@@ -110,17 +110,10 @@ bool Movimentos::mvIntraRotasReinsertion(const Instancia::Instancia *const insta
     }
 
 
-
-
 }
 
 // 0 - 1 - 2 - 3 - 4 - 0
 
-/* ******************************************************************************************************************************************************************************************************
- *
- * ///Recalcula a rota até posicaoAlvo, excluindo, caso exista,  clienteEscolhido.
- *
- ******************************************************************************************************************************************************************************************************** */
 
 ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, int posicaoClienteEscolhido, int posicaoAlvo, int peso,
                                          Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, int begin)
@@ -134,31 +127,41 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
 
 
     //Copiar lista para vetClienteRota, até posicaoAlvo. Se clienteEscolhido for achado, deve-se calcular a rota sem ele.
-
     for(auto it = std::next(veiculo->listaClientes.begin(), begin); it != veiculo->listaClientes.end(); )
     {
+
 
         if((*it)->cliente != (*clienteEscolhido)->cliente && (*it)->cliente != (*clienteAlvo)->cliente)
         {
             //Copia it para o vetor e atualiza as variaveis.
             vetClienteRotaAux[posicaoVet] = **it;
+
+            //Recalcular poluicao e combustivel das rotas.
+
+            auto proximo = it;
+            proximo++;
+
+            vetClienteRotaAux[posicaoVet].poluicao = vetClienteRotaAux[posicaoVet].poluicaoRota + VerificaSolucao::poluicaoCarga(instancia, veiculo->tipo, peso, instancia->matrizDistancias[(**it).cliente][(**proximo).cliente]);
+            vetClienteRotaAux[posicaoVet].combustivel = vetClienteRotaAux[posicaoVet].combustivelRota + VerificaSolucao::combustivelCarga(instancia, veiculo->tipo, peso, instancia->matrizDistancias[(**it).cliente][(**proximo).cliente]);
+
+            //Atualiza variaveis
             peso -= instancia->vetorClientes[(**it).cliente].demanda;
-            poluicao += (**it).poluicao;
-            combustivel += (**it).combustivel;
+            poluicao += vetClienteRotaAux[posicaoVet].poluicao;
+            combustivel += vetClienteRotaAux[posicaoVet].combustivel;
+
+
         }
         else if((*it)->cliente == (*clienteAlvo)->cliente)
         {
             //Somente insere it no vetor.
             vetClienteRotaAux[posicaoVet] = **it;
             peso -= instancia->vetorClientes[(**it).cliente].demanda;
-            poluicao += (**it).poluicao;
-            combustivel += (**it).combustivel;
 
             break;
         }
         else
         {
-            //it == clienteEscolhido
+            //it é igual a  clienteEscolhido
 
             auto itAntes = it;
             itAntes--;
@@ -175,17 +178,18 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
             }
 
             //Atualiza valores
-            poluicao += vetClienteRotaAux[posicaoVet+1].poluicao;
-            combustivel+= vetClienteRotaAux[posicaoVet+1].combustivel;
+            poluicao += vetClienteRotaAux[posicaoVet].poluicao;
+            combustivel+= vetClienteRotaAux[posicaoVet].combustivel;
             peso -= instancia->vetorClientes[vetClienteRotaAux[posicaoVet+1].cliente].demanda;
 
-            //Calcula rota até clienteAlvo
             posicaoVet += 1;
 
+            // Cliente alvo está depois de clienteEscolhido. Recalcular rotas até cliente alvo.
             while(true)
             {
                 it++;
 
+                //Se chegou no final, erro, porque cliente alvo nao esta lista.
                 if(it == (*veiculo).listaClientes.end())
                     throw exceptionEndList;
 
@@ -202,12 +206,14 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
                 peso -= instancia->vetorClientes[vetClienteRotaAux[posicaoVet].cliente].demanda;
                 posicaoVet += 1;
 
+                //Verifical combustivel
                 if(combustivel > instancia->vetorVeiculos[veiculo->tipo].combustivel)
                 {
                     ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
                     return resultado;
                 }
 
+                //Verifica se encontrou cliente alvo.
                 if((*it)->cliente == (*clienteAlvo)->cliente)
                 {
                     posicaoVet += 1;
@@ -233,8 +239,8 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
 
 //Calcula rota ate o final.
 ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
-                                          int posicaoProximoCliente, int peso, Solucao::ClienteRota *vetClienteRotaAux,
-                                          int posicaoVet, double poluicao, double combustivel)
+                                            int posicaoProximoCliente, int peso, Solucao::ClienteRota *vetClienteRotaAux,
+                                            int posicaoVet, double poluicao, double combustivel)
 {
 
     posicaoVet -= 1;
@@ -252,16 +258,29 @@ ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const inst
             return resultados;
         }
 
+        //Atualiza combustivel e poluicao.
         peso -= instancia->vetorClientes[(*itCliente)->cliente].demanda;
         combustivel += vetClienteRotaAux[posicaoVet+1].combustivel;
         poluicao += vetClienteRotaAux[posicaoVet+1].poluicao;
 
+        //Verifica peso
         if(peso < 0)
         {
-
+            throw exceptionPeso;
         }
 
+        //Verifica combustivel
+        if(combustivel > instancia->vetorVeiculos[veiculo->tipo].combustivel)
+        {
+            ResultadosRota resultados = {.viavel = false};
+            return resultados;
+        }
 
+        posicaoVet += 1;
     }
+
+    //Peso não se aplica.
+    ResultadosRota resultados = {.viavel = true, .combustivel = combustivel, .posicaoVet = posicaoVet, .poluicao = poluicao, .peso = -1};
+    return resultados;
 
 }

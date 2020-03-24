@@ -25,9 +25,17 @@ namespace Movimentos
     {
         virtual const char* what() const throw()
         {
-            return "Erro, fuc: recalculaRota. \nMotivo:Fim da lista. OBS: não DEVERIA alcancar o fim da lista.\n";
+            return "Erro, fuc: recalculaRota. \nMotivo:Fim da lista, Cliente alvo NAO está na lista.\n";
         }
     } exceptionEndList;
+
+    class ExceptionPesoNegativo: public std::exception
+    {
+        virtual const char* what() const throw()
+        {
+            return "Erro, fuc: calculaFimRota. \nPeso negativo.\n";
+        }
+    } exceptionPesoNegativo;
 
     typedef struct
     {
@@ -40,8 +48,8 @@ namespace Movimentos
 
     bool mvIntraRotasReinsertion(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao = 0);
 
-    /// Recalcula a rota até posicaoAlvo, excluindo, caso exista,  clienteEscolhido.
-    /// @param instancia @param veiculo @param posicaoClienteEscolhido @param posicaoAlvo @param peso @param vetClienteRotaAux @param posicaoVet --posicao livre @param begin
+/// Recalcula a rota até posicaoAlvo, excluindo, caso exista,  clienteEscolhido.
+/// @param instancia @param veiculo @param posicaoClienteEscolhido @param posicaoAlvo @param peso @param vetClienteRotaAux @param posicaoVet --posicao livre @param begin
     ResultadosRota recalculaRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, int posicaoClienteEscolhido, int posicaoAlvo, int peso,
                                  Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, int begin);
 
