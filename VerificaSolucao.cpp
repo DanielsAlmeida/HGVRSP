@@ -365,7 +365,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
         if(distancia == 0.0)
         {
-            cout<<"Dis = 0.\n";
+            cout<<"Dis = 0 entre "<<(*iterator)->cliente<<" e "<<(*itCliente)->cliente<<" \n";
             return false;
         }
 
@@ -507,6 +507,10 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
             //Solução está ERRADA.
 
             std::cout<<"Hora de chegada eh diferente de horaChegada.\n";
+
+            cout<<"Veiculo: " <<(*itCliente)->tempoChegada<<'\n';
+            cout<<"Correto: "<<horaChegada<<'\n';
+
             return false;
         }
 
@@ -516,7 +520,6 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
     if((veiculo->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(veiculo->poluicao - poluicao) > 0.001)) || ((fabs(veiculo->combustivel - combustivel) > 0.001)))
     {
         //Solução está ERRADA.
-        std::cout<<"Outro.\n";
 
         if(veiculo->carga != carga)
             cout<<"Carga.\n";
@@ -546,6 +549,16 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
         return true;
 
 
+}
+
+bool VerificaSolucao::verificaCombustivel(const double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *instancia)
+{
+    return ((instancia->vetorVeiculos[veiculo->tipo].combustivel - combustivel) >= -0.001);
+}
+
+bool VerificaSolucao::verificaCombustivel(const double combustivel, const int tipoVeiculo, Instancia::Instancia *instancia)
+{
+    return ((instancia->vetorVeiculos[tipoVeiculo].combustivel - combustivel) >= -0.001);
 }
 
 

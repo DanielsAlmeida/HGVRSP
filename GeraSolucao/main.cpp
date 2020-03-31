@@ -36,13 +36,15 @@ int main( int tam, char **agrs)
     string tempoRota;
 
     auto *solucao = new Solucao::Solucao(instancia.numVeiculos);
+
     criaSolucao(rota, solucao, &instancia);
     
     saida << std::fixed << setprecision(2);
     string texto;
 
+    
     VerificaSolucao::geraSolucao(&instancia, solucao, &texto);
-
+   
     double tempoViagem = 0.0;
     double inicio;
     bool fim = false;
@@ -78,7 +80,25 @@ int main( int tam, char **agrs)
         saida<<i<<' '<<instancia.vetorClientes[i].inicioJanela<<' '<<instancia.vetorClientes[i].fimJanela<<'\n';
     
     saida<<"-1\n";
-
+    
+    saida<<"Demanda:\n\n";
+    
+    for(int i = 1; i < instancia.numClientes; ++i)
+        saida<<i<<' '<<instancia.vetorClientes[i].demanda<<"\n";
+    
+    cout<<"\n\n";
+    
+    int i = 0;
+    cout<<"Veiculo  poluicao  combustivel\n";
+    for(auto it : solucao->vetorVeiculos)
+    {
+    
+        cout<<i<<'\t'<<it->poluicao<<'\t'<<it->combustivel<<'\n';
+        i += 1;
+        
+           
+    }
+    
     saida.close();
 
     cout<<"Poluicao: "<<solucao->poluicao<<'\n';

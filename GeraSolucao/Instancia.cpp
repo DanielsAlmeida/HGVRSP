@@ -49,7 +49,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
     if(file.is_open())
     {
-
+      
         vetorClientes = new Cliente[numClientes];
 
         string lixo;
@@ -135,14 +135,16 @@ Instancia::Instancia::Instancia(std::string arquivo)
         {
             file.seekg(posicao);
             file>>i>>j>>distancia;
-
             matrizDistancias[i][j] = distancia;
             posicao = file.tellg();
             getline(file, lixo, '\n');
 
             if(lixo.size()==1)
                 getline(file, lixo);
+            
         }
+        
+        cout<<"Matriz de distancia.\n";
 
         //Leitura das velocidades
 
@@ -188,7 +190,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
 
         }
-
+        cout<<"Matriz de velocidades.";
         getline(file, lixo);
 
         //Matriz de co2

@@ -8,6 +8,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace Solucao
 {
@@ -64,6 +65,33 @@ namespace Solucao
             this->tipo = tipo;
 
             inicialisaVeiculo(tipo);
+
+        }
+
+        std::string printRota()
+        {
+            std::string s = "";
+
+            for(auto it : listaClientes)
+                s += std::to_string(it->cliente) + ' ';
+
+            return s;
+        }
+
+        Veiculo(const Veiculo &outro)
+        {
+            combustivel = outro.combustivel;
+            poluicao = outro.poluicao;
+            carga = outro.carga;
+            tipo = outro.tipo;
+            ClienteRota *clientePtr = 0;
+
+            for(auto it : outro.listaClientes)
+            {
+                clientePtr = new ClienteRota(*it);
+
+                listaClientes.push_back(clientePtr);
+            }
 
         }
 

@@ -12,7 +12,7 @@
 #define TesteParametro false
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
-/*
+/* 1585430665
  * Debug memória : g++ *.cpp -Wall -fsanitize=address -g
  *
  * date '+%d_%m_%Y_%k-%M-%S'
@@ -33,7 +33,7 @@
     parametro.insert({25, 0.54});
     parametro.insert({20, 0.67});
     parametro.insert({15, 0.99});
-    parametro.insert({10, 0.12});
+    parametro.insert({10, 0.97});
  *
  * ************************************************************************************************************************************************************
  *
@@ -67,8 +67,8 @@ int main(int num, char **agrs)
     parametro.insert({50, 0.79});
     parametro.insert({25, 0.54});
     parametro.insert({20, 0.67});
-    parametro.insert({15, 0.63});
-    parametro.insert({10, 0.12});
+    parametro.insert({15, 0.35});
+    parametro.insert({10, 0.97});
 
     string strInstancia;
     string saidaCompleta;
@@ -152,7 +152,8 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 10000, 1000, logAtivo, &strLog, parametro[instancia->numClientes-1]);
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 10000, 1000, logAtivo, &strLog,
+                                       parametro[instancia->numClientes - 1]);
 
 
 
@@ -403,7 +404,7 @@ int main(int num, char **agrs)
 
     const double parametro = std::atof(agrs[5]);
 
-    auto *solucao = Construtivo::reativo(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
                                          &strLog, parametro);
 
 

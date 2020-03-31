@@ -13,7 +13,7 @@
 typedef std::list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>>::iterator ItClienteRota;
 typedef std::tuple<bool, int, double, double> TupleBID;
 
-#define HEURIST_DIST true
+#define HEURIST_DIST false
 
 namespace Construtivo
 {
@@ -34,9 +34,9 @@ namespace Construtivo
     int compCandidatoFolga(const void* cand1, const void* cand2);
     int compCandidatoDist(const void* cand1, const void* cand2);
 
-    Solucao::Solucao *reativo(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
-                                  const int numInteracoes, const int numIntAtualizarProb, bool log,
-                                  stringstream *strLog, const double parametro);
+    Solucao::Solucao *grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
+                            const int numInteracoes, const int numIntAtualizarProb, bool log,
+                            stringstream *strLog, const double parametro);
 
     Solucao::Solucao *geraSolucao(const Instancia::Instancia *const instancia, float alfa,
                                       Solucao::ClienteRota *vetorClienteBest,

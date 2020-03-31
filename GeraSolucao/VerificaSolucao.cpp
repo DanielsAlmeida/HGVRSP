@@ -29,7 +29,9 @@ bool VerificaSolucao::geraSolucao(const Instancia::Instancia *const instancia, S
     bool victicil = false;
 
     //No No PERIODO,TEMPO,DISTANCIA,POLUICAO, Velocidade
-
+    
+    saida+="No0, No1 \t COMBUSTIVEL \t POLUICAO\n\n";
+    
     for(auto it : solucao->vetorVeiculos)//Percorre os veiculos da solução
     {
 
@@ -57,6 +59,7 @@ bool VerificaSolucao::geraSolucao(const Instancia::Instancia *const instancia, S
                 return false;
 
 
+        
         for(auto itCliente = it->listaClientes.begin(); itCliente != it->listaClientes.end(); )//Percorre os clientes do veículo
         {
 
@@ -108,8 +111,8 @@ bool VerificaSolucao::geraSolucao(const Instancia::Instancia *const instancia, S
                     poluicaoAux += aux;
 
                     combustivelAux += combustivelRota(instancia, it->tipo, tempoRestantePeriodo*velocidade, (*iterator)->cliente, (*itCliente)->cliente, periodoSaida);
-                    saida += std::to_string(periodoSaida) + "," + std::to_string(tempoRestantePeriodo) + "," + std::to_string(tempoRestantePeriodo * velocidade) + "," + std::to_string(aux) + "," + std::to_string(velocidade) +",";
-                    saida += std::to_string(0) + ' ';
+                    //saida += std::to_string(periodoSaida) + "," + std::to_string(tempoRestantePeriodo) + "," + std::to_string(tempoRestantePeriodo * velocidade) + "," + std::to_string(aux) + "," + std::to_string(velocidade) +",";
+                    //saida += std::to_string(0) + ' ';
                     periodoSaida += 1;
 
                 }
@@ -127,8 +130,8 @@ bool VerificaSolucao::geraSolucao(const Instancia::Instancia *const instancia, S
                     combustivel += combustivelAux;
                     poluicao += poluicaoAux;
 
-                    saida += std::to_string(periodoSaida) + "," + std::to_string(tempoAux) + "," + std::to_string(distancia) + "," + std::to_string(aux) + "," +std::to_string(velocidade) + ",";
-                    saida += std::to_string(0) + '\n';
+                    saida += std::to_string(combustivelAux) + "," + std::to_string(poluicaoAux) + "\n";
+
 
                     (*itCliente)->poluicao = poluicaoAux;
                     (*itCliente)->combustivel = combustivelAux;
