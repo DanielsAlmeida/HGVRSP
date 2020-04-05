@@ -240,7 +240,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
         }
 
         //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
-        if((it->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001))
+        if((it->carga != carga) || (carga > instancia->vetorVeiculos[it->tipo].capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001))
         {
             //Solução está ERRADA.
             cout<<"Outros.!\n";
@@ -517,14 +517,14 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
     }
 
     //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
-    if((veiculo->carga != carga) || (carga > instancia->vetorVeiculos->capacidade) || ((fabs(veiculo->poluicao - poluicao) > 0.001)) || ((fabs(veiculo->combustivel - combustivel) > 0.001)))
+    if((veiculo->carga != carga) || (carga > instancia->vetorVeiculos[veiculo->tipo].capacidade) || ((fabs(veiculo->poluicao - poluicao) > 0.001)) || ((fabs(veiculo->combustivel - combustivel) > 0.001)))
     {
         //Solução está ERRADA.
 
         if(veiculo->carga != carga)
             cout<<"Carga.\n";
 
-        if(carga > instancia->vetorVeiculos->capacidade)
+        if(carga > instancia->vetorVeiculos[veiculo->tipo].capacidade)
             cout<<"Capacidade.\n";
 
         if((fabs(veiculo->combustivel - combustivel) >= 0.001))
@@ -551,12 +551,12 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
 }
 
-bool VerificaSolucao::verificaCombustivel(const double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *instancia)
+bool VerificaSolucao::verificaCombustivel(const double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia)
 {
     return ((instancia->vetorVeiculos[veiculo->tipo].combustivel - combustivel) >= -0.001);
 }
 
-bool VerificaSolucao::verificaCombustivel(const double combustivel, const int tipoVeiculo, Instancia::Instancia *instancia)
+bool VerificaSolucao::verificaCombustivel(const double combustivel, const int tipoVeiculo, const Instancia::Instancia *const instancia)
 {
     return ((instancia->vetorVeiculos[tipoVeiculo].combustivel - combustivel) >= -0.001);
 }

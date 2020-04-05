@@ -31,6 +31,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     //Vetor guarda o resto da lista. São passados para construir a solução
     auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
+    auto *vetClienteBestSecund = new Solucao::ClienteRota[instancia->numClientes+2];
 
     //Vetores para o reativo
     double *vetorProbabilidade = new double[tamAlfa];
@@ -61,8 +62,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         vetorFrequencia[i] = 1;
 
         //Inicializa a solucaoAcumulada para o alfa
-        solucaoAux = geraSolucao(instancia, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false,
-                                 vetorCandidatos, parametro);
+        solucaoAux = geraSolucao(instancia, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false, vetorCandidatos, parametro);
         solucaoAcumulada[i] = solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
 
         if(best->veiculoFicticil)
@@ -159,13 +159,11 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
         sequencia = "";
 
-        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux,
-                                 &sequencia, log, vetorCandidatos, parametro);
-
-
+        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos, parametro);
 
         solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
         vetorFrequencia[posicaoAlfa] += 1;
+
 
         if(solucaoAux->veiculoFicticil)
             numSolInviaveis += 1;
@@ -174,20 +172,25 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             int num = int(ceil(solucaoAux->poluicao));
             hash[num]++;
 
+/*
+            auto resultado = Movimentos::mvInterRotasShift(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, false);
 
-            auto resultado = Movimentos::mvIntraRotaShift(instancia, solucaoAux, vetorClienteBest,
-                                                          vetorClienteAux, false);
+
+            //cout<<"Solucao.\n\n";
 
             while (resultado.viavel && (resultado.poluicao < solucaoAux->poluicao))
             {
-
+                //cout<<"Viavel.\n";
                 int l = 0;
+                auto clienteRota = new Solucao::ClienteRota;
+                resultado.veiculo->listaClientes.push_back(clienteRota);
+                clienteRota = NULL;
+                int peso = 0;
                 for (auto clienteIt : resultado.veiculo->listaClientes)
                 {
-                    //std::cout<<vetorClienteBest[i].cliente<<" ";
 
                     *clienteIt = vetorClienteBest[l];
-
+                    peso += instancia->vetorClientes[(*clienteIt).cliente].demanda;
 
                     l += 1;
                 }
@@ -197,17 +200,46 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                 resultado.veiculo->combustivel = resultado.combustivel;
                 resultado.veiculo->poluicao = resultado.poluicao;
+                resultado.veiculo->carga = resultado.peso;
 
                 solucaoAux->poluicao += resultado.veiculo->poluicao;
 
+
+                clienteRota = *resultado.veiculoSecundario->listaClientes.begin();
+                resultado.veiculoSecundario->listaClientes.pop_front();
+
+                delete clienteRota;
+                l = 0;
+                peso = 0;
+                for (auto clienteIt : resultado.veiculoSecundario->listaClientes)
+                {
+
+                    *clienteIt = vetClienteBestSecund[l];
+                    peso += instancia->vetorClientes[(*clienteIt).cliente].demanda;
+
+                    l += 1;
+                }
+
+
+                //Atualiza veiculo secundario
+
+                solucaoAux->poluicao -= resultado.veiculoSecundario->poluicao;
+                resultado.veiculoSecundario->poluicao = resultado.poluicaoSecundario;
+                solucaoAux->poluicao += resultado.veiculoSecundario->poluicao;
+
+                resultado.veiculoSecundario->combustivel = resultado.combustivelSecundario;
+                resultado.veiculoSecundario->carga = resultado.pesoSecundario;
+
+
                 //VerificaSolucao::verificaVeiculo(resultado.veiculo, instancia);
 
-
-                resultado = Movimentos::mvIntraRotaShift(instancia, solucaoAux, vetorClienteBest,
-                                                         vetorClienteAux, false);
+                resultado = Movimentos::mvInterRotasShift(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, false);
 
 
-            }
+            }*/
+
+
+
         }
             if(log)
             {
@@ -305,6 +337,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     //Libera memória
     delete []vetorClienteBest;
     delete []vetorClienteAux;
+    delete []vetClienteBestSecund;
     delete []vetorProbabilidade;
     delete []vetorFrequencia;
     delete []solucaoAcumulada;
@@ -318,7 +351,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     vetorProbabilidade = NULL;
     vetorClienteAux = NULL;
     vetorClienteBest = NULL;
-
+    vetClienteBestSecund = NULL;
     /*
     cout<<"Ultima Atualizacao: "<<ultimaAtualizacao<<'\n';
     cout<<"Poluicao: "<<poluicaoUltima<<'\n';
@@ -880,8 +913,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidatoFolga);
                 escolhaProporcional(vetorProb, vetorCandidatos, tamLista1Crit, rand_u32()%100, &tamLista2Crit, NULL, 0);
 
-                std::qsort(vetorCandidatos, tamLista1Crit, sizeof(Candidato), compCandidato);
-                escolhaProporcional(vetorProb, vetorCandidatos, tamLista1Crit, rand_u32()%100, NULL, ptrEscolhido, 1);
+                std::qsort(vetorCandidatos, tamLista2Crit, sizeof(Candidato), compCandidato);
+                escolhaProporcional(vetorProb, vetorCandidatos, tamLista2Crit, rand_u32()%100, NULL, ptrEscolhido, 1);
 
 /* ************************************************************************************************************************************************************* */
             #else

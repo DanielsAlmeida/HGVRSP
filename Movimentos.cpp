@@ -290,23 +290,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
         return {.viavel = false};
     else
     {
-        bool inicio = true;
-        for(auto ptr = vetClienteRotaBest; ; ++ptr)
-        {
 
-
-            if(inicio)
-                inicio = false;
-            else
-            {
-                if(ptr->cliente == 0)
-                {
-
-                    break;
-                }
-            }
-
-        }
         return {.poluicao = poluicaoBest, .combustivel = combustivelBest, .peso = veiculo->carga, .viavel = true, .posicaoVet = -1, .veiculo = veiculo, .veiculoSecundario = NULL,
                 .poluicaoSecundario = -1.0, .combustivelSecundario = -1.0, .pesoSecundario = -1, .posicaoVetSecundario = -1};
     }
@@ -342,6 +326,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
 {
 
     //Escolhe um veiculo
+    //cout<<"mvIntraRotaSwap\n\n";
 
     int veiculoEscolhido;
 
@@ -403,9 +388,556 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
     Solucao::ClienteRota *clientePtr;
     string seguencia = veiculo->printRota();
 
+    //Guarda o proximo cliente depois de escolhido.
+    auto proxEscolhido = std::next(veiculo->listaClientes.begin(), posicaoClienteEscolhido + 1);
+    auto nextIt = veiculo->listaClientes.begin();
+
+
+
+    for(auto clienteIt = std::next(veiculo->listaClientes.begin(), 1); clienteIt != veiculo->listaClientes.end();)
+    {
+        clientePtr = *clienteIt;
+
+        //Verifica se chegou ao deposito
+        if(clientePtr->cliente == 0)
+            break;
+
+
+        //Atualiza o próximo cliente
+        if(!passouEscolhido)
+        {
+            nextIt = clienteIt;
+            nextIt++;
+            nextClienteRota = *nextIt;
+        }
+
+        if(clientePtr->cliente == (*clienteEscolhido)->cliente)
+        {
+            //posicao não é mais incrementado. posicao contem cliente antes de escolhido. peso tambem não muda mais.
+
+            clienteIt++;
+            passouEscolhido = true;
+
+            //Atualiza ponteiros
+
+            clientePtr = *clienteIt;
+            nextIt = clienteIt;
+            //nextIt++;
+            nextClienteRota = *nextIt;
+
+            continue;
+        }
+
+        if(!passouEscolhido)
+        {
+            //Criar o arco posicao - escolhido
+
+            vetClienteRotaAux[posicao+1].cliente = (*clienteEscolhido)->cliente;
+
+            if(Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao+1], instancia, peso, veiculo->tipo))
+            {
+                //Atualiza peso, combustivel, poluicao
+                pesoAux = peso;
+                pesoAux -= instancia->vetorClientes[vetClienteRotaAux[posicao+1].cliente].demanda;
+
+                combustivelAux = combustivelRotaParcial + vetClienteRotaAux[posicao+1].combustivel;
+                poluicaoAux = poluicaoRotaParcial + vetClienteRotaAux[posicao+1].poluicao;
+
+                //Verifica combustivel
+                if(VerificaSolucao::verificaCombustivel(combustivelAux, veiculo->tipo, instancia))
+                {
+                    //Calcular rota a partir de next e substituir candidato por clienteIt
+
+                    auto resultado = calculaFimRota(instancia, veiculo, nextIt, pesoAux, vetClienteRotaAux, posicao+1, poluicaoAux, combustivelAux, (*clienteEscolhido)->cliente, clientePtr->cliente);
+
+                    if(resultado.viavel)
+                    {
+                        //Se a nova solucao é melhor do que a solucao atual, atualiza solucao
+                        if(resultado.poluicao < poluicaoBest)
+                        {
+
+                            copiaSolucao(vetClienteRotaBest, vetClienteRotaAux, &poluicaoBest, &combustivelBest, resultado);
+
+                            if(pertubacao)
+                                break;
+                        }
+                    }
+
+                }
+            }
+
+            //Adicionar clienteIt ao vetClienteRotaAux.
+            vetClienteRotaAux[posicao+1] = *clientePtr;
+
+            peso -= instancia->vetorClientes[vetClienteRotaAux[posicao+1].cliente].demanda;
+            combustivelRotaParcial += vetClienteRotaAux[posicao+1].combustivel;
+            poluicaoRotaParcial += vetClienteRotaAux[posicao+1].poluicao;
+
+            posicao += 1;
+            clienteIt++;
+
+            continue;
+
+        }
+        else
+        {
+
+            //Criar arco entre posicao - clientePtr. Calcular o fim da rota substituindo, clientePtr por clienteEscolhido. Posicao não é atualizado.
+            vetClienteRotaAux[posicao+1].cliente = clientePtr->cliente;
+
+            if(Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao+1], instancia, peso, veiculo->tipo))
+            {
+                //Atualiza variaveis
+
+                combustivelAux = combustivelRotaParcial + vetClienteRotaAux[posicao+1].combustivel;
+                poluicaoAux = poluicaoRotaParcial + vetClienteRotaAux[posicao+1].poluicao;
+                pesoAux = peso - instancia->vetorClientes[vetClienteRotaAux[posicao+1].cliente].demanda;
+
+                //cout<<"Depois clienteEscolhido.\n";
+
+                //Calcula o fim da rota
+                ResultadosRota resultadosRota = calculaFimRota(instancia, veiculo, proxEscolhido, pesoAux, vetClienteRotaAux, posicao+1,
+                                                               poluicaoAux, combustivelAux, clientePtr->cliente, ptrEscolhido->cliente);
+
+                //Verifica viabilidade
+                if(resultadosRota.viavel)
+                {   //cout<<"Viavel caso 2\n";
+                    if(resultadosRota.poluicao < poluicaoBest)
+                    {
+                        copiaSolucao(vetClienteRotaBest, vetClienteRotaAux, &poluicaoBest, &combustivelBest, resultadosRota);
+
+                        if(pertubacao)
+                            break;
+                    }
+                }
+
+
+            }
+
+            clienteIt++;
+
+        }
+
+    }
+
+    if(poluicaoBest == HUGE_VALF)
+        return {.viavel = false};
+    else
+    {
+        return {.poluicao = poluicaoBest, .combustivel = combustivelBest, .peso = veiculo->carga, .viavel = true, .posicaoVet = -1, .veiculo = veiculo, .veiculoSecundario = NULL,
+                .poluicaoSecundario = -1.0, .combustivelSecundario = -1.0, .pesoSecundario = -1, .posicaoVetSecundario = -1};
+    }
+
+}
+namespace teste
+{
+    void breakPoint()
+    {
+
+    }
+}
+/*
+ * Encontre dois veiculos, escolha um cliente (por exemplo) do segundo veiculo. Verificar se é possível remover esse cliente, e tentar inserir no primenro veiculo.
+ *
+ */
+
+ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
+                                                                Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest, bool pertubacao)
+
+{
+
+    //cout<<"mvInterRotasShift\n\n";
+
+    int veiculoEscolhido1;      //Quarda o veiculo que irá receber um cliente
+    int veiculoEscolhido2;      //Veiculo que retira um cliente
+
+    //Vevifica se a solução é inviavel
+    if(solucao->veiculoFicticil)
+    {
+        veiculoEscolhido1 = rand_u32() % (solucao->vetorVeiculos.size() - 1);
+        veiculoEscolhido2 = rand_u32() % (solucao->vetorVeiculos.size() - 1);
+    }
+    else
+    {
+        veiculoEscolhido1 = rand_u32() % solucao->vetorVeiculos.size();
+        veiculoEscolhido2 = rand_u32() % solucao->vetorVeiculos.size();
+    }
+
+    auto *veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
+    auto *veiculo2 = solucao->vetorVeiculos[veiculoEscolhido2];
+
+    while(true)
+    {
+        if((veiculoEscolhido1 != veiculoEscolhido2) && (veiculo1->listaClientes.size() > 2) && (veiculo1->listaClientes.size() > 2))
+            break;
+        else
+        {
+            while(((veiculo2->listaClientes.size() <= 2)))
+            {
+
+                veiculoEscolhido2 += 1;
+                if (solucao->veiculoFicticil)
+                    veiculoEscolhido2 %= (solucao->vetorVeiculos.size() - 1);
+                else
+                    veiculoEscolhido2 %= solucao->vetorVeiculos.size();
+
+                veiculo2 = solucao->vetorVeiculos[veiculoEscolhido2];
+            }
+
+
+            while((veiculoEscolhido1 == veiculoEscolhido2) || veiculo1->listaClientes.size() <= 2)
+            {
+                veiculoEscolhido1 += 1;
+                if (solucao->veiculoFicticil)
+                    veiculoEscolhido1 %= (solucao->vetorVeiculos.size() - 1);
+                else
+                    veiculoEscolhido1 %= solucao->vetorVeiculos.size();
+
+                veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
+            }
+        }
+
+    }
+
+
+    //Escolhe um cliente do veiculo2
+    int posicaoClienteEscolhido = 1 + rand_u32() % (veiculo2->listaClientes.size() - 2);
+    auto clienteEscolhido = std::next(veiculo2->listaClientes.begin(), posicaoClienteEscolhido);
+    auto escolhido = *clienteEscolhido;
+    bool inicioRota = true;
+
+    const int PosicaoClienteOriginal = posicaoClienteEscolhido;
+
+    if((veiculo1->carga + instancia->vetorClientes[escolhido->cliente].demanda) > instancia->vetorVeiculos[veiculo1->tipo].capacidade)
+    {
+        posicaoClienteEscolhido += 1;
+        posicaoClienteEscolhido = 1 + posicaoClienteEscolhido % (veiculo2->listaClientes.size() - 2);
+        clienteEscolhido = std::next(veiculo2->listaClientes.begin(), posicaoClienteEscolhido);
+        escolhido = *clienteEscolhido;
+
+        while((veiculo1->carga + instancia->vetorClientes[escolhido->cliente].demanda) > instancia->vetorVeiculos[veiculo1->tipo].capacidade)
+        {
+
+            posicaoClienteEscolhido += 1;
+            posicaoClienteEscolhido = 1 + posicaoClienteEscolhido % (veiculo2->listaClientes.size() - 2);
+            clienteEscolhido = std::next(veiculo2->listaClientes.begin(), posicaoClienteEscolhido);
+            escolhido = *clienteEscolhido;
+
+            if(posicaoClienteEscolhido == PosicaoClienteOriginal)
+            {
+
+
+                return {.viavel = false};
+            }
+        }
+    }
+
+    //Variaveis de combustivel, poluicao
+    double combustivelRotaParcialVeic1 = 0.0, poluicaoRotaParcialVeic1 = 0.0;
+    double combustivelAuxVeic1, poluicaoAuxVeic1, combustivelBestVeic1, poluicaoBestVeic1 = HUGE_VALF; //Rota completa
+
+    double combustivelBestVeic2, poluicaoBestVeic2;
+
+    //Ajusta o peso dos veiculo
+    int pesoVeic1 = veiculo1->carga + instancia->vetorClientes[escolhido->cliente].demanda;
+    int pesoVeic2 = veiculo2->carga - instancia->vetorClientes[escolhido->cliente].demanda;
+    int  pesoAux;
+
+    const int PesoVeiculo1 = pesoVeic1;
+    const int PesoVeiculo2 = pesoVeic2;
+
+    vetClienteRotaAux[0] = **veiculo1->listaClientes.begin();
+    int posicao = 0;
+    Solucao::ClienteRota *clientePtr;
+    Solucao::ClienteRota *nextClienteRota;
+
+
+
+    string strVeiculo1 = veiculo1->printRota();
+    string strVeiculo2 = veiculo2->printRota();
+    int posicaoBestVeic1;
+
+
+    for(auto clienteIt = std::next(veiculo1->listaClientes.begin(), 1); clienteIt != veiculo1->listaClientes.end();)
+    {
+
+        clientePtr = *clienteIt;
+
+        if(clientePtr->cliente == 8)
+            teste::breakPoint();
+
+        //Verifica se chegou ao deposito
+        if (!inicioRota && clientePtr->cliente == 0)
+            break;
+
+        if (inicioRota)
+            inicioRota = false;
+
+        //Atualiza o próximo cliente
+        auto nextIt = clienteIt;
+        nextIt++;
+        nextClienteRota = *nextIt;
+
+        const Solucao::ClienteRota clienteRotaPosicao = vetClienteRotaAux[posicao];
+
+        vetClienteRotaAux[posicao + 1].cliente = (*clienteEscolhido)->cliente;
+
+        //Calcular rota entre posicao e posicao + 1
+        if(Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao+1], instancia, pesoVeic1, veiculo1->tipo))
+        {
+            combustivelAuxVeic1 = combustivelRotaParcialVeic1;
+            poluicaoAuxVeic1 = poluicaoRotaParcialVeic1;
+
+            auto cliente = vetClienteRotaAux[posicao+1];
+
+            combustivelAuxVeic1 += vetClienteRotaAux[posicao+1].combustivel;
+            poluicaoAuxVeic1 += vetClienteRotaAux[posicao+1].poluicao;
+
+            //Verifica combustivel
+            if(VerificaSolucao::verificaCombustivel(combustivelAuxVeic1, veiculo1->tipo, instancia))
+            {
+                //calcula o resto da rota
+
+                pesoAux = pesoVeic1;
+                pesoAux -= instancia->vetorClientes[(*clienteEscolhido)->cliente].demanda;
+                auto prox = clienteIt;
+                auto ptr = *prox;
+
+                auto resultado = calculaFimRota(instancia, veiculo1, prox, pesoAux, vetClienteRotaAux, posicao + 1,
+                                                poluicaoAuxVeic1, combustivelAuxVeic1, -1, -1, PesoVeiculo1, 1);
+
+                if (resultado.viavel)
+                {
+                    posicaoBestVeic1 = resultado.posicaoVet;
+
+                    //Verifica se é melhor do que a melhor solucao
+                    if (resultado.poluicao < poluicaoBestVeic1)
+                    {
+                        //Copia solucao para best
+
+                        auto bestPtr = &vetClienteRotaBest[0];
+                        auto auxPtr = &vetClienteRotaAux[0];
+
+                        //Copia rota
+                        for (int i = 0; i < resultado.posicaoVet + 1; ++i)
+                        {
+                            *bestPtr = *auxPtr;
+
+
+                            bestPtr++;
+                            auxPtr++;
+                        }
+
+                        poluicaoBestVeic1 = resultado.poluicao;
+                        combustivelBestVeic1 = resultado.combustivel;
+
+                        if (pertubacao)
+                            break;
+
+                    }
+                }
+
+            }
+        }
+
+        //Adicionar arco vetCliente[posicao] - clienteIt(posicao+1)
+
+        vetClienteRotaAux[posicao+1] = **clienteIt;
+
+
+        //Recalcula poluicao, combustivel relativo as cargas
+        vetClienteRotaAux[posicao+1].poluicao = vetClienteRotaAux[posicao+1].poluicaoRota + VerificaSolucao::poluicaoCarga(instancia, veiculo1->tipo, pesoVeic1, instancia->matrizDistancias[vetClienteRotaAux[posicao].cliente][vetClienteRotaAux[posicao+1].cliente]);
+        vetClienteRotaAux[posicao+1].combustivel = vetClienteRotaAux[posicao+1].combustivelRota + VerificaSolucao::combustivelCarga(instancia, veiculo1->tipo, pesoVeic1, instancia->matrizDistancias[vetClienteRotaAux[posicao].cliente][vetClienteRotaAux[posicao+1].cliente]);
+
+        poluicaoRotaParcialVeic1 += vetClienteRotaAux[posicao+1].poluicao;
+        combustivelRotaParcialVeic1 += vetClienteRotaAux[posicao+1].combustivel;
+
+        if(!VerificaSolucao::verificaCombustivel(combustivelRotaParcialVeic1, veiculo1->tipo, instancia))
+            break;
+
+        pesoVeic1 -= instancia->vetorClientes[vetClienteRotaAux[posicao+1].cliente].demanda;
+
+        posicao++;
+        clienteIt++;
+
+    }
+
+
+
+    if(poluicaoBestVeic1 == HUGE_VALF)
+        return {.viavel = false};
+
+    string resultadoVeiculo1 = "";
+
+    for (int i = 0; i < posicaoBestVeic1 + 1; ++i)
+    {
+        resultadoVeiculo1 += std::to_string(vetClienteRotaBest[i].cliente) + ' ';
+    }
+
+    posicao = 0;
+    ResultadosRota resultadoVeic2;
+    double poluicaoRotaVeic2 = 0.0, combustivelRotaVeic2 = 0.0;
+    vetClienteRotaSecundBest[0] = *(*veiculo2->listaClientes.begin());
+
+    string resultadoVeiculo2 = "";
+
+
+
+    //Recalcular veiculo2 sem escolhido. Até escolhido, recalcular poluicao/combustivel relativo a carga, depois recalcular rota.
+    for(auto clienteIt = std::next(veiculo2->listaClientes.begin(),1); clienteIt != veiculo2->listaClientes.end();)
+    {
+        clientePtr = *clienteIt;
+
+        if(clientePtr->cliente == (*clienteEscolhido)->cliente)
+        {
+
+            clienteIt++;
+            //cout<<vetClienteRotaSecundBest[0].cliente<<"\n\n";
+            resultadoVeic2 = calculaFimRota(instancia, veiculo2, clienteIt, pesoVeic2, vetClienteRotaSecundBest, posicao, poluicaoRotaVeic2, combustivelRotaVeic2, -1, -1, PesoVeiculo2, -1);
+
+            for(int i = 0; i < resultadoVeic2.posicaoVet+1; ++i)
+                resultadoVeiculo2 += std::to_string(vetClienteRotaSecundBest[i].cliente) + ' ';
+            break;
+
+        }
+
+        vetClienteRotaSecundBest[posicao+1] = *clientePtr;
+        int clieinte1, cliente2;
+        clieinte1 = vetClienteRotaSecundBest[posicao].cliente;
+        cliente2 = vetClienteRotaSecundBest[posicao+1].cliente;
+
+
+        //recalcula poluicao/combustivel das cargas
+        vetClienteRotaSecundBest[posicao+1].poluicao += vetClienteRotaSecundBest[posicao+1].poluicaoRota + VerificaSolucao::poluicaoCarga(instancia, veiculo2->tipo, pesoVeic2, instancia->matrizDistancias[clieinte1][cliente2]);
+        vetClienteRotaSecundBest[posicao+1].combustivel += vetClienteRotaSecundBest[posicao+1].combustivelRota + VerificaSolucao::combustivelCarga(instancia, veiculo2->tipo, pesoVeic2, instancia->matrizDistancias[clieinte1][cliente2]);
+
+        poluicaoRotaVeic2 += vetClienteRotaSecundBest[posicao+1].poluicao;
+        combustivelRotaVeic2 += vetClienteRotaSecundBest[posicao+1].combustivel;
+
+        if(VerificaSolucao::verificaCombustivel(combustivelRotaVeic2, veiculo2->tipo, instancia))
+        {
+            resultadoVeic2.viavel = false;
+            break;
+        }
+
+        pesoVeic2 -= instancia->vetorClientes[cliente2].demanda;
+        posicao += 1;
+        clienteIt++;
+
+    }
+
+
+    if(!resultadoVeic2.viavel)
+        return {.viavel = false};
+
+
+
+    ResultadosRota resultados;
+
+    resultados.viavel = true;
+
+    resultados.combustivel = combustivelBestVeic1;
+    resultados.poluicao = poluicaoBestVeic1;
+    resultados.veiculo = veiculo1;
+    resultados.posicaoVet = posicaoBestVeic1;
+
+    int peso = instancia->vetorClientes[(*clienteEscolhido)->cliente].demanda;
+    resultados.peso = PesoVeiculo1;
+
+    resultados.poluicaoSecundario = resultadoVeic2.poluicao;
+    resultados.combustivelSecundario = resultadoVeic2.combustivel;
+    resultados.veiculoSecundario = veiculo2;
+    resultados.pesoSecundario = PesoVeiculo2;
+    resultados.posicaoVetSecundario = resultadoVeic2.posicaoVet;
+
+    return resultados;
+
+
 
 }
 
+ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
+                                Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest, bool pertubacao)
+{
+
+    int veiculoEscolhido1;
+    int veiculoEscolhido2;
+
+    //Vevifica se a solução é inviavel
+    if(solucao->veiculoFicticil)
+    {
+        veiculoEscolhido1 = rand_u32() % (solucao->vetorVeiculos.size() - 1);
+        veiculoEscolhido2 = rand_u32() % (solucao->vetorVeiculos.size() - 1);
+    }
+    else
+    {
+        veiculoEscolhido1 = rand_u32() % solucao->vetorVeiculos.size();
+        veiculoEscolhido2 = rand_u32() % solucao->vetorVeiculos.size();
+    }
+
+    auto *veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
+    auto *veiculo2 = solucao->vetorVeiculos[veiculoEscolhido2];
+
+    while(true)
+    {
+        if((veiculoEscolhido1 != veiculoEscolhido2) && (veiculo1->listaClientes.size() > 2) && (veiculo1->listaClientes.size() > 2))
+            break;
+        else
+        {
+            while(((veiculo2->listaClientes.size() <= 2)))
+            {
+
+                veiculoEscolhido2 += 1;
+                if (solucao->veiculoFicticil)
+                    veiculoEscolhido2 %= (solucao->vetorVeiculos.size() - 1);
+                else
+                    veiculoEscolhido2 %= solucao->vetorVeiculos.size();
+
+                veiculo2 = solucao->vetorVeiculos[veiculoEscolhido2];
+            }
+
+
+            while((veiculoEscolhido1 == veiculoEscolhido2) || veiculo1->listaClientes.size() <= 2)
+            {
+                veiculoEscolhido1 += 1;
+                if (solucao->veiculoFicticil)
+                    veiculoEscolhido1 %= (solucao->vetorVeiculos.size() - 1);
+                else
+                    veiculoEscolhido1 %= solucao->vetorVeiculos.size();
+
+                veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
+            }
+        }
+
+    }
+
+    int posicaoClienteEscolhido = 1 + rand_u32() % (veiculo2->listaClientes.size() - 2);
+    auto clienteEscolhido = std::next(veiculo2->listaClientes.begin(), posicaoClienteEscolhido);
+    auto escolhido = *clienteEscolhido;
+
+
+
+
+}
+
+void Movimentos::copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest, double *combustivelBest, ResultadosRota resultado)
+{
+
+    //Copia rota
+    for (int i = 0; i < resultado.posicaoVet + 1; ++i)
+    {
+        *bestPtr = *auxPtr;
+
+        //cout<<bestPtr->cliente<<" ";
+
+        bestPtr++;
+        auxPtr++;
+    }
+    //cout<<'\n'<<'\n';
+    *poluicaoBest = resultado.poluicao;
+    *combustivelBest = resultado.combustivel;
+
+}
 
 ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, int posicaoClienteEscolhido, int posicaoAlvo, int peso,
                                          Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, int begin)
@@ -534,7 +1066,7 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
 ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
                                           auto proximoClienteIt, int peso, Solucao::ClienteRota *vetClienteRotaAux,
                                           int posicaoVet, double poluicao, double combustivel,
-                                          const int clienteEscolhido, const int substituto)
+                                          const int clienteEscolhido, const int substituto, const int pesoTotal, const int maisclientes)
 {
 
 
@@ -590,21 +1122,30 @@ ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const inst
         ++itCliente;
     }
 
-    auto veiculoPtr = new Solucao::Veiculo(*veiculo);
+    auto veiculoPtr = new Solucao::Veiculo(veiculo->tipo);
 
-    int i = 0;
 
-    for(auto it : veiculoPtr->listaClientes)
+
+    veiculoPtr->listaClientes.erase(veiculoPtr->listaClientes.begin(), veiculoPtr->listaClientes.end());
+
+    for(int i = 0; i <= posicaoVet; ++i)
     {
-        *it = vetClienteRotaAux[i];
-        i += 1;
+        auto cliente = new Solucao::ClienteRota;
+        *cliente = vetClienteRotaAux[i];
+
+        veiculoPtr->listaClientes.push_back(cliente);
+
     }
+
 
     veiculoPtr->poluicao = poluicao;
     veiculoPtr->combustivel = combustivel;
+    veiculoPtr->carga = pesoTotal;
+
     if(!VerificaSolucao::verificaVeiculo(veiculoPtr, instancia))
     {
         delete veiculoPtr;
+
         throw exceptionVeiculo;
     }
 

@@ -8,7 +8,7 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
-#define Saida true
+#define Saida false
 #define TesteParametro false
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
@@ -33,7 +33,7 @@
     parametro.insert({25, 0.54});
     parametro.insert({20, 0.67});
     parametro.insert({15, 0.99});
-    parametro.insert({10, 0.97});
+    parametro.insert({10, 0.39});
  *
  * ************************************************************************************************************************************************************
  *
@@ -66,9 +66,9 @@ int main(int num, char **agrs)
     parametro.insert({75, 0.82});
     parametro.insert({50, 0.79});
     parametro.insert({25, 0.54});
-    parametro.insert({20, 0.67});
-    parametro.insert({15, 0.35});
-    parametro.insert({10, 0.97});
+    parametro.insert({20, 0.19});
+    parametro.insert({15,  0.73});
+    parametro.insert({10, 0.35});
 
     string strInstancia;
     string saidaCompleta;
@@ -122,7 +122,7 @@ int main(int num, char **agrs)
     if(std::atoll(agrs[4]) != 0)
         semente = std::atoll(agrs[4]);
 
-
+    //cout<<"Semente = "<<semente<<'\n';
     string texto;
     std::time_t result = std::time(nullptr);
     auto data = std::asctime(std::localtime(&result));
@@ -152,7 +152,7 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 10000, 1000, logAtivo, &strLog,
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 2000, 200, logAtivo, &strLog,
                                        parametro[instancia->numClientes - 1]);
 
 

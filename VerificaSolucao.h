@@ -32,8 +32,8 @@ namespace VerificaSolucao
     double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
 
     bool verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
-    bool verificaCombustivel(const double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *instancia);
-    bool verificaCombustivel(const double combustivel, const int tipoVeiculo, Instancia::Instancia *instancia);
+    bool verificaCombustivel(const double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
+    bool verificaCombustivel(const double combustivel, const int tipoVeiculo, const Instancia::Instancia *const instancia);
 
 
 
