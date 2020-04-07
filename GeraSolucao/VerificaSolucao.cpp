@@ -134,6 +134,7 @@ bool VerificaSolucao::geraSolucao(const Instancia::Instancia *const instancia, S
 
 
                     (*itCliente)->poluicao = poluicaoAux;
+                    (*itCliente)->poluicaoRota = aux;
                     (*itCliente)->combustivel = combustivelAux;
                     (*itCliente)->tempoChegada = horario;
 

@@ -8,7 +8,7 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
-#define Saida false
+#define Saida true
 #define TesteParametro false
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
@@ -122,7 +122,7 @@ int main(int num, char **agrs)
     if(std::atoll(agrs[4]) != 0)
         semente = std::atoll(agrs[4]);
 
-    //cout<<"Semente = "<<semente<<'\n';
+    cout<<"Semente = "<<semente<<'\n';
     string texto;
     std::time_t result = std::time(nullptr);
     auto data = std::asctime(std::localtime(&result));

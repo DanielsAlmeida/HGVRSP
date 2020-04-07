@@ -89,11 +89,11 @@ int main( int tam, char **agrs)
     cout<<"\n\n";
     
     int i = 0;
-    cout<<"Veiculo  poluicao  combustivel\n";
+    cout<<"Veiculo  poluicao  combustivel peso\n";
     for(auto it : solucao->vetorVeiculos)
     {
     
-        cout<<i<<'\t'<<it->poluicao<<'\t'<<it->combustivel<<'\n';
+        cout<<i<<'\t'<<it->poluicao<<'\t'<<it->combustivel<<'\t'<<it->carga<<'\n';
         i += 1;
         
            
@@ -132,6 +132,35 @@ int main( int tam, char **agrs)
 
         cout<<"    "<<"Cliente: "<<clienteInt<<" menor gap: "<<gap<<";  Tempo saida ultimo cliente: "<<ultimo<<'\n';
 
+    }
+    
+    cout<<"\n\n";
+    
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+            if(veiculo->tipo == 2)
+            continue;
+            
+            int i = 0;
+            
+            cout<<"0 ";
+            for(auto cliente : veiculo->listaClientes)
+            {
+            
+                if(!((i % 2)==0))
+                {
+                    cout<<cliente->cliente<<" "<<"PoluicaoRota: "<<cliente->poluicaoRota<<'\n';
+                    
+                    cout<<cliente->cliente<<" ";
+                }
+                
+                
+                i++;
+            
+            }
+            
+            i = 0;
+            
     }
 
     delete solucao;

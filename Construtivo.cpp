@@ -32,6 +32,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetClienteBestSecund = new Solucao::ClienteRota[instancia->numClientes+2];
+    auto *vetClienteRotaSecundAux = new Solucao::ClienteRota[instancia->numClientes+2];
 
     //Vetores para o reativo
     double *vetorProbabilidade = new double[tamAlfa];
@@ -127,7 +128,6 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     std::string sequencia;
     for(int i = 0; i < numInteracoes; ++i)
     {
-        //cout<<"Interacao: "<<i<<"\n\n";
 
         //Atualiza probabilidade
         if((i%numIntAtualizarProb) == 0)
@@ -172,19 +172,18 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             int num = int(ceil(solucaoAux->poluicao));
             hash[num]++;
 
-/*
-            auto resultado = Movimentos::mvInterRotasShift(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, false);
+            //cout<<"Interacao: "<<i<<"\n\n";
+
+            auto resultado = Movimentos::mvInterRotasSwap(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux, false);
 
 
             //cout<<"Solucao.\n\n";
 
             while (resultado.viavel && (resultado.poluicao < solucaoAux->poluicao))
             {
-                //cout<<"Viavel.\n";
+                cout<<"Viavel.\n";
                 int l = 0;
-                auto clienteRota = new Solucao::ClienteRota;
-                resultado.veiculo->listaClientes.push_back(clienteRota);
-                clienteRota = NULL;
+
                 int peso = 0;
                 for (auto clienteIt : resultado.veiculo->listaClientes)
                 {
@@ -204,11 +203,6 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                 solucaoAux->poluicao += resultado.veiculo->poluicao;
 
-
-                clienteRota = *resultado.veiculoSecundario->listaClientes.begin();
-                resultado.veiculoSecundario->listaClientes.pop_front();
-
-                delete clienteRota;
                 l = 0;
                 peso = 0;
                 for (auto clienteIt : resultado.veiculoSecundario->listaClientes)
@@ -233,10 +227,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                 //VerificaSolucao::verificaVeiculo(resultado.veiculo, instancia);
 
-                resultado = Movimentos::mvInterRotasShift(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, false);
+                resultado = Movimentos::mvInterRotasSwap(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux, false);
 
 
-            }*/
+            }
 
 
 
@@ -343,6 +337,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     delete []solucaoAcumulada;
     delete []vetorMedia;
     delete []proporcao;
+    delete []vetClienteRotaSecundAux;
 
     proporcao = NULL;
     vetorMedia = NULL;

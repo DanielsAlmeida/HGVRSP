@@ -36,7 +36,7 @@ namespace Movimentos
                                      Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest, bool pertubacao = false);
 
     ResultadosRota mvInterRotasSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
-                                     Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest, bool pertubacao = false);
+                                     Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest,Solucao::ClienteRota *vetClienteRotaSecundAux, bool pertubacao = false);
 
 
     // Recalcula a rota até posicaoAlvo, excluindo, caso exista,  clienteEscolhido.
@@ -50,8 +50,11 @@ namespace Movimentos
                                   int posicaoVet, double poluicao, double combustivel,
                                   const int clienteEscolhido, const int substituto = -1, const int pesoTotal=-1, const int maisclientes = 0);
 
-    void copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest,
-                      double *combustivelBest, ResultadosRota resultado);
+    bool recalculaCombustivelPoluicaoCargas(Solucao::Veiculo *veiculo, double *poluicao, double *combustivel, int *pesoTotal, const Instancia::Instancia *const instancia,
+                                            Solucao::ClienteRota *vetClienteRotaAux, int posicao);
+
+
+    void copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest, double *combustivelBest, ResultadosRota resultado, int *posicao);
 
 
 }
