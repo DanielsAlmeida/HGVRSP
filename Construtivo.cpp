@@ -172,9 +172,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             int num = int(ceil(solucaoAux->poluicao));
             hash[num]++;
 
-            //cout<<"Interacao: "<<i<<"\n\n";
+            /*cout<<"Interacao: "<<i<<"\n\n";
 
-            auto resultado = Movimentos::mvInterRotasSwap(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux, false);
+            auto resultado = Movimentos::mv_2optSwapIntraRota(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false);
 
 
             //cout<<"Solucao.\n\n";
@@ -203,34 +203,11 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                 solucaoAux->poluicao += resultado.veiculo->poluicao;
 
-                l = 0;
-                peso = 0;
-                for (auto clienteIt : resultado.veiculoSecundario->listaClientes)
-                {
 
-                    *clienteIt = vetClienteBestSecund[l];
-                    peso += instancia->vetorClientes[(*clienteIt).cliente].demanda;
-
-                    l += 1;
-                }
+                resultado = Movimentos::mv_2optSwapIntraRota(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false);
 
 
-                //Atualiza veiculo secundario
-
-                solucaoAux->poluicao -= resultado.veiculoSecundario->poluicao;
-                resultado.veiculoSecundario->poluicao = resultado.poluicaoSecundario;
-                solucaoAux->poluicao += resultado.veiculoSecundario->poluicao;
-
-                resultado.veiculoSecundario->combustivel = resultado.combustivelSecundario;
-                resultado.veiculoSecundario->carga = resultado.pesoSecundario;
-
-
-                //VerificaSolucao::verificaVeiculo(resultado.veiculo, instancia);
-
-                resultado = Movimentos::mvInterRotasSwap(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux, false);
-
-
-            }
+            }*/
 
 
 

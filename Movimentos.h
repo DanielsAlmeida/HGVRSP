@@ -38,6 +38,11 @@ namespace Movimentos
     ResultadosRota mvInterRotasSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
                                      Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest,Solucao::ClienteRota *vetClienteRotaSecundAux, bool pertubacao = false);
 
+    ResultadosRota mv_2optSwapIntraRota(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,Solucao::ClienteRota *vetClienteRotaBest,
+                                        Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao= false);
+    //Peso de ResultadosRota é o peso restante do veiculo
+    ResultadosRota inverteRota(auto itInicio, auto itFim, Solucao::ClienteRota *vetClienteRotaAux, int posicao, int peso, double poluicao,
+                               double combustivel, const Instancia::Instancia *const instancia, int tipoVeiculo);
 
     // Recalcula a rota até posicaoAlvo, excluindo, caso exista,  clienteEscolhido.
     ResultadosRota recalculaRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, int posicaoClienteEscolhido, int posicaoAlvo, int peso,

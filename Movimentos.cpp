@@ -882,17 +882,6 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
     auto *veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
     auto *veiculo2 = solucao->vetorVeiculos[veiculoEscolhido2];
 
-    if(!VerificaSolucao::verificaVeiculo(veiculo1, instancia))
-    {
-        cout<<"Veiculo1 errado antes movimento\n\n";
-    }
-
-    if(!VerificaSolucao::verificaVeiculo(veiculo2, instancia))
-    {
-        cout<<"Veiculo2 errado antes movimento\n\n";
-    }
-
-
     while(true)
     {
         if((veiculoEscolhido1 != veiculoEscolhido2) && (veiculo1->listaClientes.size() > 2) && (veiculo1->listaClientes.size() > 2))

@@ -8,8 +8,8 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
-#define Saida true
-#define TesteParametro false
+#define Saida false
+#define TesteParametro true
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /* 1585430665
@@ -66,7 +66,7 @@ int main(int num, char **agrs)
     parametro.insert({75, 0.82});
     parametro.insert({50, 0.79});
     parametro.insert({25, 0.54});
-    parametro.insert({20, 0.19});
+    parametro.insert({20, 0.19});  //
     parametro.insert({15,  0.73});
     parametro.insert({10, 0.35});
 
