@@ -99,22 +99,22 @@ namespace Solucao
         {
             std::string saida;
 
-            saida = "********************************TIPO-"+std::to_string(tipo)+"********************************************\n";
+            //saida = "********************************TIPO-"+std::to_string(tipo)+"********************************************\n";
 
             for(auto cliente : listaClientes)
             {
 
-                saida += "Cliente: " + std::to_string(cliente->cliente) + "\n";
-                saida += "TempoChegada: " + std::to_string(cliente->tempoChegada) + "  ";
+                saida += std::to_string(cliente->cliente) + ' ';
+/*                saida += "TempoChegada: " + std::to_string(cliente->tempoChegada) + "  ";
                 saida += "TempoSaida: " + std::to_string(cliente->tempoSaida) + "\n";
                 saida += "PoluicaoRota: " + std::to_string(cliente->poluicaoRota) + "  ";
                 saida += "Poluicao: " + std::to_string(cliente->poluicao) + "\n";
                 saida += "CombustivelRota: " + std::to_string(cliente->combustivelRota) + "  ";
-                saida += "Combustivel: " + std::to_string(cliente->combustivel) + "\n\n";
+                saida += "Combustivel: " + std::to_string(cliente->combustivel) + "\n\n";*/
 
             }
 
-            saida += "****************************************************************************\n";
+            //saida += "****************************************************************************\n";
 
             return saida;
         }

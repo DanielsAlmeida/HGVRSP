@@ -8,8 +8,8 @@
 #include "mersenne-twister.h"
 #include "time.h"
 
-#define Saida false
-#define TesteParametro true
+#define Saida true
+#define TesteParametro false
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /* 1585430665
@@ -63,10 +63,12 @@ using namespace std;
 int main(int num, char **agrs)
 {
     std::map<int, float> parametro;
-    parametro.insert({75, 0.82});
-    parametro.insert({50, 0.79});
-    parametro.insert({25, 0.54});
-    parametro.insert({20, 0.19});  //
+
+    parametro.insert({100, 0.92});
+    parametro.insert({75, 0.36});
+    parametro.insert({50, 0.73});
+    parametro.insert({25, 0.99}); 
+    parametro.insert({20, 0.19});  
     parametro.insert({15,  0.73});
     parametro.insert({10, 0.35});
 

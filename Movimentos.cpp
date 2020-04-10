@@ -5,6 +5,7 @@
 #include "Movimentos.h"
 #include "Construtivo.h"
 #include "mersenne-twister.h"
+#include "Exception.h"
 
 using namespace Movimentos;
 
@@ -18,29 +19,6 @@ using namespace Movimentos;
  * A partir do 20, adicionar arco 8-20, com 7, 20-7 adicionando o peso do 10
  * ************************************************************************************************************************************************************************************************** */
 
-class ExceptionVeiculo: public std::exception
-{
-    virtual const char* what() const throw()
-    {
-        return "Erro, veiculo incorreto.\n";
-    }
-} exceptionVeiculo;
-
-class ExceptionPeso: public std::exception
-{
-    virtual const char* what() const throw()
-    {
-        return "Erro, fuc: calculaFimRota. \nMotivo: Peso passado incorreto\n";
-    }
-} exceptionPeso;
-
-class Exception: public std::exception
-{
-    virtual const char* what() const throw()
-    {
-        return "Erro, fuc: calculaFimRota. \nMotivo: clienteEscolhido eh igual a zero\n";
-    }
-} exceptionEscolhido;
 
 ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                             Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,

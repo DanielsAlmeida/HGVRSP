@@ -172,24 +172,36 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             int num = int(ceil(solucaoAux->poluicao));
             hash[num]++;
 
-            /*cout<<"Interacao: "<<i<<"\n\n";
+            //cout<<"Interacao: "<<i<<"\n\n";
 
-            auto resultado = Movimentos::mv_2optSwapIntraRota(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false);
+            auto resultado = Movimentos::mvTrocarVeiculos(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux);
 
+            if(resultado.viavel)
+             cout<<"Solucao.\n";
 
-            //cout<<"Solucao.\n\n";
-
-            while (resultado.viavel && (resultado.poluicao < solucaoAux->poluicao))
+            while (resultado.viavel && ((resultado.poluicao) < (resultado.veiculo->poluicao )))
             {
-                cout<<"Viavel.\n";
+                cout<<"Melhorou solucao\n";
                 int l = 0;
 
                 int peso = 0;
-                for (auto clienteIt : resultado.veiculo->listaClientes)
-                {
 
-                    *clienteIt = vetorClienteBest[l];
-                    peso += instancia->vetorClientes[(*clienteIt).cliente].demanda;
+                while(resultado.veiculo->listaClientes.size() > 0)
+                {
+                    auto cliente = *resultado.veiculo->listaClientes.begin();
+                    resultado.veiculo->listaClientes.pop_front();
+
+                    delete cliente;
+
+                }
+
+                for (;l <= resultado.posicaoVet;)
+                {
+                    auto cliente = new Solucao::ClienteRota;
+                    *cliente = vetorClienteBest[l];
+                    peso += instancia->vetorClientes[(*cliente).cliente].demanda;
+
+                    resultado.veiculo->listaClientes.push_back(cliente);
 
                     l += 1;
                 }
@@ -200,14 +212,40 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                 resultado.veiculo->combustivel = resultado.combustivel;
                 resultado.veiculo->poluicao = resultado.poluicao;
                 resultado.veiculo->carga = resultado.peso;
-
                 solucaoAux->poluicao += resultado.veiculo->poluicao;
 
+                peso = 0;
+                l = 0;
 
-                resultado = Movimentos::mv_2optSwapIntraRota(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false);
+                while(resultado.veiculoSecundario->listaClientes.size() > 0)
+                {
+                    auto cliente = *resultado.veiculoSecundario->listaClientes.begin();
+                    resultado.veiculoSecundario->listaClientes.pop_front();
+
+                    delete cliente;
+
+                }
+
+                for (;l <= resultado.posicaoVetSecundario;)
+                {
+                    auto cliente = new Solucao::ClienteRota;
+                    *cliente = vetClienteBestSecund[l];
+                    peso += instancia->vetorClientes[(*cliente).cliente].demanda;
+
+                    resultado.veiculoSecundario->listaClientes.push_back(cliente);
+
+                    l += 1;
+                }
+                solucaoAux->poluicao -= resultado.veiculoSecundario->poluicao;
+                resultado.veiculoSecundario->combustivel = resultado.combustivelSecundario;
+                resultado.veiculoSecundario->poluicao = resultado.poluicaoSecundario;
+                resultado.veiculoSecundario->carga = resultado.pesoSecundario;
+                solucaoAux->poluicao += resultado.veiculoSecundario->poluicao;
+
+                resultado = Movimentos::mvTrocarVeiculos(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux);
 
 
-            }*/
+            }
 
 
 

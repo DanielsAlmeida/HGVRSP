@@ -4,3 +4,13 @@
     criterio: Max:folga e Min: Poluição
     Para cada veiculo calcular a menor folga.
 
+
+Parametro para 2º Heuristica:
+
+    10 : 0.81
+    15 : 0.42
+    20 : 0.94
+    25 : 0.55
+    50 : 0.44
+    75 : 0.68
+    100: 0.96 //
