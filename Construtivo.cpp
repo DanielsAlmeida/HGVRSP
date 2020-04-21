@@ -4,6 +4,8 @@
 #include "mersenne-twister.h"
 #include <unordered_map>
 #include "Movimentos.h"
+#include "ViabilizaSolucao.h"
+#include "Vnd.h"
 
 using namespace Construtivo;
 using namespace std;
@@ -22,8 +24,10 @@ class ExceptioMvShifit: public std::exception
 } exceptioMvShifit;
 
 Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
-                                      const int numInteracoes, const int numIntAtualizarProb, bool log,
-                                      stringstream *strLog, const double parametro)
+                                      const int numInteracoes,
+                                      const int numIntAtualizarProb, bool log, stringstream *strLog,
+                                      const double parametroHeur1,
+                                      const double parametroHeur2, const bool usarDuasHeur)
 {
 
     unordered_map<int, int> hash;
@@ -47,14 +51,14 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     //Inicializa a melhor solução
     vetorFrequencia[0] = 1;
     Solucao::Solucao *best = geraSolucao(instancia, vetorAlfa[0], vetorClienteBest, vetorClienteAux,
-                                         nullptr, false, vetorCandidatos, parametro);
+                                         nullptr, false, vetorCandidatos, parametroHeur1, parametroHeur2, true);
     vetorProbabilidade[0] = 1.0/tamAlfa;
     solucaoAcumulada[0] = best->poluicao;
     Solucao::Solucao *solucaoAux;
     int posicaoAlfa;
     int ultimaAtualizacao = -1;
     double poluicaoUltima = -1.0;
-
+    bool heuristica1 = true;
 
     //Inicializa os vetores de todos os alfas
     for(int i = 1; i < tamAlfa; ++i)
@@ -63,7 +67,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         vetorFrequencia[i] = 1;
 
         //Inicializa a solucaoAcumulada para o alfa
-        solucaoAux = geraSolucao(instancia, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false, vetorCandidatos, parametro);
+        solucaoAux = geraSolucao(instancia, vetorAlfa[i], vetorClienteBest, vetorClienteAux, nullptr, false, vetorCandidatos, parametroHeur1, parametroHeur2, heuristica1);
         solucaoAcumulada[i] = solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
 
         if(best->veiculoFicticil)
@@ -133,6 +137,20 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         if((i%numIntAtualizarProb) == 0)
             atualizaProbabilidade(vetorProbabilidade, vetorFrequencia, solucaoAcumulada, vetorMedia, proporcao, tamAlfa, best->poluicao);
 
+        if((i == numInteracoes/2) && usarDuasHeur)
+        {
+
+            double taxa = numSolInviaveis/double(numInteracoes/2);
+
+            if(taxa >= 0.6)
+            {
+                heuristica1 = false;
+
+            }
+
+
+        }
+
         //Escolher alfa, gerar solução, atualizar vetores, ....
         somaProb = posicaoAlfa = 0;
 
@@ -159,10 +177,37 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
         sequencia = "";
 
-        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos, parametro);
+        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos, parametroHeur1, parametroHeur2, heuristica1);
 
         solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
         vetorFrequencia[posicaoAlfa] += 1;
+
+        if(solucaoAux->veiculoFicticil && i >= 100)
+        {
+            //Calcular probabilidade
+
+            double taxa = numSolInviaveis/double(i+1); // 1 - 0.6 = 0.4
+
+            int p = 100.0*(1-taxa);
+
+            if((rand_u32()%100) > p)
+            {
+                int num = solucaoAux->vetorVeiculos[solucaoAux->vetorVeiculos.size()-1]->listaClientes.size()-2;
+                taxa = 1.0/double(num);
+                p = 100.0*(1-taxa);
+
+                if(((rand_u32()%100) > p) || (num == 1))
+                {
+                    //cout<<"Tentando viabilizar\n";
+                    ViabilizaSolucao::viabilizaSolucao(solucaoAux, instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos,
+                                                       parametroHeur1, parametroHeur2, heuristica1, 5, 15, vetClienteBestSecund, vetClienteRotaSecundAux);
+
+
+                }
+            }
+        }
+
+
 
 
         if(solucaoAux->veiculoFicticil)
@@ -172,81 +217,12 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             int num = int(ceil(solucaoAux->poluicao));
             hash[num]++;
 
+            double dist;
+
             //cout<<"Interacao: "<<i<<"\n\n";
 
-            auto resultado = Movimentos::mvTrocarVeiculos(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux);
 
-            if(resultado.viavel)
-             cout<<"Solucao.\n";
-
-            while (resultado.viavel && ((resultado.poluicao) < (resultado.veiculo->poluicao )))
-            {
-                cout<<"Melhorou solucao\n";
-                int l = 0;
-
-                int peso = 0;
-
-                while(resultado.veiculo->listaClientes.size() > 0)
-                {
-                    auto cliente = *resultado.veiculo->listaClientes.begin();
-                    resultado.veiculo->listaClientes.pop_front();
-
-                    delete cliente;
-
-                }
-
-                for (;l <= resultado.posicaoVet;)
-                {
-                    auto cliente = new Solucao::ClienteRota;
-                    *cliente = vetorClienteBest[l];
-                    peso += instancia->vetorClientes[(*cliente).cliente].demanda;
-
-                    resultado.veiculo->listaClientes.push_back(cliente);
-
-                    l += 1;
-                }
-
-                solucaoAux->poluicao -= resultado.veiculo->poluicao;
-
-
-                resultado.veiculo->combustivel = resultado.combustivel;
-                resultado.veiculo->poluicao = resultado.poluicao;
-                resultado.veiculo->carga = resultado.peso;
-                solucaoAux->poluicao += resultado.veiculo->poluicao;
-
-                peso = 0;
-                l = 0;
-
-                while(resultado.veiculoSecundario->listaClientes.size() > 0)
-                {
-                    auto cliente = *resultado.veiculoSecundario->listaClientes.begin();
-                    resultado.veiculoSecundario->listaClientes.pop_front();
-
-                    delete cliente;
-
-                }
-
-                for (;l <= resultado.posicaoVetSecundario;)
-                {
-                    auto cliente = new Solucao::ClienteRota;
-                    *cliente = vetClienteBestSecund[l];
-                    peso += instancia->vetorClientes[(*cliente).cliente].demanda;
-
-                    resultado.veiculoSecundario->listaClientes.push_back(cliente);
-
-                    l += 1;
-                }
-                solucaoAux->poluicao -= resultado.veiculoSecundario->poluicao;
-                resultado.veiculoSecundario->combustivel = resultado.combustivelSecundario;
-                resultado.veiculoSecundario->poluicao = resultado.poluicaoSecundario;
-                resultado.veiculoSecundario->carga = resultado.pesoSecundario;
-                solucaoAux->poluicao += resultado.veiculoSecundario->poluicao;
-
-                resultado = Movimentos::mvTrocarVeiculos(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux);
-
-
-            }
-
+            Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund, vetClienteRotaSecundAux);
 
 
         }
@@ -421,36 +397,42 @@ void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFr
 
 void
 Construtivo::atualizaPesos(double *beta, double *teta, int numClientes, const double parametro, const int k,
-                           double *gama)
+                           double *gama, const double parametroheu2, const bool heuristica1)
 {
-
-    *teta = abs(sin(2*M_PI*(k)/(parametro* numClientes)));
-    *beta = 1 - *teta;
-
-/*
-    static int i = 0, j = 0;
-    static const double F = numClientes * parametro;
-    static const int max = int(numClientes);
-
-    *beta = abs(sin(2.0 * M_PI * i) / F);
-    *teta = (1-*beta) * abs(sin(2.0*M_PI*j)/F);
-    *gama = 1.0 - *beta - *teta;
-
-    if(j+1 < max)
-        j += 1;
+    if(heuristica1)
+    {
+        *teta = abs(sin(2 * M_PI * (k) / (parametro * numClientes)));
+        *beta = 1 - *teta;
+    }
     else
-    {   j = 0;
-        if(i+1 < max)
-            i += 1;
+    {
+
+
+
+
+        static int i = 0, j = 0;
+        static const double F = numClientes * parametroheu2;
+        static const int max = int(numClientes);
+
+        *beta = abs(sin(2.0 * M_PI * i) / F);
+        *teta = (1-*beta) * abs(sin(2.0*M_PI*j)/F);
+        *gama = 1.0 - *beta - *teta;
+
+        if(j+1 < max)
+            j += 1;
         else
-            i = 0;
-    }*/
+        {
+            j = 0;
+            if(i+1 < max)
+                i += 1;
+            else
+                i = 0;
+        }
+    }
 }
 
-Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const instancia, float alfa,
-                                            Solucao::ClienteRota *vetorClienteBest,
-                                            Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
-                                            Construtivo::Candidato *vetorCandidatos, const double parametro)
+Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
+                                            string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos, const double parametroHeur1, const double parametroHeur2, const bool heurist1)
 {
 
     string texto;
@@ -483,34 +465,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
     double folgaRota, folgaRotaAux;
     double distRotaBest;
 
-    // *************************************************************INSERE CLIENTE*************************************************************************
-/*    solucao->vetorVeiculos[0]->listaClientes;
-
-    Solucao::ClienteRota *cliente = new Solucao::ClienteRota;
-
-    cliente->cliente = 7;
-
-    auto aux = solucao->vetorVeiculos[0]->listaClientes.begin();
-    ++aux;
-    auto clieteAux10 = *aux;
-
-
-    determinaHorario(*solucao->vetorVeiculos[0]->listaClientes.begin(), cliente, instancia, instancia->vetorClientes[7].demanda, 0);
-    solucao->vetorVeiculos[0]->listaClientes.insert(aux, cliente);
-    determinaHorario(cliente, clieteAux10, instancia, 0.0, 0);
-
-    solucao->poluicao = cliente->poluicao;
-    solucao->poluicao += (clieteAux10)->poluicao;
-    solucao->vetorVeiculos[0]->combustivel = cliente->combustivel;
-    solucao->vetorVeiculos[0]->poluicao = (clieteAux10)->poluicao;
-
-    cliente = *aux;
-    solucao->poluicao += cliente->poluicao;
-    solucao->vetorVeiculos[0]->combustivel += cliente->combustivel;
-    solucao->vetorVeiculos[0]->carga = instancia->vetorClientes[7].demanda;*/
-
-    // *************************************************************INSERE CLIENTE*************************************************************************
-
     auto *candidato = new Solucao::ClienteRota;
     Instancia::Cliente clienteAux;
 
@@ -540,7 +494,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
     while (!listaCandidatos.empty())
     {
 
-        atualizaPesos(&beta, &teta, instancia->numClientes, parametro, numClientesSol, &gama);
+        atualizaPesos(&beta, &teta, instancia->numClientes, parametroHeur1, numClientesSol, &gama, parametroHeur2, heurist1);
         numClientesSol += 1;
 
         //Pega a melhor solucao de cada candidato.
@@ -602,16 +556,17 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                     if (viavel)
                     {
 
-                        #if HEURIST_DIST
-                            for(int i = 0; i+2 < tamVetAux; ++i)
+                        if(!heurist1)
+                        {
+                            for (int i = 0; i + 2 < tamVetAux; ++i)
                             {
-                                double dist = instancia->matrizDistancias[vetorClienteAux[i].cliente][vetorClienteAux[i+1].cliente];
-                                dist += instancia->matrizDistancias[vetorClienteAux[i+1].cliente][vetorClienteAux[i+2].cliente];
+                                double dist = instancia->matrizDistancias[vetorClienteAux[i].cliente][vetorClienteAux[i + 1].cliente];
+                                dist += instancia->matrizDistancias[vetorClienteAux[i + 1].cliente][vetorClienteAux[i+2].cliente];
 
-                                if(dist > disTemp)
+                                if (dist > disTemp)
                                     disTemp = dist;
                             }
-                        #endif
+                        }
 
                         if (nullMelhorVeiculo)
                         {
@@ -627,9 +582,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             else
                                 folgaRota = folgaRotaAux;
 
-                            #if HEURIST_DIST
+                            if(!heurist1)
                                 distRotaBest = disTemp;
-                            #endif
 
                             //trocar vetores
                             vetorClienteSwap = vetorClienteBest;
@@ -640,7 +594,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                                 vetorClienteAux[i] = vetorClienteBest[i];
 
                         }
-
                         else
                         {
                             //Variaveis auxiliares de folga e poluicao
@@ -648,10 +601,14 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             double folgaSolParcial;    //Armazena a folga do veiculo da solucao parcial.
                             double folgaBest = folgaRota;
 
-                            #if HEURIST_DIST
-                                double distParcial = disTemp;
-                                double distBest = distRotaBest;
-                            #endif
+                            double distParcial;
+                            double distBest;
+
+                            if(!heurist1)
+                            {
+                                distParcial = disTemp;
+                                distBest = distRotaBest;
+                            }
 
                             if(aux < folgaRotaAux)
                                 folgaSolParcial = aux;
@@ -661,16 +618,21 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             //Valor que eh incrementado na funcao objetivo
                             double incAtual = (auxPoluicao - (*veiculo)->poluicao);
                             double incBest = (melhorPoluicao - (*melhorVeiculo).poluicao);
+                            double normaAtual;
+                            double normaBest;
 
-                            #if not HEURIST_DIST
+                            if(heurist1)
+                            {
                                 //Normaliza os valores
-                                double normaAtual = pow(folgaSolParcial,2) + pow(incAtual, 2);
-                                double normaBest =  pow(folgaBest,2) + pow(incBest, 2);
+                                normaAtual = pow(folgaSolParcial, 2) + pow(incAtual, 2);
+                                normaBest = pow(folgaBest, 2) + pow(incBest, 2);
 
-                            #else
-                                double normaAtual = pow(folgaSolParcial,2) + pow(incAtual, 2) + pow(distParcial, 2);
-                                double normaBest =  pow(folgaBest,2) + pow(incBest, 2) + pow(distBest, 2);
-                            #endif
+                            }
+                            else
+                            {
+                                normaAtual = pow(folgaSolParcial,2) + pow(incAtual, 2) + pow(distParcial, 2);
+                                normaBest =  pow(folgaBest,2) + pow(incBest, 2) + pow(distBest, 2);
+                            }
 
                             folgaSolParcial /=normaAtual;
                             incAtual /= normaAtual;
@@ -678,18 +640,20 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                             folgaBest /= normaBest;
                             incBest /= normaBest;
 
-                            #if HEURIST_DIST
-
+                            if(!heurist1)
+                            {
                                 distParcial /= normaAtual;
                                 distBest /= normaBest;
+                            }
 
-                            #endif
+                            bool condicao;
 
-                            #if HEURIST_DIST
-                                if ((beta*incAtual + teta*(1.0/folgaSolParcial) + gama*distParcial) < (beta*incBest + teta*(1.0/folgaBest) + gama*distBest))
-                            #else
-                                if ((beta*incAtual + teta*(1.0/folgaSolParcial)) < (beta*incBest + teta*(1.0/folgaBest) ))
-                            #endif
+                            if(heurist1)
+                                condicao = ((beta*incAtual + teta*(1.0/folgaSolParcial)) < (beta*incBest + teta*(1.0/folgaBest) ));
+                            else
+                                condicao = ((beta*incAtual + teta*(1.0/folgaSolParcial) + gama*distParcial) < (beta*incBest + teta*(1.0/folgaBest) + gama*distBest));
+
+                            if(condicao)
                             {
 
                                 melhorVeiculo = (*veiculo);
@@ -698,9 +662,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                                 tamVetBest = tamVetAux;
                                 melhorPosicao = clienteIt;
 
-                                #if HEURIST_DIST
+                                if(!heurist1)
                                     distRotaBest = distParcial;
-                                #endif
 
                                 if (aux < folgaRotaAux)
                                     folgaRota = aux;
@@ -845,9 +808,9 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 ultimo->posicao = melhorPosicao;
                 ultimo->folgaRota = folgaRota;
 
-                #if HEURIST_DIST
+                if(!heurist1)
                     ultimo->distanciaArcos = distRotaBest;
-                #endif
+
                 candidato = new Solucao::ClienteRota;
 
 
@@ -919,25 +882,26 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
              *  1: compCandidatoFolga, compCandidato, compCandidatoDist
              *  2: compCandidatoDist, compCandidatoFolga, compCandidato
              */
-            #if not HEURIST_DIST
+            if(heurist1)
+            {
                 std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidatoFolga);
-                escolhaProporcional(vetorProb, vetorCandidatos, tamLista1Crit, rand_u32()%100, &tamLista2Crit, NULL, 0);
+                escolhaProporcional(vetorProb, vetorCandidatos, tamLista1Crit, rand_u32() % 100, &tamLista2Crit, NULL,0);
 
                 std::qsort(vetorCandidatos, tamLista2Crit, sizeof(Candidato), compCandidato);
-                escolhaProporcional(vetorProb, vetorCandidatos, tamLista2Crit, rand_u32()%100, NULL, ptrEscolhido, 1);
-
-/* ************************************************************************************************************************************************************* */
-            #else
+                escolhaProporcional(vetorProb, vetorCandidatos, tamLista2Crit, rand_u32() % 100, NULL, ptrEscolhido, 1);
+            }
+            else
+            {
                 std::qsort(vetorCandidatos, tam, sizeof(Candidato), compCandidatoFolga);
-                escolhaProporcional(vetorProb, vetorCandidatos, tamLista1Crit, rand_u32()%100, &tamLista2Crit, NULL, 0);
+                escolhaProporcional(vetorProb, vetorCandidatos, tamLista1Crit, rand_u32() % 100, &tamLista2Crit, NULL,0);
 
                 std::qsort(vetorCandidatos, tamLista2Crit, sizeof(Candidato), compCandidato);
-                escolhaProporcional(vetorProb, vetorCandidatos, tamLista2Crit, rand_u32()%100, &tamLista3Crit, NULL, 1);
+                escolhaProporcional(vetorProb, vetorCandidatos, tamLista2Crit, rand_u32() % 100, &tamLista3Crit, NULL,1);
 
                 std::qsort(vetorCandidatos, tamLista3Crit, sizeof(Candidato), compCandidatoDist);
-                escolhaProporcional(vetorProb, vetorCandidatos, tamLista3Crit, rand_u32()%100, NULL, ptrEscolhido, 2);
+                escolhaProporcional(vetorProb, vetorCandidatos, tamLista3Crit, rand_u32() % 100, NULL, ptrEscolhido, 2);
 
-            #endif
+            }
 
             listaCandidatos.remove(instancia->vetorClientes[ptrEscolhido->candidato->cliente]);
 

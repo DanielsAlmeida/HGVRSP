@@ -243,7 +243,23 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
         if((it->carga != carga) || (carga > instancia->vetorVeiculos[it->tipo].capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001))
         {
             //Solução está ERRADA.
-            cout<<"Outros.!\n";
+            //cout<<"Outros.!\n";
+
+            if((it->carga != carga))
+                cout<<"Verificacao final. Carga diferente\n";
+
+            if(carga > instancia->vetorVeiculos[it->tipo].capacidade)
+                cout<<"Verificacao final. capacidade\n";
+
+            if((fabs(it->poluicao - poluicao) > 0.001))
+                cout<<"Verificacao final. poluiao diferente\n";
+
+            if(fabs(it->combustivel - combustivel))
+                cout<<"Verificacao final. Combustivel diferente\n";
+
+            if((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001)
+                cout<<"Verificacao final. consumo Combustivel a mais do que a capacidade\n";
+
             delete []vetorClientes;
             return false;
         }

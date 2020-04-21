@@ -57,11 +57,11 @@ namespace Instancia
     public:
 
 
-        const Periodo vetorPeriodos[5] = {{0,   1.8},
-                                          {1.8, 3.6},
-                                          {3.6, 5.4},
-                                          {5.4, 7.2},
-                                          {7.2, 9.0}}; //Tempo em horas
+        const Periodo vetorPeriodos[5] = {{0,   1.8},  //p0
+                                          {1.8, 3.6},  //p1
+                                          {3.6, 5.4},  //p2
+                                          {5.4, 7.2},  //p3
+                                          {7.2, 9.0}}; //p4   Tempo em horas
         Cliente *vetorClientes;
         const Veiculo vetorVeiculos[3] = {{10000,150,2.2384e-005,2.66374, 0.0, 9.0},{15000, 200, 1.79961e-005, 2.66374, 0.5, 9.0}, {FP_INFINITE, FP_INFINITE, 2.2384e-4, 2.66374, 0, 9}};
         double **matrizDistancias;

@@ -7,8 +7,8 @@
 #include "Construtivo.h"
 #include "mersenne-twister.h"
 #include "time.h"
-
-#define Saida true
+//1586725703
+#define Saida false
 #define TesteParametro false
 
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
@@ -62,15 +62,25 @@ using namespace std;
 #if not TesteParametro
 int main(int num, char **agrs)
 {
-    std::map<int, float> parametro;
+    std::map<int, float> parametroHeur1;
+    std::map<int, float> parametroHeur2;
 
-    parametro.insert({100, 0.92});
-    parametro.insert({75, 0.36});
-    parametro.insert({50, 0.73});
-    parametro.insert({25, 0.99}); 
-    parametro.insert({20, 0.19});  
-    parametro.insert({15,  0.73});
-    parametro.insert({10, 0.35});
+
+    parametroHeur1.insert({10, 0.35});
+    parametroHeur1.insert({15, 0.73});
+    parametroHeur1.insert({20, 0.19});
+    parametroHeur1.insert({25, 0.99});
+    parametroHeur1.insert({50, 0.73});
+    parametroHeur1.insert({75, 0.36});
+    parametroHeur1.insert({100, 0.92});
+
+    parametroHeur2.insert({10, 0.81});
+    parametroHeur2.insert({15, 0.42});
+    parametroHeur2.insert({20, 0.94});
+    parametroHeur2.insert({25, 0.55});
+    parametroHeur2.insert({50, 0.44});
+    parametroHeur2.insert({75, 0.68});
+    parametroHeur2.insert({100, 0.96});
 
     string strInstancia;
     string saidaCompleta;
@@ -124,7 +134,10 @@ int main(int num, char **agrs)
     if(std::atoll(agrs[4]) != 0)
         semente = std::atoll(agrs[4]);
 
-    cout<<"Semente = "<<semente<<'\n';
+    #if Saida
+        cout<<"Semente = "<<semente<<'\n';
+    #endif
+
     string texto;
     std::time_t result = std::time(nullptr);
     auto data = std::asctime(std::localtime(&result));
@@ -155,7 +168,7 @@ int main(int num, char **agrs)
     clock_t c_start = clock();
 
     auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 2000, 200, logAtivo, &strLog,
-                                       parametro[instancia->numClientes - 1]);
+            parametroHeur1[instancia->numClientes - 1], parametroHeur2[instancia->numClientes - 1], false);
 
 
 
@@ -256,6 +269,8 @@ int main(int num, char **agrs)
 
     //if(solucao->poluicao <= 0.1)
     //    cout<<"Poluicao = 0\n";
+
+    //cout<<"Tempo cpu: " << ((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) << " S\n";
 
     if(num == 1)
     {

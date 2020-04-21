@@ -34,14 +34,12 @@ namespace Construtivo
     int compCandidatoFolga(const void* cand1, const void* cand2);
     int compCandidatoDist(const void* cand1, const void* cand2);
 
-    Solucao::Solucao *grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
-                            const int numInteracoes, const int numIntAtualizarProb, bool log,
-                            stringstream *strLog, const double parametro);
+    Solucao::Solucao *grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa, const int numInteracoes,
+          const int numIntAtualizarProb, bool log, stringstream *strLog, const double parametroHeur1, const double parametroHeur2, const bool usarDuasHeur);
 
-    Solucao::Solucao *geraSolucao(const Instancia::Instancia *const instancia, float alfa,
-                                      Solucao::ClienteRota *vetorClienteBest,
-                                      Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
-                                      Construtivo::Candidato *vetorCandidatos, const double parametro);
+    Solucao::Solucao *geraSolucao(const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest,
+                Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos,
+                const double parametroHeur1, const double parametroHeur2, const bool heurist1);
 
     void insereCandidato(Candidato *candidato, const Instancia::Instancia *instancia, Solucao::ClienteRota *vetCliente);
 
@@ -55,8 +53,7 @@ namespace Construtivo
                                          int posicao, double *folga);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
-    void atualizaPesos(double *beta, double *teta, int numClientes, const double parametro, const int k,
-                       double *gama);
+    void atualizaPesos(double *beta, double *teta, int numClientes, const double parametro, const int k, double *gama, const double parametroheu2, const bool heuristica1);
 
 
 

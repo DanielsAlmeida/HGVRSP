@@ -7,6 +7,7 @@
 
 #include "Instancia.h"
 #include "Solucao.h"
+#include <string>
 //#include "Exception.h"
 
 namespace Movimentos
@@ -61,13 +62,18 @@ namespace Movimentos
 
 
     //Calcula rota ate o final.
-    ResultadosRota calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, auto proximoClienteIt, int peso,
-                                    Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao, double combustivel,
-                                    const int clienteEscolhido, const int substituto = -1, const int pesoTotal=-1, const int maisclientes = 0);
+    ResultadosRota calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, auto proximoClienteIt,
+                   int peso,
+                   Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao, double combustivel,
+                   const int clienteEscolhido, std::string mvStr, const int substituto = -1, const int pesoTotal = -1,
+                   const int maisclientes = 0);
 
-    ResultadosRota calculaFimRota_2OptInter(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, Solucao::Veiculo *veiculo2,
-                                  auto proximoClienteIt, int peso, Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao, double combustivel,
-                                  const int clienteEscolhido, const int substituto = -1, const int pesoTotal=-1, const int maisclientes = 0);
+    ResultadosRota calculaFimRota_2OptInter(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
+                                            Solucao::Veiculo *veiculo2, auto proximoClienteIt, int peso,
+                                            Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao,
+                                            double combustivel, const int clienteEscolhido, std::string mvStr,
+                                            const int substituto = -1, const int pesoTotal = -1,
+                                            const int maisclientes = 0);
 
     bool recalculaCombustivelPoluicaoCargas(Solucao::Veiculo *veiculo, double *poluicao, double *combustivel, int *pesoTotal, const Instancia::Instancia *const instancia,
                                             Solucao::ClienteRota *vetClienteRotaAux, int posicao);
@@ -75,6 +81,10 @@ namespace Movimentos
 
     void copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest, double *combustivelBest, ResultadosRota resultado, int *posicao);
 
+    ResultadosRota aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
+                                   Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest = NULL, Solucao::ClienteRota *vetClienteRotaSecundAux = NULL);
+
+    void atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaSecundBest);
 
 }
 
