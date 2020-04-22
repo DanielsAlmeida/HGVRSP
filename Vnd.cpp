@@ -1,6 +1,10 @@
 //
 // Created by igor on 13/04/2020.
-//
+// 2.400
+
+//2600
+
+// 2700
 
 #include "Vnd.h"
 #include "mersenne-twister.h"
@@ -12,9 +16,10 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 {
 
 
-    static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    static int vetMovimentos[8] = {1, 1, 2, 3, 4, 5, 6, 7};
+    // static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-    for(int i = 0; i < 8; ++i)
+    /*for(int i = 0; i < 8; ++i)
     {
         int mv = rand_u32() % 8;
 
@@ -32,14 +37,14 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
         vetMovimentos[i] = mv;
 
-    }
+    }*/
 
 
     Movimentos::ResultadosRota resultadosRota;
 
     int posicao = 0;
 
-    while(posicao < 8)
+    while(posicao < 1)
     {
 
         resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false, vetClienteRotaSecundBest, vetClienteRotaSecundAux);
@@ -51,7 +56,7 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
                 Movimentos::atualizaSolucao(resultadosRota, solucao, vetClienteRotaBest, vetClienteRotaSecundBest);
                 posicao = 0;
-
+                //cout<<"Atualizacao\n";
             }
             else
                 posicao++;
