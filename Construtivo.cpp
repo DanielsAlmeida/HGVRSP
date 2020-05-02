@@ -6,6 +6,7 @@
 #include "Movimentos.h"
 #include "ViabilizaSolucao.h"
 #include "Vnd.h"
+#include "Movimentos_Paradas.h"
 
 using namespace Construtivo;
 using namespace std;
@@ -130,6 +131,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     }
     std::string texto;
     std::string sequencia;
+
+    int tentativasViabilizar = 0;
+
     for(int i = 0; i < numInteracoes; ++i)
     {
 
@@ -190,19 +194,18 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
             int p = 100.0*(1-taxa);
 
-            if((rand_u32()%100) > p)
+            if((1+(rand_u32()%100)) > p)
             {
                 int num = solucaoAux->vetorVeiculos[solucaoAux->vetorVeiculos.size()-1]->listaClientes.size()-2;
                 taxa = 1.0/double(num);
                 p = 100.0*(1-taxa);
 
-                if(((rand_u32()%100) > p) || (num == 1))
+                if(((1+(rand_u32()%100)) > p) || (num == 1))
                 {
                     //cout<<"Tentando viabilizar\n";
                     ViabilizaSolucao::viabilizaSolucao(solucaoAux, instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos,
                                                        parametroHeur1, parametroHeur2, heuristica1, 5, 15, vetClienteBestSecund, vetClienteRotaSecundAux);
-
-
+                    tentativasViabilizar++;
                 }
             }
         }
@@ -214,8 +217,6 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             numSolInviaveis += 1;
         else
         {
-            int num = int(ceil(solucaoAux->poluicao));
-            hash[num]++;
 
             double dist;
 
@@ -223,6 +224,13 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
 
             Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund, vetClienteRotaSecundAux);
+
+            Movimentos_Paradas::mvPercorreRotaParadas(instancia, solucaoAux, vetorClienteAux);
+
+
+
+
+
 
 
         }
@@ -329,6 +337,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     delete []vetorMedia;
     delete []proporcao;
     delete []vetClienteRotaSecundAux;
+    delete []vetorCandidatos;
 
     proporcao = NULL;
     vetorMedia = NULL;
@@ -395,8 +404,7 @@ void Construtivo::atualizaProbabilidade(double *vetorProbabilidade, int *vetorFr
 
 }
 
-void
-Construtivo::atualizaPesos(double *beta, double *teta, int numClientes, const double parametro, const int k,
+void Construtivo::atualizaPesos(double *beta, double *teta, int numClientes, const double parametro, const int k,
                            double *gama, const double parametroheu2, const bool heuristica1)
 {
     if(heuristica1)
@@ -774,7 +782,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                 veiculo->listaClientes.insert(iterador, candidato);
 
 
-                //delete candidato;
+//*************************************************************************delete candidato;************************************************************
 
                 candidato = new Solucao::ClienteRota;
 
@@ -810,6 +818,8 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
                 if(!heurist1)
                     ultimo->distanciaArcos = distRotaBest;
+
+//*************************************************************************delete candidato;************************************************************
 
                 candidato = new Solucao::ClienteRota;
 
@@ -914,12 +924,17 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
             solucao->poluicao -= polAntes;
             solucao->poluicao += ptrEscolhido->veiculo->poluicao;
 
-            for (auto ptr = vetorCandidatos; ptr != &vetorCandidatos[instancia->numClientes]; ptr++)
+            for (auto ptr = vetorCandidatos; ptr != &vetorCandidatos[tam]; ptr++)
             {
-                if (!ptr->candidato)
+                if (ptr->candidato)
+                {
                     delete ptr->candidato;
+                    ptr->candidato = NULL;
+                }
 
             }
+            
+            delete []vetorProb;
 
 
         }
@@ -1069,10 +1084,10 @@ void Construtivo::insereCandidato(Candidato *candidato, const Instancia::Instanc
     candidato->veiculo->combustivel = combustivelParcial;
     candidato->veiculo->carga = candidato->veiculo->carga + instancia->vetorClientes[cliente].demanda;
 
-    bool verificacao = VerificaSolucao::verificaVeiculo(candidato->veiculo, instancia);
+    //bool verificacao = VerificaSolucao::verificaVeiculo(candidato->veiculo, instancia);
 
-    if(!verificacao)
-        cout<<"LINHA "<<__LINE__<<" VEICULO ERADO!!!!!\n\n";
+    //if(!verificacao)
+    //    cout<<"LINHA "<<__LINE__<<" VEICULO ERADO!!!!!\n\n";
 
 
 }

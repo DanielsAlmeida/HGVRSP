@@ -503,7 +503,7 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
 
             listaCandidatos.remove(instancia->vetorClientes[ptrEscolhido->candidato->cliente]);
 
-
+            delete []vetorProb;
             double polAntes = ptrEscolhido->veiculo->poluicao;
 
             //Insere candidato escolhido
@@ -512,10 +512,13 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
             solucao->poluicao -= polAntes;
             solucao->poluicao += ptrEscolhido->veiculo->poluicao;
 
-            for (auto ptr = vetorCandidatos; ptr != &vetorCandidatos[instancia->numClientes]; ptr++)
+            for (auto ptr = vetorCandidatos; ptr != &vetorCandidatos[tam]; ptr++)
             {
-                if (!ptr->candidato)
+                if (ptr->candidato)
+                {
                     delete ptr->candidato;
+                    ptr->candidato = NULL;
+                }
 
             }
 
@@ -533,12 +536,13 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
 
 }
 
-#define NUM 6
+#define NUM 8
 
 bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
                                    string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos, const double parametroHeur1, const double parametroHeur2, const bool heurist1,
                                    const int interacoes, const int interacoesPorMv, Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteSecondAux)
 {
+
 
     int i = 0;
     int j = 0;
@@ -546,7 +550,7 @@ bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instanc
     bool pertubacao = false;
     Movimentos::ResultadosRota resultadosRota;
 
-    int vetMovimentos[NUM] = {0, 1, 6, 7, 2, 3};  //{0, 1, 6, 7, 2, 3};
+    static int vetMovimentos[NUM] = {5, 4, 6, 7, 2, 3, 1, 0};  //{0, 1, 6, 7, 2, 3};
 
     while(i < interacoes)
     {

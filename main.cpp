@@ -7,6 +7,8 @@
 #include "Construtivo.h"
 #include "mersenne-twister.h"
 #include "time.h"
+#include <mcheck.h>
+
 //1586725703
 #define Saida false
 #define TesteParametro false
@@ -62,6 +64,9 @@ using namespace std;
 #if not TesteParametro
 int main(int num, char **agrs)
 {
+    //mtrace();
+
+
     std::map<int, float> parametroHeur1;
     std::map<int, float> parametroHeur2;
 
@@ -138,6 +143,8 @@ int main(int num, char **agrs)
         cout<<"Semente = "<<semente<<'\n';
     #endif
 
+    cout<<"Semente = "<<semente<<'\n';
+
     string texto;
     std::time_t result = std::time(nullptr);
     auto data = std::asctime(std::localtime(&result));
@@ -168,7 +175,7 @@ int main(int num, char **agrs)
     clock_t c_start = clock();
 
     auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 2000, 200, logAtivo, &strLog,
-            parametroHeur1[instancia->numClientes - 1], parametroHeur2[instancia->numClientes - 1], false);
+            parametroHeur1[instancia->numClientes - 1], parametroHeur2[instancia->numClientes - 1], true);
 
 
 
@@ -339,6 +346,8 @@ int main(int num, char **agrs)
 
     delete solucao;
     delete instancia;
+
+    //muntrace();
 
     return 0;
 }

@@ -42,7 +42,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
             saida += "-1\n\n";
             if(texto)
                 *texto += saida;
-
+            delete []vetorClientes;
             return false;
 
         }
@@ -59,7 +59,12 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
         if(it->tipo == 1)
             if((*cliente)->tempoSaida < 0.5)
+            {
+                delete []vetorClientes;
+                cout<<"Erro, tempoSaida incompativel com veiculo\n";
                 return false;
+
+            }
 
 
         for(auto itCliente = it->listaClientes.begin(); itCliente != it->listaClientes.end(); )//Percorre os clientes do veículo
@@ -82,8 +87,8 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
             if(distancia == 0.0)
             {
-
-
+                cout<<"Erro, distancia igual a 0\n";
+                delete []vetorClientes;
                 return false;
             }
 
@@ -200,8 +205,9 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
                     // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
 
                     float tempoSaida = (*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
+                    //((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))
 
-                    if(!((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) && (fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico )) <= 0.0001)))
+                    if(!((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) && ((fabs(tempoSaida - (*itCliente)->tempoSaida) <= 0.001) || ((*itCliente)->tempoSaida > tempoSaida) || ((*itCliente)->cliente == 0) )))
                     {
                         //Solução está ERRADA.
                         cout<<"Erro, Tempo\n";
@@ -216,7 +222,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
                     //Verificar tempo de saida
 
-                    if(instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico != (*itCliente)->tempoSaida)
+                    if((*itCliente)->tempoSaida < instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico)
                     {
                         //Solução está ERRADA.
                         std::cout<<"Erro, Tempo de saida\n";
@@ -402,14 +408,18 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
             if(!(*itCliente)->percorrePeriodo[periodoSaida])
             {
-                horaPartida = instancia->vetorPeriodos[periodoSaida + 1].inicio;
                 periodoSaida += 1;
 
                 if(periodoSaida >= 5 )
                 {
+                    cout<<"tempoSaida: "<<horaPartida<<'\n';
+                    cout<<"Periodo: "<<periodoSaida-1<<'\n';
+                    cout<<(*iterator)->cliente<<" ** "<<(*itCliente)->cliente<<'\n';
                     cout<<"Periodo.\n";
                     return false;
                 }
+
+                horaPartida = instancia->vetorPeriodos[periodoSaida].inicio;
             }
 //Aqui.
             else if((instancia->retornaPeriodo(horario) != periodoSaida))//Periodo de chegada diferente da saida, não é possível percorrer a distancia em somente um periodo.
@@ -445,6 +455,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
                 {
                     cout<<"Poluicao diferente.\n";
                     cout<<"Diferenca = "<<std::to_string(fabs(poluicaoAux - ((*itCliente)->poluicao )))<<'\n';
+                    cout<<"Valor real: "<<poluicaoAux<<'\n';
                     cout<<(*iterator)->cliente << ' ' <<(*itCliente)->cliente<<'\n';
                     return false;
                 }
@@ -453,6 +464,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
                 {
                     cout<<"Combustivel diferente.\n";
                     cout<<"Diferenca = "<<std::to_string(fabs(poluicaoAux - ((*itCliente)->poluicao )))<<'\n';
+                    cout<<"Valor real: "<<combustivelAux<<'\n';
                     cout<<(*iterator)->cliente << ' ' <<(*itCliente)->cliente<<'\n';
 
                     return false;
@@ -490,12 +502,15 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
                 float tempoSaida = (*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
 
-                if(!(((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) || fabs(tempoSaida - instancia->vetorClientes[(*itCliente)->cliente].fimJanela) <= 0.0001) && (fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico )) <= 0.0001)))
+                if(!((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) && ((fabs(tempoSaida - (*itCliente)->tempoSaida) <= 0.001) || ((*itCliente)->tempoSaida > tempoSaida) || ((*itCliente)->cliente==0))))
                 {
                     //Solução está ERRADA.
                     std::cout<<"Erro tempo.\n";
-                    std::cout<<fabs(tempoSaida - ((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))<<"\n\n";
-                    std::cout<<fabs(tempoSaida - instancia->vetorClientes[(*itCliente)->cliente].fimJanela)<<"\n\n";
+                    std::cout<<"cliente: "<<(*itCliente)->cliente<<'\n';
+
+                    if(((*itCliente)->tempoSaida < tempoSaida))
+                        cout<<"tempo saida\n";
+
                     return false;
                 }
 
@@ -506,7 +521,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
                 //Verificar tempo de saida
 
-                if(instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico != (*itCliente)->tempoSaida)
+                if((*itCliente)->tempoSaida < instancia->vetorClientes[(*itCliente)->cliente].inicioJanela + instancia->vetorClientes[(*itCliente)->cliente].tempoServico)
                 {
                     //Solução está ERRADA.
                     std::cout<<"Erro, Tempo de saida\n";

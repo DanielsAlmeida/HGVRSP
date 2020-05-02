@@ -72,7 +72,7 @@ namespace Instancia
         int demandaTotal;
 
         Instancia(std::string arquivo);
-        int retornaPeriodo(float hora) const ;
+        int retornaPeriodo(double hora) const ;
 
         void getClientes();
 

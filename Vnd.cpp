@@ -15,11 +15,9 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
          Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux)
 {
 
+    static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-    static int vetMovimentos[8] = {1, 1, 2, 3, 4, 5, 6, 7};
-    // static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-
-    /*for(int i = 0; i < 8; ++i)
+    for(int i = 0; i < 8; ++i)
     {
         int mv = rand_u32() % 8;
 
@@ -37,16 +35,16 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
         vetMovimentos[i] = mv;
 
-    }*/
+    }
 
 
     Movimentos::ResultadosRota resultadosRota;
 
     int posicao = 0;
 
-    while(posicao < 1)
+    while(posicao < 8)
     {
-
+        //cout<<"VND\n";
         resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false, vetClienteRotaSecundBest, vetClienteRotaSecundAux);
 
         if(resultadosRota.viavel)
@@ -56,7 +54,6 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
                 Movimentos::atualizaSolucao(resultadosRota, solucao, vetClienteRotaBest, vetClienteRotaSecundBest);
                 posicao = 0;
-                //cout<<"Atualizacao\n";
             }
             else
                 posicao++;

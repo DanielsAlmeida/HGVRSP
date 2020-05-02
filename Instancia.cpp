@@ -307,7 +307,7 @@ Instancia::Instancia::~Instancia()
         delete []matrizCo2[i];
     }
 
-    delete matrizCo2;
+    delete []matrizCo2;
 
 
     for(int i = 0; i < numClientes; ++i)
@@ -336,7 +336,7 @@ Instancia::Instancia::~Instancia()
     delete []distanciaDeposito;
 }
 
-int Instancia::Instancia::retornaPeriodo(float hora) const
+int Instancia::Instancia::retornaPeriodo(double hora) const
 {
 
 
