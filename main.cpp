@@ -6,8 +6,12 @@
 #include "VerificaSolucao.h"
 #include "Construtivo.h"
 #include "mersenne-twister.h"
+#include "Constantes.h"
+#include "Vnd.h"
+#include "Movimentos_Paradas.h"
+
 #include "time.h"
-#include <mcheck.h>
+//  1588722899
 
 //1586725703
 #define Saida false
@@ -67,25 +71,62 @@ int main(int num, char **agrs)
     //mtrace();
 
 
-    std::map<int, float> parametroHeur1;
-    std::map<int, float> parametroHeur2;
+    std::map<int, double> parametroHeur0;
+    std::map<int, double> parametroHeur1;
+    std::map<int, double> parametroHeur3;
+    std::map<int, double> parametroHeur4;
+    std::map<int, double> parametroHeur5;
+    std::map<int, double> parametroHeur6;
+    
 
+    parametroHeur0.insert({10, 0.35});
+    parametroHeur0.insert({15, 0.73});
+    parametroHeur0.insert({20, 0.19});
+    parametroHeur0.insert({25, 0.99});
+    parametroHeur0.insert({50, 0.73});
+    parametroHeur0.insert({75, 0.36});
+    parametroHeur0.insert({100, 0.92});
 
-    parametroHeur1.insert({10, 0.35});
-    parametroHeur1.insert({15, 0.73});
-    parametroHeur1.insert({20, 0.19});
-    parametroHeur1.insert({25, 0.99});
-    parametroHeur1.insert({50, 0.73});
-    parametroHeur1.insert({75, 0.36});
-    parametroHeur1.insert({100, 0.92});
+    parametroHeur1.insert({10, 0.81});
+    parametroHeur1.insert({15, 0.42});
+    parametroHeur1.insert({20, 0.94});
+    parametroHeur1.insert({25, 0.55});
+    parametroHeur1.insert({50, 0.44});
+    parametroHeur1.insert({75, 0.68});
+    parametroHeur1.insert({100, 0.96});
 
-    parametroHeur2.insert({10, 0.81});
-    parametroHeur2.insert({15, 0.42});
-    parametroHeur2.insert({20, 0.94});
-    parametroHeur2.insert({25, 0.55});
-    parametroHeur2.insert({50, 0.44});
-    parametroHeur2.insert({75, 0.68});
-    parametroHeur2.insert({100, 0.96});
+    parametroHeur3.insert({10, 0.41});
+    parametroHeur3.insert({15, 0.97});
+    parametroHeur3.insert({20, 0.23});
+    parametroHeur3.insert({25, 0.66});
+    parametroHeur3.insert({50, 0.34});
+    parametroHeur3.insert({75, 0.73});
+    parametroHeur3.insert({100, 0.12});
+
+    parametroHeur4.insert({10, 1.0});
+    parametroHeur4.insert({15, 0.3});
+    parametroHeur4.insert({20, 0.23});
+    parametroHeur4.insert({25, 0.17});
+    parametroHeur4.insert({50, 0.98});
+    parametroHeur4.insert({75, 0.76});
+    parametroHeur4.insert({100, 0.87});
+
+    parametroHeur5.insert({10, 0.7});
+    parametroHeur5.insert({15, 0.86});
+    parametroHeur5.insert({20, 0.3});
+    parametroHeur5.insert({25, 0.36});
+    parametroHeur5.insert({50, 0.35});
+    parametroHeur5.insert({75, 0.65});
+    parametroHeur5.insert({100, 0.55});
+
+    parametroHeur6.insert({10, 0.16});
+    parametroHeur6.insert({15, 0.31});
+    parametroHeur6.insert({20, 0.56});
+    parametroHeur6.insert({25, 0.61});
+    parametroHeur6.insert({50, 0.29});
+    parametroHeur6.insert({75, 0.57});
+    parametroHeur6.insert({100, 0.34});
+
 
     string strInstancia;
     string saidaCompleta;
@@ -95,7 +136,7 @@ int main(int num, char **agrs)
 
     bool logAtivo = false;
 
-    if(num != 5 && num != 6)
+    if(num != 5)
     {
         cout<<"Numero incorreto de parametros.\n";
         exit(-1);
@@ -105,16 +146,6 @@ int main(int num, char **agrs)
     strInstancia = agrs[1];
     saidaCompleta = agrs[2];
     saidaParcial = agrs[3];
-
-    if(num == 6)
-    {
-        log = agrs[5];
-        logAtivo = true;
-
-    }
-
-
-
 
     ofstream file;
 
@@ -139,11 +170,9 @@ int main(int num, char **agrs)
     if(std::atoll(agrs[4]) != 0)
         semente = std::atoll(agrs[4]);
 
-    #if Saida
-        cout<<"Semente = "<<semente<<'\n';
-    #endif
-
     cout<<"Semente = "<<semente<<'\n';
+
+
 
     string texto;
     std::time_t result = std::time(nullptr);
@@ -159,14 +188,22 @@ int main(int num, char **agrs)
 
     Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
 
-
-
-
+    const double vetParametro[7] = {parametroHeur0[instancia->numClientes - 1], parametroHeur1[instancia->numClientes - 1], 0.0, parametroHeur3[instancia->numClientes - 1],
+                                    parametroHeur4[instancia->numClientes - 1], parametroHeur5[instancia->numClientes -1], parametroHeur6[instancia->numClientes - 1]};
 
     auto vet = instancia->vetorClientes;
 
     #define numAlfas  18
     float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
+    //boost::tuple<int,int> vetHeuristicas[3] = {{2,1}, {1,3}, {2, 3}};
+    boost::tuple<int,int> vetHeuristicas[3] = {{2,1}, {1,3}, {5, 3}};
+    
+    if(vetHeuristicas[0].get<1>() < 0 || vetHeuristicas[0].get<1>() > 3)
+    {
+        cout<<"Erro, heuristicas informadas de forma incorreta\n";
+        exit(-1);
+    }
+
 
 
     std::stringstream strLog;
@@ -174,8 +211,9 @@ int main(int num, char **agrs)
 
     clock_t c_start = clock();
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 2000, 200, logAtivo, &strLog,
-            parametroHeur1[instancia->numClientes - 1], parametroHeur2[instancia->numClientes - 1], true);
+    Vnd::EstatisticaMv vetEstatisticaMv[9];
+
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, vetHeuristicas, 3, vetParametro, vetEstatisticaMv);
 
 
 
@@ -294,24 +332,48 @@ int main(int num, char **agrs)
 
         int numVeiculosUsados = 0;
 
+
         for(auto veiculo : solucao->vetorVeiculos)
         {
 
             if(veiculo->listaClientes.size() > 2)
+            {
                 ++numVeiculosUsados;
+
+            }
 
         }
 
+        for(int i = 0; i < 9 ; ++i)
+        {
+            if(vetEstatisticaMv[i].num > 0)
+            {
+                vetEstatisticaMv[i].poluicao /= vetEstatisticaMv[i].num;
+                vetEstatisticaMv[i].gap /= vetEstatisticaMv[i].num;
+            }
+        }
 
             // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
 
         if(Veificacao)
             file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
-            " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << " "<<std::to_string(solucao->ultimaAtualizacao)<<'\n';
+            " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << " "<<std::to_string(solucao->ultimaAtualizacao)
+            <<" "<<vetEstatisticaMv[0].poluicao<<" "<<vetEstatisticaMv[1].poluicao<<" "<<vetEstatisticaMv[2].poluicao<<" "<<vetEstatisticaMv[3].poluicao<<" "<<vetEstatisticaMv[4].poluicao<<" "<<vetEstatisticaMv[5].poluicao
+            <<" "<<vetEstatisticaMv[6].poluicao<<" "<<vetEstatisticaMv[7].poluicao<<" "<<vetEstatisticaMv[8].poluicao<<" "<<vetEstatisticaMv[0].gap<<" "<<vetEstatisticaMv[1].gap<<" "<<vetEstatisticaMv[2].gap<<" "<<
+            vetEstatisticaMv[3].gap<<" "<<vetEstatisticaMv[4].gap<<" "<<vetEstatisticaMv[5].gap<<" "<<vetEstatisticaMv[6].gap<<" "<<vetEstatisticaMv[7].gap<<" "<<vetEstatisticaMv[8].gap<<" "<<'\n';
 
         else
             file << std::to_string(0.0) << " " <<((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)<<
-                 " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << " "<< std::to_string(solucao->ultimaAtualizacao)<< '\n';
+                 " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << " "<< std::to_string(solucao->ultimaAtualizacao)<<
+                 " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"<<'\n';
+
+         /*if(Veificacao)
+             file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
+                 " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.0)<<" "<<std::to_string(distanciaTotal)<<'\n';
+
+         else
+             file << std::to_string(0.0) << " " <<((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)<<
+             " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.)<<" "<<std::to_string(distanciaTotal)<<'\n';*/
 
         file.close();
 
@@ -329,6 +391,20 @@ int main(int num, char **agrs)
             cout<<"Clientes sem rota: "<<lista->listaClientes.size()-2;
         }
 
+        cout<<"\n";
+
+
+
+        for(int i = 0; i < 9 ; ++i)
+            cout<<vetEstatisticaMv[i].poluicao<<"    ";
+
+        cout<<"\n\n";
+
+        for(int i = 0; i < 9 ; ++i)
+            cout<<vetEstatisticaMv[i].gap<<"    ";
+
+        cout<<"\n\n";
+
     #endif
 
     if(num == 5)
@@ -343,6 +419,48 @@ int main(int num, char **agrs)
         file.close();
 
     }
+
+    /* ********************************************************************************************************************************************************************************** */
+
+/*    cout<<"Cria rotas\n\n";
+    cout<<"Num de veiculos disponiveis: "<<instancia->numVeiculos<<"\n";
+
+    cout<<"************************************************************************************************************\n\n";
+
+    //Tenta criar rotas:
+    Solucao::ClienteRota *vetClienteRota = new Solucao::ClienteRota[instancia->numClientes];
+
+    double poluicao, combustivel;
+
+    int l = 0;
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+
+
+        int k = 0;
+        for(auto cliente : veiculo->listaClientes)
+        {
+            vetClienteRota[k] = *cliente;
+            k++;
+        }
+
+        if(Movimentos_Paradas::criaRota(instancia, vetClienteRota, k, veiculo->carga, veiculo->tipo, &combustivel, &poluicao))
+            cout<<"Rota criada. Poluicao original: "<<veiculo->poluicao<<" Nova poluicao: "<<poluicao<<"\n\n";
+        else
+            cout<<"Falha ao criar rota\n\n";
+
+        cout<<"************************************************************************************************************\n\n";
+
+        l++;
+
+        if(l==instancia->numVeiculos)
+            break;
+    }
+
+    delete []vetClienteRota;*/
+
+/* ********************************************************************************************************************************************************************************** */
 
     delete solucao;
     delete instancia;
@@ -394,7 +512,6 @@ int main(int num, char **agrs)
 
     auto semente  = std::stoul(agrs[3]);
 
-    //uint32_t semente = 1576259993;
 
     string texto;
     std::time_t result = std::time(nullptr);
@@ -430,8 +547,9 @@ int main(int num, char **agrs)
 
     const double parametro = std::atof(agrs[5]);
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo,
-                                         &strLog, parametro);
+     const double vetParametro[7] = {parametro, parametro, parametro, parametro, parametro, parametro, parametro};
+
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, Heuristica_6, vetParametro);
 
 
 

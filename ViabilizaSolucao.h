@@ -13,12 +13,16 @@
 namespace ViabilizaSolucao
 {
 
-    bool geraSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
-                                 string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos, const double parametroHeur1, const double parametroHeur2, const bool heurist1);
+    bool geraSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
+                     Construtivo::Candidato *vetorCandidatos, boost::tuple<int,int> heuristica, const double *const vetorParametros);
 
-    bool viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
-                          string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos, const double parametroHeur1, const double parametroHeur2, const bool heurist1,
-                          const int interacoes, const int interacoesPorMv, Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteSecondAux);
+    bool viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa,
+                          Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
+                          string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos,
+                          const int interacoes, const int interacoesPorMv,
+                          Solucao::ClienteRota *vetClienteRotaSecundBest,
+                          Solucao::ClienteRota *vetClienteSecondAux, boost::tuple<int,int> heuristica,
+                          const double *const vetorParametros);
 
 };
 

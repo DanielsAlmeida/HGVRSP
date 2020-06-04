@@ -63,8 +63,8 @@ namespace Movimentos
 
 
     //Calcula rota ate o final.
-    ResultadosRota calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, ItClienteRota proximoClienteIt, int peso, Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet,
-                   double poluicao, double combustivel, const int clienteEscolhido, std::string mvStr, const int substituto = -1, const int pesoTotal = -1, const int maisclientes = 0);
+    ResultadosRota calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, ItClienteRota proximoClienteIt, int peso, Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao, double combustivel,
+                                  const int clienteEscolhido, std::string mvStr, int *erro, const int substituto = -1, const int pesoTotal = -1, const int maisclientes = 0);
 
     ResultadosRota calculaFimRota_2OptInter(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, Solucao::Veiculo *veiculo2, ItClienteRota proximoClienteIt, int peso,
                                             Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao, double combustivel, const int clienteEscolhido, std::string mvStr,

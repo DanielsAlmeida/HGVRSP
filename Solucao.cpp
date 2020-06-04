@@ -56,6 +56,7 @@ void Solucao::Veiculo::inicialisaVeiculo(int tipo)
         clienteRota->tempoSaida = 0.5;
 
     clienteRota->poluicao = 0.0;
+    clienteRota->distanciaAteCliente = 0.0;
 
     listaClientes.push_back(clienteRota);
 
@@ -63,6 +64,7 @@ void Solucao::Veiculo::inicialisaVeiculo(int tipo)
     clienteRota->cliente = 0;
     clienteRota->tempoSaida = -1;
     clienteRota->poluicao = 0.0;
+    clienteRota->distanciaAteCliente = 0.0;
 
     listaClientes.push_back(clienteRota);
 }

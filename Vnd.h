@@ -5,7 +5,7 @@
 #ifndef HGVRSP_VND_H
 #define HGVRSP_VND_H
 
-#include "Construtivo.h"
+
 #include "Solucao.h"
 #include "Instancia.h"
 #include "Movimentos.h"
@@ -13,14 +13,31 @@
 namespace Vnd
 {
 
+    struct EstatisticaMv
+    {
+        int num;
+        double gap;
+        double poluicao;
+
+        EstatisticaMv()
+        {
+            num = 0;
+            gap = 0.0;
+            poluicao = 0;
+        }
+
+    };
+
     void vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
              Solucao::ClienteRota *vetClienteRotaBest,
              Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
-             Solucao::ClienteRota *vetClienteRotaSecundAux);
+             Solucao::ClienteRota *vetClienteRotaSecundAux, int interacao, EstatisticaMv *vetEstatisticaMv);
 
     bool avaliaSolucao(Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota);
 
-}
+    void atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota);
+
+};
 
 
 #endif //HGVRSP_VND_H

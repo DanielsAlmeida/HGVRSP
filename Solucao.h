@@ -27,6 +27,7 @@ namespace Solucao
         double combustivelRota;
         double poluicaoRota;
         double produtoCarga;
+        double distanciaAteCliente;
 
         ClienteRota(){}
         ClienteRota(const ClienteRota &outro)
@@ -39,6 +40,7 @@ namespace Solucao
             poluicaoRota = outro.poluicaoRota;
             produtoCarga = outro.produtoCarga;
             combustivelRota = outro.combustivelRota;
+            distanciaAteCliente = outro.distanciaAteCliente;
 
             for(int i = 0; i < 5; ++i)
                 percorrePeriodo[i] = outro.percorrePeriodo[i];
@@ -48,6 +50,8 @@ namespace Solucao
 
     class Veiculo
     {
+
+    private: std::list<ClienteRota *>::iterator itListaCliente;
 
     public:
 
@@ -66,6 +70,14 @@ namespace Solucao
 
             inicialisaVeiculo(tipo);
 
+        }
+
+        double getDistancia()
+        {
+            itListaCliente = listaClientes.end();
+            itListaCliente--;
+
+            return (*itListaCliente)->distanciaAteCliente;
         }
 
         std::string printRota()

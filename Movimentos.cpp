@@ -24,13 +24,11 @@ using namespace Movimentos;
  * ************************************************************************************************************************************************************************************************** */
 
 
-ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                            Solucao::ClienteRota *vetClienteRotaBest,
-                                            Solucao::ClienteRota *vetClienteRotaAux,
-                                            const bool percorreVeiculos, const bool percorreClientes,
-                                            const bool pertubacao)
+ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
+                                            Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos, const bool percorreClientes, const bool pertubacao)
 {
     string mvStr = "intraRotaShift";
+
 
     //Escolhe um veiculo
 
@@ -151,7 +149,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                 nextIt++;
                 nextClienteRota = *nextIt;
 
-                //*********************************ERRO!!!****************************************
+
 
                 //Verifica se o proximo cliente é igual a clienteEscolhido. ClienteEscolhido tem que ser pulado.
                 if (nextClienteRota->cliente == (*clienteEscolhido)->cliente)
@@ -178,7 +176,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                     vetClienteRotaAux[posicao + 1].cliente = nextClienteRota->cliente;
 
                     if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1],
-                                                       instancia, peso, veiculo->tipo))
+                                                       instancia, peso, veiculo->tipo, NULL))
                     {
                         //cout<<"MV inviavel J.\n";
                         break;
@@ -218,7 +216,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                 //Calcular rota entre posicao e posicao + 1
                 if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1],
                                                   instancia,
-                                                  peso, veiculo->tipo))
+                                                  peso, veiculo->tipo, NULL))
                 {
 
                     combustivelAux = combustivelRotaParcial;
@@ -243,7 +241,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                         auto resultado = calculaFimRota(instancia, veiculo, prox, pesoAux, vetClienteRotaAux,
                                                         posicao + 1,
                                                         poluicaoAux, combustivelAux, (*clienteEscolhido)->cliente,
-                                                        mvStr,
+                                                        mvStr, nullptr,
                                                         -1,
                                                         veiculo->carga, 0);
 
@@ -302,7 +300,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                     //Atualiza vetRotaAux
 
                     if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1],
-                                                       instancia, peso, veiculo->tipo))
+                                                       instancia, peso, veiculo->tipo, NULL))
                         break;
 
                 }
@@ -485,8 +483,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
             nextIt = veiculo->listaClientes.begin();
 
 
-            for (auto clienteIt = std::next(veiculo->listaClientes.begin(), 1);
-                 clienteIt != veiculo->listaClientes.end();)
+            for (auto clienteIt = std::next(veiculo->listaClientes.begin(), 1); clienteIt != veiculo->listaClientes.end();)
             {
                 clientePtr = *clienteIt;
 
@@ -527,7 +524,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
                     vetClienteRotaAux[posicao + 1].cliente = (*clienteEscolhido)->cliente;
 
                     if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1],
-                                                      instancia, peso, veiculo->tipo))
+                                                      instancia, peso, veiculo->tipo, NULL))
                     {
                         //Atualiza peso, combustivel, poluicao
                         pesoAux = peso;
@@ -544,6 +541,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
                             auto resultado = calculaFimRota(instancia, veiculo, nextIt, pesoAux, vetClienteRotaAux,
                                                             posicao + 1, poluicaoAux,
                                                             combustivelAux, (*clienteEscolhido)->cliente, mvStr,
+                                                            nullptr,
                                                             clientePtr->cliente, veiculo->carga, 0);
 
                             if (resultado.viavel)
@@ -582,7 +580,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
                     vetClienteRotaAux[posicao + 1].cliente = clientePtr->cliente;
 
                     if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1],
-                                                      instancia, peso, veiculo->tipo))
+                                                      instancia, peso, veiculo->tipo, NULL))
                     {
                         //Atualiza variaveis
                         combustivelAux = combustivelRotaParcial + vetClienteRotaAux[posicao + 1].combustivel;
@@ -595,7 +593,8 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
                         ResultadosRota resultadosRota = calculaFimRota(instancia, veiculo, proxEscolhido, pesoAux,
                                                                        vetClienteRotaAux, posicao + 1,
                                                                        poluicaoAux, combustivelAux, clientePtr->cliente,
-                                                                       mvStr, ptrEscolhido->cliente, veiculo->carga, 0);
+                                                                       mvStr, nullptr, ptrEscolhido->cliente,
+                                                                       veiculo->carga, 0);
 
                         //Verifica viabilidade
                         if (resultadosRota.viavel)
@@ -857,7 +856,8 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
             vetClienteRotaAux[posicao + 1].cliente = (*clienteEscolhido)->cliente;
 
             //Calcular rota entre posicao e posicao + 1
-            if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia, pesoVeic1, veiculo1->tipo))
+            if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia,
+                                              pesoVeic1, veiculo1->tipo, NULL))
             {
                 combustivelAuxVeic1 = combustivelRotaParcialVeic1;
                 poluicaoAuxVeic1 = poluicaoRotaParcialVeic1;
@@ -877,7 +877,9 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                     auto prox = clienteIt;
                     auto ptr = *prox;
 
-                    auto resultado = calculaFimRota(instancia, veiculo1, prox, pesoAux, vetClienteRotaAux, posicao + 1, poluicaoAuxVeic1, combustivelAuxVeic1, -1, mvStr, -1, PesoVeiculo1, 1);
+                    auto resultado = calculaFimRota(instancia, veiculo1, prox, pesoAux, vetClienteRotaAux, posicao + 1,
+                                                    poluicaoAuxVeic1, combustivelAuxVeic1, -1, mvStr, nullptr, -1,
+                                                    PesoVeiculo1, 1);
 
 
                     posicaoBestVeic1 = resultado.posicaoVet;
@@ -924,8 +926,10 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                                 clienteIt++;
 
 
-                                resultadoVeic2 = calculaFimRota(instancia, veiculo2, clienteIt, pesoVeic2, vetClienteRotaSecundBest, posicao, poluicaoRotaVeic2,
-                                                                combustivelRotaVeic2, -1, mvStr, -1, PesoVeiculo2, -1);
+                                resultadoVeic2 = calculaFimRota(instancia, veiculo2, clienteIt, pesoVeic2,
+                                                                vetClienteRotaSecundBest, posicao, poluicaoRotaVeic2,
+                                                                combustivelRotaVeic2, -1, mvStr, nullptr, -1,
+                                                                PesoVeiculo2, -1);
 
 
                                 break;
@@ -1197,15 +1201,18 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
                         ResultadosRota resultadosRotaVeic1{.viavel = false}, resultadosRotaVeic2{.viavel=false};
 
                         //Adiciona o novo cliente
-                        if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia, pesoAux, veiculo1->tipo))
+                        if (Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1],
+                                                          instancia, pesoAux, veiculo1->tipo, NULL))
                         {
                             poluicaoAuxVeic1 += vetClienteRotaAux[posicao + 1].poluicao;
                             combustivelAuxVeic1 += vetClienteRotaAux[posicao + 1].combustivel;
                             pesoAux -= instancia->vetorClientes[(*clienteEscolhido)->cliente].demanda;
 
                             if (VerificaSolucao::verificaCombustivel(combustivelAuxVeic1, veiculo1->tipo, instancia))
-                                resultadosRotaVeic1 = calculaFimRota(instancia, veiculo1, next, pesoAux, vetClienteRotaAux, posicao + 1, poluicaoAuxVeic1,
-                                                                     combustivelAuxVeic1, -1, mvStr, -1, pesoVeic1T, 0);
+                                resultadosRotaVeic1 = calculaFimRota(instancia, veiculo1, next, pesoAux,
+                                                                     vetClienteRotaAux, posicao + 1, poluicaoAuxVeic1,
+                                                                     combustivelAuxVeic1, -1, mvStr, nullptr, -1,
+                                                                     pesoVeic1T, 0);
 
 
                         }
@@ -1227,7 +1234,9 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
 
                                 vetClienteRotaSecundAux[posicaoVeic2 + 1].cliente = clientePtr->cliente;
 
-                                if (Construtivo::determinaHorario(&vetClienteRotaSecundAux[posicaoVeic2], &vetClienteRotaSecundAux[posicaoVeic2 + 1], instancia, pesoAux, veiculo2->tipo))
+                                if (Construtivo::determinaHorario(&vetClienteRotaSecundAux[posicaoVeic2],
+                                                                  &vetClienteRotaSecundAux[posicaoVeic2 + 1], instancia,
+                                                                  pesoAux, veiculo2->tipo, NULL))
                                 {
                                     //Atualiza variaveis
 
@@ -1241,8 +1250,11 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
                                         auto nexClienteEscolhido = clienteEscolhido;
                                         nexClienteEscolhido++;
 
-                                        resultadosRotaVeic2 = calculaFimRota(instancia, veiculo2, nexClienteEscolhido, pesoAux, vetClienteRotaSecundAux,
-                                                            posicaoVeic2 + 1, poluicaoAuxVeic2, combustivelAuxVeic2, -1, mvStr, -1, pesoVeic2T, 0);
+                                        resultadosRotaVeic2 = calculaFimRota(instancia, veiculo2, nexClienteEscolhido,
+                                                                             pesoAux, vetClienteRotaSecundAux,
+                                                                             posicaoVeic2 + 1, poluicaoAuxVeic2,
+                                                                             combustivelAuxVeic2, -1, mvStr, nullptr,
+                                                                             -1, pesoVeic2T, 0);
                                     }
 
                                 }
@@ -1441,7 +1453,7 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
 
             //Rota entre o cliente anterior de it e o cliente posterior de it
             if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet + 1],
-                                               instancia, peso, veiculo->tipo))
+                                               instancia, peso, veiculo->tipo, NULL))
             {
                 ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
                 return resultado;
@@ -1461,7 +1473,7 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
 
                 vetClienteRotaAux[posicaoVet + 1] = **it;
                 if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet + 1],
-                                                   instancia, peso, veiculo->tipo))
+                                                   instancia, peso, veiculo->tipo, NULL))
                 {
                     ResultadosRota resultado = {.poluicao = poluicao, .combustivel = combustivel, .peso = peso, .viavel = false, .posicaoVet = posicaoVet};
                     return resultado;
@@ -1507,13 +1519,9 @@ ResultadosRota Movimentos::recalculaRota(const Instancia::Instancia *const insta
 //Calcula rota ate o final.
 //Esta escrevendo em posicaoVet !!!
 //Substitui escolhido por substituto
-Movimentos::ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
-                                          ItClienteRota proximoClienteIt, int peso,
-                                          Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao,
-                                          double combustivel,
-                                          const int clienteEscolhido, std::string mvStr, const int substituto,
-                                          const int pesoTotal,
-                                          const int maisclientes)
+ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo, ItClienteRota proximoClienteIt, int peso,
+                                          Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao, double combustivel, const int clienteEscolhido,
+                                          std::string mvStr, int *erro, const int substituto, const int pesoTotal, const int maisclientes)
 {
 
 
@@ -1540,9 +1548,10 @@ Movimentos::ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia
         }
 
         //Calcular rota entre posicaoVet e posicaoVet + 1
-        if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet + 1],
-                                           instancia, peso, veiculo->tipo))
+        if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet + 1], instancia, peso, veiculo->tipo, NULL))
         {
+            if(erro)
+                *erro = 1;
             ResultadosRota resultados = {.viavel=false};
             //cout<<"mv recalculaRota. J.\n";
             return resultados;
@@ -1562,46 +1571,63 @@ Movimentos::ResultadosRota Movimentos::calculaFimRota(const Instancia::Instancia
         //Verifica combustivel
         if (!VerificaSolucao::verificaCombustivel(combustivel, veiculo, instancia))
         {
-            return {.viavel = false};
+            if(erro)
+                *erro = 0;
+
+            return {.viavel = false, .posicaoVet = posicaoVet};
         }
         posicaoVet += 1;
         ++itCliente;
     }
 
-    /*
-    auto veiculoPtr = new Solucao::Veiculo(veiculo->tipo);
-
-
-    veiculoPtr->listaClientes.erase(veiculoPtr->listaClientes.begin(), veiculoPtr->listaClientes.end());
-
-    for (int i = 0; i <= posicaoVet; ++i)
+    if (peso > 0)
     {
-        auto cliente = new Solucao::ClienteRota;
-        *cliente = vetClienteRotaAux[i];
-
-        veiculoPtr->listaClientes.push_back(cliente);
-
+        cout << "Erro peso nao eh 0\n";
     }
 
-    auto clientePtr = *std::next(veiculoPtr->listaClientes.begin(), 1);
-
-
-    veiculoPtr->poluicao = poluicao;
-    veiculoPtr->combustivel = combustivel;
-    veiculoPtr->carga = pesoTotal;
-
-    if (!VerificaSolucao::verificaVeiculo(veiculoPtr, instancia))
+    if(pesoTotal != -1)
     {
+
+        auto veiculoPtr = new Solucao::Veiculo(veiculo->tipo);
+
+        for (auto it : veiculoPtr->listaClientes)
+            delete it;
+
+
+        veiculoPtr->listaClientes.erase(veiculoPtr->listaClientes.begin(), veiculoPtr->listaClientes.end());
+
+        for (int i = 0; i <= posicaoVet; ++i)
+        {
+            auto cliente = new Solucao::ClienteRota;
+            *cliente = vetClienteRotaAux[i];
+
+            veiculoPtr->listaClientes.push_back(cliente);
+
+        }
+
+        auto clientePtr = *std::next(veiculoPtr->listaClientes.begin(), 1);
+
+
+        veiculoPtr->poluicao = poluicao;
+        veiculoPtr->combustivel = combustivel;
+        veiculoPtr->carga = pesoTotal;
+
+        if (!VerificaSolucao::verificaVeiculo(veiculoPtr, instancia))
+        {
+            cout<<"\n\n";
+            for(auto it:veiculoPtr->listaClientes)
+                cout<<it->cliente<<" ";
+
+            cout<<'\n';
+
+            delete veiculoPtr;
+            cout << "*Func pai: " << mvStr << '\n';
+            throw exceptionVeiculo;
+        }
+
         delete veiculoPtr;
-        cout << "Func pai: " << mvStr << '\n';
-        throw exceptionVeiculo;
-    }
 
-    delete veiculoPtr;*/
 
-    if(peso > 0)
-    {
-        cout<<"Erro peso nao eh 0\n";
     }
 
     //Peso não se aplica.
@@ -1628,7 +1654,7 @@ Movimentos::inverteRota(ItClienteRota itInicio, ItClienteRota itFim, Solucao::Cl
 
         //Calcula horário, poluicao e combustivel
         if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia,
-                                           peso, tipoVeiculo))
+                                           peso, tipoVeiculo, NULL))
             return {.viavel = false};
 
         //Atualia poluicao e combustivel
@@ -1778,8 +1804,10 @@ ResultadosRota Movimentos::mv_2optSwapIntraRota(const Instancia::Instancia *cons
                 fim++;
 
                 //Calcula o fim da rota
-                resultadosRota = Movimentos::calculaFimRota(instancia, veiculo, fim, pesoAux, vetClienteRotaAux, posicaoAux,
-                                                            poluicaoAux, combustivelAux, -1, mvStr, -1, veiculo->carga, 0);
+                resultadosRota = Movimentos::calculaFimRota(instancia, veiculo, fim, pesoAux, vetClienteRotaAux,
+                                                            posicaoAux,
+                                                            poluicaoAux, combustivelAux, -1, mvStr, nullptr, -1,
+                                                            veiculo->carga, 0);
 
                 if (resultadosRota.viavel)
                 {
@@ -1951,6 +1979,7 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
 
     const int veiculo1Original = veiculoEscolhido1;
 
+
     do
     {
         veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
@@ -1967,6 +1996,8 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
 
             continue;
         }
+
+
 
         pesoVeic1Parcial = 0;
         it = veiculo1->listaClientes.begin();
@@ -2021,11 +2052,11 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
                         auto itAux = clienteEscolhido;
                         itAux++;
 
-                        //cout<<"viculo1\n";
+
 
                         //Calcula fim da rota adicionando clientes do veiculo2
 
-
+                        //cout<<"viculo1\n";
                         Movimentos::ResultadosRota resultadosRotaVeic1 = Movimentos::calculaFimRota_2OptInter(instancia,veiculo1, veiculo2, itAux,
                                                                                                               pesoAux, vetClienteRotaAux, posicao, poluicaoAux,
                                                                                                               combustivelAux, -1, mvStr, -1, pesoNovoVeiculo1, 0);
@@ -2109,6 +2140,9 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
             vetClienteRotaAux[posicao + 1] = **clienteIt;
             pesoVeic1Parcial += instancia->vetorClientes[(*clienteIt)->cliente].demanda;
             posicao++;
+
+/*            cout<<vetClienteRotaAux[posicao].cliente<<" ( "<<vetClienteRotaAux[posicao].tempoChegada<<" "
+                <<vetClienteRotaAux[posicao].tempoSaida<<")\n";*/
 
 
         }
@@ -2375,13 +2409,18 @@ Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Soluca
 
 }
 
-ResultadosRota
-Movimentos::calculaFimRota_2OptInter(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
+ResultadosRota Movimentos::calculaFimRota_2OptInter(const Instancia::Instancia *const instancia, Solucao::Veiculo *veiculo,
                                      Solucao::Veiculo *veiculo2, ItClienteRota proximoClienteIt, int peso,
                                      Solucao::ClienteRota *vetClienteRotaAux, int posicaoVet, double poluicao,
                                      double combustivel, const int clienteEscolhido, std::string mvStr,
                                      const int substituto, const int pesoTotal, const int maisclientes)
 {
+    string saida;
+    const int posicaoOriginal = posicaoVet;
+
+    saida+="ClienteIt "+std::to_string((**proximoClienteIt).cliente)+'\n';
+    saida+"tempoSaida posicao: "+std::to_string(vetClienteRotaAux[posicaoVet].tempoSaida)+'\n'+"cliente posicao: "+std::to_string(vetClienteRotaAux[posicaoVet].cliente)+'\n';
+
 
     //Calcular rota do ultimo cliente em vetCliente
     if (clienteEscolhido == 0)
@@ -2407,7 +2446,7 @@ Movimentos::calculaFimRota_2OptInter(const Instancia::Instancia *const instancia
 
         //Calcular rota entre posicaoVet e posicaoVet + 1
         if (!Construtivo::determinaHorario(&vetClienteRotaAux[posicaoVet], &vetClienteRotaAux[posicaoVet + 1],
-                                           instancia, peso, veiculo->tipo))
+                                           instancia, peso, veiculo->tipo, NULL))
         {
             Movimentos::ResultadosRota resultados = {.viavel=false};
             //cout<<"mv recalculaRota. J.\n";
@@ -2433,38 +2472,52 @@ Movimentos::calculaFimRota_2OptInter(const Instancia::Instancia *const instancia
         posicaoVet += 1;
         ++itCliente;
     }
-
-    /*
-    auto veiculoPtr = new Solucao::Veiculo(veiculo->tipo);
-
-
-    veiculoPtr->listaClientes.erase(veiculoPtr->listaClientes.begin(), veiculoPtr->listaClientes.end());
-
-    for (int i = 0; i <= posicaoVet; ++i)
+    if(pesoTotal != -1)
     {
-        int aux = vetClienteRotaAux[i].cliente;
-        auto cliente = new Solucao::ClienteRota;
-        *cliente = vetClienteRotaAux[i];
-        veiculoPtr->listaClientes.push_back(cliente);
 
-    }
+        auto veiculoPtr = new Solucao::Veiculo(veiculo->tipo);
+        for (auto it : veiculoPtr->listaClientes)
+            delete it;
 
-    auto clientePtr = *std::next(veiculoPtr->listaClientes.begin(), 1);
+        veiculoPtr->listaClientes.erase(veiculoPtr->listaClientes.begin(), veiculoPtr->listaClientes.end());
+
+        for (int i = 0; i <= posicaoVet; ++i)
+        {
+            auto cliente = new Solucao::ClienteRota;
+            *cliente = vetClienteRotaAux[i];
+            veiculoPtr->listaClientes.push_back(cliente);
+
+        }
+
+        auto clientePtr = *std::next(veiculoPtr->listaClientes.begin(), 1);
 
 
-    veiculoPtr->poluicao = poluicao;
-    veiculoPtr->combustivel = combustivel;
-    veiculoPtr->carga = pesoTotal;
+        veiculoPtr->poluicao = poluicao;
+        veiculoPtr->combustivel = combustivel;
+        veiculoPtr->carga = pesoTotal;
 
-    if(!VerificaSolucao::verificaVeiculo(veiculoPtr, instancia))
-    {
-        cout<<"Carga: "<<veiculoPtr->carga<<"\nCapacidade: "<<instancia->vetorVeiculos[veiculo->tipo].capacidade<<'\n';
+        if (!VerificaSolucao::verificaVeiculo(veiculoPtr, instancia))
+        {
+
+            //cout<<saida;
+
+            for(auto it:veiculoPtr->listaClientes)
+                cout<<it->cliente<<" *( "<<it->tempoChegada<<" "<<it->tempoSaida<<")\n";
+            cout<<'\n';
+
+            cout<<"Tam "<<veiculoPtr->listaClientes.size()<<'\n';
+            cout<<"Tipo: "<<veiculoPtr->tipo<<'\n';
+
+            cout << "Carga: " << veiculoPtr->carga << "\n*Capacidade: "
+                 << instancia->vetorVeiculos[veiculo->tipo].capacidade << '\n';
+            delete veiculoPtr;
+            cout << "Func pai: " << mvStr << '\n';
+            cout<<"Posicao original: "<<posicaoOriginal<<'\n';
+            throw exceptionVeiculo;
+        }
+
         delete veiculoPtr;
-        cout<<"Func pai: "<<mvStr<<'\n';
-        throw exceptionVeiculo;
     }
-
-    delete veiculoPtr;*/
 
     //Peso não se aplica.
     return {.poluicao = poluicao, .combustivel = combustivel, .peso = -1, .viavel = true, .posicaoVet = posicaoVet, .veiculoSecundario = NULL};

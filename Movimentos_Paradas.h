@@ -20,6 +20,33 @@ namespace Movimentos_Paradas
         double poluicao, combustivel;
         double poluicaoRotas, combustivelRotas;
         bool vetPeriodos[5];
+
+        Aresta(){}
+
+        Aresta(double _poluicao, double _combustivel, double _poluicaoRotas, double _combustivelRotas) : poluicao(_poluicao), combustivel(_combustivel),
+        poluicaoRotas(_poluicaoRotas), combustivelRotas(_combustivelRotas)
+        {
+
+        }
+
+        Aresta(const Aresta &aresta)
+        {
+            poluicao = aresta.poluicao;
+            combustivel = aresta.combustivel;
+            poluicaoRotas = aresta.poluicaoRotas;
+            combustivelRotas = aresta.combustivelRotas;
+
+            auto ptr = vetPeriodos;
+            auto outroPtr = aresta.vetPeriodos;
+
+            for(int i = 0; i < 5; ++i)
+            {
+                *ptr = *outroPtr;
+
+                ++ptr;
+                ++outroPtr;
+            }
+        }
     };
 
     struct HeapNo
@@ -53,6 +80,17 @@ namespace Movimentos_Paradas
         const double tempoChegada;
         bool fechado;
 
+        No(int _id, int _cliente, double _tempoSaida, int _predecessorId, double _predecessorTempoSaida, double _poluicao, double _combustivel, Aresta *_aresta, bool _final,
+                double _tempoChegada, double _fechado) : id(_id), cliente(_cliente), tempoSaida(_tempoSaida), predecessorId(_predecessorId), predecessorTempoSaida(_predecessorTempoSaida),
+                poluicao(_poluicao), combustivel(_combustivel), aresta(_aresta), final(_final), tempoChegada(_tempoChegada), fechado(_fechado)
+        {}
+
+        ~No()
+        {
+            if(aresta)
+                delete aresta;
+        }
+
     };
 
     struct Cliente
@@ -60,6 +98,22 @@ namespace Movimentos_Paradas
         double tempo;
         int id;
         Aresta aresta;
+
+        Cliente(){}
+
+        Cliente(const Cliente &outro)
+        {
+            tempo = outro.tempo;
+            id = outro.id;
+            aresta = outro.aresta;
+        }
+
+        void swap(const Cliente &outro)
+        {
+            tempo = outro.tempo;
+            id = outro.id;
+            aresta = outro.aresta;
+        }
     };
 
     struct VetCliente
@@ -67,12 +121,59 @@ namespace Movimentos_Paradas
         Cliente *vetCliente;
         int tam;
         int tamReal;
+
+        VetCliente(int _tam, int _tamReal):  tam(_tam), tamReal(_tamReal)
+        {
+
+            vetCliente = (Cliente*)(malloc(sizeof(Cliente) * _tamReal));
+
+        }
+
+        VetCliente(){}
+
+        ~VetCliente()
+        {
+            free(vetCliente);
+        }
+
+        void swap(VetCliente *outroVetCliente)
+        {
+            int aux = tam;
+            tam = outroVetCliente->tam;
+            outroVetCliente->tam = aux;
+
+            aux = tamReal;
+            tamReal = outroVetCliente->tamReal;
+            outroVetCliente->tamReal = aux;
+
+            Cliente *ptr = vetCliente;
+            vetCliente = outroVetCliente->vetCliente;
+            outroVetCliente->vetCliente = ptr;
+        }
+
     };
 
     bool mvPercorreRotaParadas(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRota);
-    int buscaBinaria(Cliente *vetCliente, double tempoSaida, int tam);
-    int dijkstra(std::unordered_map<int, No*> *hashNo, std::map<int,int> *mapVetor, VetCliente *vetVetCliente, double maxCombustivel);
 
+    int buscaBinaria(Cliente *vetCliente, double tempoSaida, int tam);
+
+    int dijkstra(std::unordered_map<int, No *> *hashNo, std::map<int, int> *mapVetor, VetCliente *vetVetCliente, const double maxCombustivel, std::string *erro);
+
+    /** **********************************************************************************************************
+     * Recebe uma rota por um vetor (vetClienteRota) e cria a rota realizando paradas.
+     * A nova rota é escrita no vetor (vetClienteRota) e a poluicao e combustivel nos seus respectivos ponteiros.
+     *
+     * @param instancia
+     * @param vetClienteRota
+     * @param tam
+     * @param peso
+     * @param tipoVeiculo
+     * @param combustivel
+     * @param poluicao
+     * @return bool Resultado
+     ********************************************************************************************************** */
+
+    bool criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam, const int peso, const int tipoVeiculo, double *combustivel, double *poluicao);
 
 }
 
