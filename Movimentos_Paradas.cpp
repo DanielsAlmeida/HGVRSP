@@ -1,4 +1,3 @@
-//
 // Created by igor on 27/04/2020.
 
 #include "Movimentos_Paradas.h"
@@ -10,6 +9,7 @@
 #include "VerificaSolucao.h"
 #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <chrono>
 
 constexpr const bool Debug = false;
 
@@ -37,7 +37,7 @@ class ExceptionRota : public std::exception
 {
     virtual const char *what() const throw()
     {
-        return "Erro, fuc: Movimentos_Paradas::criaRota. \nMotivo: rota deve comecar e terminar com o deposito\n";
+        return "Na funcao\nErro, fuc: Movimentos_Paradas::criaRota. \nMotivo: rota deve comecar e terminar com o deposito\n";
     }
 };
 
@@ -780,37 +780,75 @@ int Movimentos_Paradas::buscaBinaria(Cliente *vetCliente, double tempoSaida, int
     return -1;
 }
 
-bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam, const int peso, const int tipoVeiculo,
-                                  double *combustivel, double *poluicao)
+bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam, const int peso, const int tipoVeiculo, double *combustivel,
+                            double *poluicao, double *folga, TempoCriaRota *tempoCriaRota)
 {
-
 
     if (tam <= 2)
     {
         return false;
     }
 
+    auto c_start = std::chrono::high_resolution_clock::now();
 
     if (vetClienteRota[0].cliente != 0 || vetClienteRota[tam - 1].cliente != 0)
         throw ExceptionRota();
+
+    int pesoParcial = peso;
+
+    // Verifica viabilidade da janela de tempo e a menor folga
+    vetClienteRota[0].tempoSaida = (tipoVeiculo == 0 ? 0.0 : 0.5);
+
+    double menor = HUGE_VAL;
+
+    for(int i = 0; i < (tam - 2); ++i)
+    {
+        if(!Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[i+1], instancia, pesoParcial, tipoVeiculo, NULL))
+        {
+            auto c_end = std::chrono::high_resolution_clock::now();
+
+            std::chrono::duration<double> tempoCpu  = c_end - c_start;
+            tempoCriaRota->tempoCpu += tempoCpu.count();
+
+            return false;
+
+        }
+
+        if(folga)
+        {
+            double aux = instancia->vetorClientes[vetClienteRota[i+1].cliente].fimJanela - vetClienteRota[i+1].tempoSaida;
+
+            if(aux < menor)
+                menor = aux;
+        }
+
+        pesoParcial -= instancia->vetorClientes[vetClienteRota[i+1].cliente].demanda;
+    }
+
+    if(folga)
+        *folga = menor;
 
     //Cria estruturas auxiliares
     std::unordered_map<int, No *> hashNo;
     //std::map<int, int> mapVetor;
     //std::list<Aresta *> listaAresta;
     int nextId = 0;
-    int pesoParcial = peso;
-    const double IncrementoTempo = 0.166667;                         //10 minutos
+    pesoParcial = peso;
+    const double IncrementoTempo = 0.666666667;                         //40 minutos
     const double TempoMax = 1.8;                                     //Tempo maximo de diferenca da primeira rota ate a ultima
+    const int FreqVerificacao = 4; //6
+    const int IncrementoEspaco = 5;
+    const int TamRealVetor = 6;
+
     bool *ptrAresta, *ptrVet;
 
-    VetCliente clienteI{0, 20};
-    VetCliente clienteJ{0, 20};
+    VetCliente clienteI{0, TamRealVetor};
+    VetCliente clienteJ{0, TamRealVetor};
 
     //Inicializa o deposito
-    clienteI.vetCliente[0].tempo = (tipoVeiculo == 0 ? 0.0 : 0.5);
+/*    clienteI.vetCliente[0].tempo = (tipoVeiculo == 0 ? 0.0 : 0.5);
     clienteI.vetCliente[0].id = nextId;
-    clienteI.tam = 1;
+    clienteI.tam = 1;*/
 
 
     No *no = new No(nextId, 0, (tipoVeiculo == 0 ? 0.0 : 0.5), -1, -1, 0.0, 0.0, NULL, false,
@@ -821,6 +859,40 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
     nextId++;
 
     Aresta *aresta;
+    aresta = new Aresta;
+
+    aresta->combustivelRotas = vetClienteRota[1].combustivelRota;
+    aresta->combustivel = vetClienteRota[1].combustivel;
+    aresta->poluicaoRotas = vetClienteRota[1].poluicaoRota;
+    aresta->poluicao = vetClienteRota[1].poluicao;
+
+    ptrAresta = aresta->vetPeriodos;
+    ptrVet = vetClienteRota[1].percorrePeriodo;
+
+    for(int i = 0; i < 5; ++i)
+    {
+        *ptrAresta = *ptrVet;
+
+        ++ptrAresta;
+        ++ptrVet;
+    }
+
+    no = new No(nextId, vetClienteRota[1].cliente, vetClienteRota[1].tempoSaida, 0, (tipoVeiculo == 0 ? 0.0 : 0.5), aresta->poluicao, aresta->combustivel, aresta,
+            false, vetClienteRota[1].tempoChegada, false);
+
+    clienteI.vetCliente[0].tempo = no->tempoSaida;
+    clienteI.vetCliente[0].id = nextId;
+    clienteI.vetCliente[0].aresta = *aresta;
+    clienteI.tam = 1;
+
+    hashNo[nextId] = no;
+
+    no = NULL;
+    aresta = NULL;
+    nextId += 1;
+
+    //Atualiza o peso. Saiada do cliente na posicao 1
+    pesoParcial -= instancia->vetorClientes[vetClienteRota[1].cliente].demanda;
 
     auto funcLiberaMemoria = [&]()
     {
@@ -833,11 +905,16 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
         hashNo.erase(hashNo.begin(), hashNo.end());
 
+        auto c_end = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> tempoCpu  = c_end - c_start;
+        tempoCriaRota->tempoCpu += tempoCpu.count();
+
     };
 
 
     //A cada interacao cria arcos i-j
-    for (int i = 0; i < (tam - 1); ++i)
+    for (int i = 1; i < (tam - 1); ++i)
     {
 
         int j = i + 1;
@@ -851,7 +928,6 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
             return false;
 
         }
-
 
         //Percorre todos os tempos, criando  arestas i-j
         for(int k = 0; k < clienteI.tam; ++k)
@@ -922,10 +998,19 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
             }
         }
 
+        if(clienteI.tam == 0)
+        {
+            funcLiberaMemoria();
+            return false;
+        }
+
 
         //Cria rotas intermediarias
         for(int k = 0; k < (clienteI.tam - 1); ++k)
         {
+            if((clienteI.tam + 1) > TamRealVetor)
+                break;
+
             double diferencaTempo = clienteI.vetCliente[k+1].tempo  -  clienteI.vetCliente[k].tempo;
 
             //Verifica o espaçamento
@@ -945,16 +1030,18 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
                         if((clienteI.tam + 1) > clienteI.tamReal)
                         {
                             //Espaco nao é suficiente. Alacar mais espaco nos vetores
-                            clienteI.vetCliente = (Cliente*)(realloc(clienteI.vetCliente, sizeof(Cliente) * (clienteI.tamReal + 5)));
-                            clienteJ.vetCliente =  (Cliente*)(realloc(clienteJ.vetCliente, sizeof(Cliente) * (clienteJ.tamReal + 5)));
+                            clienteI.vetCliente = (Cliente*)(realloc(clienteI.vetCliente, sizeof(Cliente) * (clienteI.tamReal + IncrementoEspaco)));
+                            clienteJ.vetCliente =  (Cliente*)(realloc(clienteJ.vetCliente, sizeof(Cliente) * (clienteJ.tamReal + IncrementoEspaco)));
 
-                            clienteI.tamReal += 5;
-                            clienteJ.tamReal += 5;
+                            clienteI.tamReal += IncrementoEspaco;
+                            clienteJ.tamReal += IncrementoEspaco;
 
                             if(!clienteI.vetCliente || !clienteJ.vetCliente)
                             {
                                 throw ExceptionNull();
                             }
+
+                            //cout<<"Aumentando vetor para "<<clienteI.tamReal<<'\n';
                         }
 
 
@@ -1039,8 +1126,11 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
         int k = 1;
 
         //Enquanto o incremento no tempo de saida da ultima rota for menor que o tempoMax, adicionar uma nova aresta
-        while(((clienteI.vetCliente[clienteI.tam-1].tempo - clienteI.vetCliente[0].tempo) + k*IncrementoTempo) < TempoMax)
+        while(((clienteI.vetCliente[clienteI.tam-1].tempo - clienteI.vetCliente[0].tempo) + k*IncrementoTempo) <= TempoMax)
         {
+            if((clienteI.tam + 1) > TamRealVetor)
+                break;
+
             //Cria aresta i-j
             vetClienteRota[i].tempoSaida = clienteI.vetCliente[clienteI.tam - 1].tempo + k * IncrementoTempo;
             bool resultado = Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial, tipoVeiculo, NULL);
@@ -1050,21 +1140,45 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
                 //Verifica se a poluicao é igual a ultima rota
                 if(vetClienteRota[j].poluicao != clienteJ.vetCliente[clienteI.tam - 1].aresta.poluicao)
                 {
+                    //Realiza uma verificacao de viabilidade a cada (FreqVerificacao-1).
+                    if((k % FreqVerificacao) == 0)
+                    {
+                        int pesoAux = pesoParcial - instancia->vetorClientes[vetClienteRota[j].cliente].demanda;
+
+                        bool viavel = true;
+                        int p = j;
+
+                        for(; (p + 1) < tam; ++p)
+                        {
+                            if(!Construtivo::determinaHorario(&vetClienteRota[p], &vetClienteRota[p+1], instancia, pesoAux, tipoVeiculo, NULL))
+                            {
+                                viavel = false;
+                                break;
+                            }
+
+                            pesoAux -= instancia->vetorClientes[vetClienteRota[p+1].cliente].demanda;
+                        }
+
+                        if(!viavel)
+                            break;
+                    }
 
                     //Verifica o espaco
                     if((clienteI.tam + 1) > clienteI.tamReal)
                     {
                         //Espaco nao é suficiente. Alacar mais espaco nos vetores
-                        clienteI.vetCliente = (Cliente*)(realloc(clienteI.vetCliente, sizeof(Cliente) * (clienteI.tamReal + 5)));
-                        clienteJ.vetCliente =  (Cliente*)(realloc(clienteJ.vetCliente, sizeof(Cliente) * (clienteJ.tamReal + 5)));
+                        clienteI.vetCliente = (Cliente*)(realloc(clienteI.vetCliente, sizeof(Cliente) * (clienteI.tamReal + IncrementoEspaco)));
+                        clienteJ.vetCliente =  (Cliente*)(realloc(clienteJ.vetCliente, sizeof(Cliente) * (clienteJ.tamReal + IncrementoEspaco)));
 
-                        clienteI.tamReal += 5;
-                        clienteJ.tamReal += 5;
+                        clienteI.tamReal += IncrementoEspaco;
+                        clienteJ.tamReal += IncrementoEspaco;
 
                         if(!clienteI.vetCliente || !clienteJ.vetCliente)
                         {
                             throw ExceptionNull();
                         }
+
+                        //cout<<"Aumentando vetor para "<<clienteI.tamReal<<'\n';
 
                     }
 
@@ -1119,6 +1233,7 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
                     aresta = NULL;
                     no = NULL;
 
+
                 }
             }
             else
@@ -1127,16 +1242,16 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
             ++k;
         }
 
-
-
-
-        /* ******************************************************************************
+        /* *************************************************************************************************************************************************************************************************
+         *
          * Realizar a atualizacao dos nos de j com a poluicao e combustivel parcial de i.
          * Verificar o combustivel
-         ****************************************************************************** */
+         *
+         ************************************************************************************************************************************************************************************************ */
 
         bool atualizacao = false;
 
+        //Verifica se foram criadas arestas
         if(clienteJ.tam == 0)
         {
             return false;
@@ -1178,8 +1293,6 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
             //Percorre as arestas
             for(;indice < clienteJ.tam; ++indice)
             {
-
-
 
                 noAux = hashNo[clienteJ.vetCliente[indice].id];
 
@@ -1287,13 +1400,15 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
         clienteI.swap(&clienteJ);
 
-        if constexpr(Debug)
-        {
-            cout << "\n\n***************************************************************************************\n\n";
-        }
     }
 
+    if(pesoParcial != 0)
+    {
+        funcLiberaMemoria();
+        cout<<"Erro, fuc: Movimentos_Paradas::criaRota. \nMotivo: peso nao eh 0\n\n";
+        exit(-1);
 
+    }
 
     //Copiar a solucao para o vetor
 
@@ -1323,10 +1438,22 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
         exit(-1);
     }
 
-    cout<<"Encontrou solucao\n";
-
     *poluicao = no->poluicao;
     *combustivel = no->combustivel;
+
+    if(!VerificaSolucao::verificaCombustivel(*combustivel, tipoVeiculo, instancia))
+    {
+        cout<<"Erro! func Movimentos_Parados::criaRota.\nMotivo: combustivel a mais\n";
+        funcLiberaMemoria();
+        exit(-1);
+    }
+
+    if(no->cliente != 0)
+    {
+        cout<<"Erro ultimo clientete nao eh o deposito\n";
+        exit(-1);
+    }
+
 
     while(no)
     {
@@ -1351,6 +1478,7 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
             funcLiberaMemoria();
             exit(-1);
         }
+
 
         vetClienteRota[index].poluicao = aresta->poluicao;
         vetClienteRota[index].poluicaoRota = aresta->poluicaoRotas;
@@ -1393,7 +1521,9 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
     //Cria um veiculo para verificar a solucao
 
-    Solucao::Veiculo veiculoVerifica(tipoVeiculo);
+    //*****************************************************************************************************************************************
+
+    /*Solucao::Veiculo veiculoVerifica(tipoVeiculo);
 
     for(auto it : veiculoVerifica.listaClientes)
         delete it;
@@ -1419,7 +1549,12 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
         funcLiberaMemoria();
         exit(-1);
 
-    }
+    }*/
+
+    //*****************************************************************************************************************************************
+
+    tempoCriaRota->num += 1;
+    tempoCriaRota->tamVet += clienteI.tam;
 
     funcLiberaMemoria();
     return true;

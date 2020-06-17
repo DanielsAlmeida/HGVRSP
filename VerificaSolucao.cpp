@@ -10,6 +10,9 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
                                       double *distanciaTotal)
 {
 
+    if(solucao->veiculoFicticil)
+        return false;
+
     std::string saida;
     int *vetorClientes = new int[instancia->numClientes]; //Vetor para checar se cada cliente foi visitado uma unica vez.
 
@@ -46,7 +49,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
         }
 
-        if(it->listaClientes.size() == 2)
+        if(it->listaClientes.size() <= 2)
             continue;
 
         carga = 0;
@@ -245,7 +248,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
         }
 
         //if((it->carga != carga) || (carga > instancia->vetorVeiculos.capacidade) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((fabs(it->poluicao - poluicao) > 0.001)))
-        if((it->carga != carga) || (carga > instancia->vetorVeiculos[it->tipo].capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || ((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001))
+        if((it->carga != carga) || (carga > instancia->vetorVeiculos[it->tipo].capacidade) || ((fabs(it->poluicao - poluicao) > 0.001)) || ((fabs(it->combustivel - combustivel) > 0.001)) || (!verificaCombustivel(combustivel, it->tipo, instancia)))
         {
             //Solução está ERRADA.
             //cout<<"Outros.!\n";
@@ -262,8 +265,16 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
             if(fabs(it->combustivel - combustivel))
                 cout<<"Verificacao final. Combustivel diferente\n";
 
-            if((instancia->vetorVeiculos[it->tipo].combustivel - combustivel ) <= -0.001)
-                cout<<"Verificacao final. consumo Combustivel a mais do que a capacidade\n";
+            if(!verificaCombustivel(combustivel, it->tipo, instancia))
+            {
+                cout << "Verificacao final. consumo Combustivel a mais do que a capacidade\n";
+                cout<<"combustivel: "<<combustivel<<'\n';
+		        cout<<"Capacidade combustivel: "<<instancia->vetorVeiculos[it->tipo].combustivel<<'\n';
+		        cout<<"Tipo "<<it->tipo<<'\n';
+		        cout<<"Poluicao: "<<it->poluicao<<'\n';
+		        cout<<"Rota: "<<it->getRota()<<'\n';
+
+            }
 
             delete []vetorClientes;
             return false;
@@ -324,9 +335,24 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 double VerificaSolucao::poluicaoRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k)
 {
 
+    if(!(tipoVeiculo < 2))
+    {
+        cout<<"Erro tipo de veiculo\n";
+        cout<<tipoVeiculo<<'\n';
+        exit(-1);
+    }
+
     double c = instancia->vetorVeiculos[tipoVeiculo].cVeiculo;
 
-    return c * instancia->matrizCo2[i][j][k][tipoVeiculo] * distanciaParcial;
+    if(!(i >=0 && i < instancia->numClientes && j >=0 && j < instancia->numClientes && k < 5 && k >=0))
+    {
+        cout<<"Erro poluicao rota\n";
+        exit(-1);
+    }
+
+    double temp = c * instancia->matrizCo2[i][j][k][tipoVeiculo] * distanciaParcial;
+
+    return temp;
 
 }
 
@@ -501,6 +527,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
         delete []vetClienteRotaAux;
         return false;
     }
+    
 
     if(fabs(poluicao - veiculo->poluicao) > 0.001)
     {

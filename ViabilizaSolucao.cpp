@@ -151,7 +151,7 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                                                                                                       poluicaoParcial,
                                                                                                       *veiculo, peso,
                                                                                                       posicaoVetor,
-                                                                                                      &aux);
+                                                                                                      &aux, nullptr);
 
                     if (viavel)
                     {
@@ -559,7 +559,7 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
             double polAntes = ptrEscolhido->veiculo->poluicao;
 
             //Insere candidato escolhido
-            insereCandidato(ptrEscolhido, instancia, vetorClienteAux);
+            insereCandidato(ptrEscolhido, instancia, vetorClienteAux, nullptr, nullptr);
 
             solucao->poluicao -= polAntes;
             solucao->poluicao += ptrEscolhido->veiculo->poluicao;

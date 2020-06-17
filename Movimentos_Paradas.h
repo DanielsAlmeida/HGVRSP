@@ -13,7 +13,18 @@
 namespace Movimentos_Paradas
 {
 
+    struct TempoCriaRota
+    {
+        double tempoCpu;
+        int tamVet;
+        u_int64_t num;
 
+        TempoCriaRota()
+        {
+            tempoCpu = 0.0;
+            num = tamVet = 0;
+        }
+    };
 
     struct Aresta
     {
@@ -121,11 +132,14 @@ namespace Movimentos_Paradas
         Cliente *vetCliente;
         int tam;
         int tamReal;
+        std::list<Cliente> *ptrLista;
 
         VetCliente(int _tam, int _tamReal):  tam(_tam), tamReal(_tamReal)
         {
 
             vetCliente = (Cliente*)(malloc(sizeof(Cliente) * _tamReal));
+
+            ptrLista = new std::list<Cliente>;
 
         }
 
@@ -134,6 +148,7 @@ namespace Movimentos_Paradas
         ~VetCliente()
         {
             free(vetCliente);
+            delete ptrLista;
         }
 
         void swap(VetCliente *outroVetCliente)
@@ -149,6 +164,24 @@ namespace Movimentos_Paradas
             Cliente *ptr = vetCliente;
             vetCliente = outroVetCliente->vetCliente;
             outroVetCliente->vetCliente = ptr;
+
+            auto auxPtrLista = ptrLista;
+
+            ptrLista = outroVetCliente->ptrLista;
+            outroVetCliente->ptrLista = auxPtrLista;
+
+/*            auto ptr = vetCliente;
+            auto ptrOutro = outroVetCliente->vetCliente;
+
+            for(int i = 0; i < tam; ++i)
+            {
+                *ptr = *ptrOutro;
+
+                ++ptr;
+                ++ptrOutro;
+            }*/
+
+
         }
 
     };
@@ -170,10 +203,15 @@ namespace Movimentos_Paradas
      * @param tipoVeiculo
      * @param combustivel
      * @param poluicao
+     * @param folga
      * @return bool Resultado
      ********************************************************************************************************** */
 
-    bool criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam, const int peso, const int tipoVeiculo, double *combustivel, double *poluicao);
+    bool criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam,
+                  const int peso, const int tipoVeiculo, double *combustivel, double *poluicao,
+                  double *folga, TempoCriaRota *tempoCriaRota);
+
+    int comparaCliente(const void *p0, const void *p1);
 
 }
 

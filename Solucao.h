@@ -20,6 +20,7 @@ namespace Solucao
 
         int cliente;                    //id do cliente
         bool percorrePeriodo[5];       //true se percorre periodo de i a j, false caso contrário.
+        double tempoPorPeriodo[5];
         double tempoChegada;
         double tempoSaida;
         double poluicao;                // Poluição somente de i para j.
@@ -43,8 +44,30 @@ namespace Solucao
             distanciaAteCliente = outro.distanciaAteCliente;
 
             for(int i = 0; i < 5; ++i)
+            {
+                percorrePeriodo[i] = outro.percorrePeriodo[i];
+                tempoPorPeriodo[i] = outro.tempoPorPeriodo[i];
+            }
+        }
+
+        void operator = (const ClienteRota &outro)
+        {
+
+            cliente = outro.cliente;
+            tempoChegada = outro.tempoChegada;
+            tempoSaida = outro.tempoSaida;
+            poluicao = outro.poluicao;
+            combustivel = outro.combustivel;
+            poluicaoRota = outro.poluicaoRota;
+            produtoCarga = outro.produtoCarga;
+            combustivelRota = outro.combustivelRota;
+            distanciaAteCliente = outro.distanciaAteCliente;
+
+            for(int i = 0; i < 5; ++i)
                 percorrePeriodo[i] = outro.percorrePeriodo[i];
         }
+
+
 
     };
 

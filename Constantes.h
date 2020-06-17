@@ -18,5 +18,6 @@ extern const int Heuristica_Cliente_1; // Poluicao
 extern const int Heuristica_Cliente_2; // distancia_deposito
 extern const int Heuristica_Cliente_3; // Distancia
 
+extern const int MaxTamVetClientesMatrix;
 
 #endif //HGVRSP_CONSTANTES_H

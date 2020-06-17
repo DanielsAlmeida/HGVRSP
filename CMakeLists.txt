@@ -8,7 +8,6 @@ endif()
 set (CMAKE_CXX_FLAGS " -std=c++2a")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS "-I $HOME/Documentos/Programas/boost_1_72_0")
-set(CMAKE_CXX_FLAGS "-fconcepts")
 
 add_executable(HGVRSP main.cpp
         Instancia.cpp

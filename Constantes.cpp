@@ -16,3 +16,5 @@ const int Heuristica_Cliente_0 = 0;
 const int Heuristica_Cliente_1 = 1;
 const int Heuristica_Cliente_2 = 2;
 const int Heuristica_Cliente_3 = 3;
+
+const int MaxTamVetClientesMatrix = 20;

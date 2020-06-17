@@ -32,3 +32,51 @@ Rota original
 33 (3.6, 3.93333) (c 23.2183, p61.8476)
 
 */
+
+
+
+auto escolhaProporcional = [](double *vetorProb, Construtivo::Candidato *vetorCandidatos, int tamLista1Crit, int valAleatorio, int *tamRestante, Construtivo::Candidato *ptrEscolhido, int atributo)
+            {
+
+                double soma = 0.0;
+                for(int i = 0; i < tamLista1Crit; ++i)
+                {
+                    if(atributo == 0)
+                        vetorProb[i] = vetorCandidatos[i].folgaRota;
+
+                    else if(atributo == 1)
+                        vetorProb[i] = .1/vetorCandidatos[i].incrementoPoluicao;
+                    else if(atributo == 2)
+                        vetorProb[i] = .1/vetorCandidatos[i].distanciaArcos;
+                    else if(atributo == 3)
+                        vetorProb[i] = .1/vetorCandidatos[i].distanciaRotaCompleta;
+
+                    soma += vetorProb[i];
+                }
+                int aux = 0;
+                int posicao;
+                for(int j = 0; j < tamLista1Crit; ++j)
+                {
+                    aux += int(100.0*vetorProb[j]/soma);
+                    //cout<<"aux = "<<aux<<'\n';
+
+                    if(tamRestante)
+                        *tamRestante = j + 1;
+
+                    posicao = j;
+
+                    if(aux >= valAleatorio || (j +1) == tamLista1Crit)
+                        break;
+
+
+
+                    if(ptrEscolhido)
+                        ptrEscolhido++;
+
+                }
+
+                //cout<<"val "<<valAleatorio<<'\n';
+                //cout<<"j = "<<posicao<<"\n\n";
+
+
+            };

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <chrono>
 #include "Instancia.h"
 #include "Solucao.h"
 #include "VerificaSolucao.h"
@@ -9,7 +10,6 @@
 #include "Constantes.h"
 #include "Vnd.h"
 #include "Movimentos_Paradas.h"
-
 #include "time.h"
 //  1588722899
 
@@ -195,8 +195,11 @@ int main(int num, char **agrs)
 
     #define numAlfas  18
     float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
-    //boost::tuple<int,int> vetHeuristicas[3] = {{2,1}, {1,3}, {2, 3}};
-    boost::tuple<int,int> vetHeuristicas[3] = {{2,1}, {1,3}, {5, 3}};
+    //{{2,1}, {1,3}, {5, 3}};
+
+    #define TamVetH 1
+
+    boost::tuple<int,int> vetHeuristicas[TamVetH] = {{2,1}};
     
     if(vetHeuristicas[0].get<1>() < 0 || vetHeuristicas[0].get<1>() > 3)
     {
@@ -204,20 +207,32 @@ int main(int num, char **agrs)
         exit(-1);
     }
 
+    //Alaoca matrix para guardar a melhor rota de cada candidato
 
+    Solucao::ClienteRota **matrixClienteBest = new Solucao::ClienteRota *[instancia->numClientes];
+
+    for(int i = 0; i < instancia->numClientes; ++i)
+        matrixClienteBest[i] = new Solucao::ClienteRota[MaxTamVetClientesMatrix];
 
     std::stringstream strLog;
     string logAux;
 
-    clock_t c_start = clock();
+    Movimentos_Paradas::TempoCriaRota tempoCriaRota;
+
+    auto c_start = std::chrono::high_resolution_clock::now();
 
     Vnd::EstatisticaMv vetEstatisticaMv[9];
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, vetHeuristicas, 3, vetParametro, vetEstatisticaMv);
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 200, 20, logAtivo, &strLog, vetHeuristicas,
+                                       TamVetH, vetParametro, vetEstatisticaMv, matrixClienteBest, &tempoCriaRota);
 
+    auto c_end = std::chrono::high_resolution_clock::now();
 
+    //desaloca matrix
+    for(int i = 0; i < instancia->numClientes; ++i)
+        delete []matrixClienteBest[i];
 
-    clock_t c_end = clock();
+    delete []matrixClienteBest;
 
     strLog<<logAux;
     //strLog<<"\n\nRota:\n";
@@ -282,7 +297,11 @@ int main(int num, char **agrs)
 
     double distanciaTotal;
 
-    bool Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);
+    bool Veificacao = false;
+
+    if(!solucao->veiculoFicticil)
+        Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);
+
     texto += '\n';
 
     std::setprecision(2);
@@ -302,8 +321,12 @@ int main(int num, char **agrs)
     std::stringstream tempo;
     tempo << std::fixed << std::setprecision(2); //    std::string s = stream.str();
 
+    std::chrono::duration<double> tempoCpu = c_end-c_start;
 
-    tempo << "Tempo cpu: " << ((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) << " S\n";
+    tempo << "Tempo cpu: " << tempoCpu.count()<< " S\n";
+    tempo<<"Tempo na funcao criaRota: "<<tempoCriaRota.tempoCpu<<" S\n";
+    tempo<<"Tamanho medio vetor: "<<double(tempoCriaRota.tamVet)/ tempoCriaRota.num<<'\n';
+    tempo<<"Numero chamadas: "<<tempoCriaRota.num<<"\n";
     tempo << "Verificacao: " <<(Veificacao) << "\n";
     tempo << "Poluicao: " <<(solucao->poluicao + solucao->poluicaoPenalidades) << '\n';
     tempo << "Ultima atualizacao: " << (solucao->ultimaAtualizacao) << '\n';
@@ -356,23 +379,23 @@ int main(int num, char **agrs)
             // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
 
         if(Veificacao)
-            file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
+            file << std::to_string(solucao->poluicao) << " " << tempoCpu.count() <<
             " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << " "<<std::to_string(solucao->ultimaAtualizacao)
             <<" "<<vetEstatisticaMv[0].poluicao<<" "<<vetEstatisticaMv[1].poluicao<<" "<<vetEstatisticaMv[2].poluicao<<" "<<vetEstatisticaMv[3].poluicao<<" "<<vetEstatisticaMv[4].poluicao<<" "<<vetEstatisticaMv[5].poluicao
             <<" "<<vetEstatisticaMv[6].poluicao<<" "<<vetEstatisticaMv[7].poluicao<<" "<<vetEstatisticaMv[8].poluicao<<" "<<vetEstatisticaMv[0].gap<<" "<<vetEstatisticaMv[1].gap<<" "<<vetEstatisticaMv[2].gap<<" "<<
             vetEstatisticaMv[3].gap<<" "<<vetEstatisticaMv[4].gap<<" "<<vetEstatisticaMv[5].gap<<" "<<vetEstatisticaMv[6].gap<<" "<<vetEstatisticaMv[7].gap<<" "<<vetEstatisticaMv[8].gap<<" "<<'\n';
 
         else
-            file << std::to_string(0.0) << " " <<((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)<<
+            file << std::to_string(0.0) << " " <<tempoCpu.count()<<
                  " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << " "<< std::to_string(solucao->ultimaAtualizacao)<<
                  " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"<<'\n';
 
          /*if(Veificacao)
-             file << std::to_string(solucao->poluicao) << " " << ((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0) <<
+             file << std::to_string(solucao->poluicao) << " " << tempoCpu.count() <<
                  " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.0)<<" "<<std::to_string(distanciaTotal)<<'\n';
 
          else
-             file << std::to_string(0.0) << " " <<((1000.0 * c_end - c_start) / CLOCKS_PER_SEC / 1000.0)<<
+             file << std::to_string(0.0) << " " <<tempoCpu.count()<<
              " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.)<<" "<<std::to_string(distanciaTotal)<<'\n';*/
 
         file.close();
