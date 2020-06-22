@@ -7,6 +7,7 @@
 #include "Construtivo.h"
 #include "list"
 #include "VerificaSolucao.h"
+#include "Constantes.h"
 #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <chrono>
@@ -780,14 +781,18 @@ int Movimentos_Paradas::buscaBinaria(Cliente *vetCliente, double tempoSaida, int
     return -1;
 }
 
-bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam, const int peso, const int tipoVeiculo, double *combustivel,
-                            double *poluicao, double *folga, TempoCriaRota *tempoCriaRota)
+bool
+Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam,
+                             const int peso, const int tipoVeiculo, double *combustivel, double *poluicao,
+                             double *folga, TempoCriaRota *tempoCriaRota, double *vetLimiteTempo,
+                             Solucao::ClienteRota *vetClienteRotaAux)
 {
 
     if (tam <= 2)
     {
         return false;
     }
+
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
@@ -798,21 +803,50 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
     // Verifica viabilidade da janela de tempo e a menor folga
     vetClienteRota[0].tempoSaida = (tipoVeiculo == 0 ? 0.0 : 0.5);
+    vetClienteRotaAux[0] = vetClienteRota[0];
 
     double menor = HUGE_VAL;
+    double combustivelPrimeiraRota, poluicaoPrimeiraRota;
 
-    for(int i = 0; i < (tam - 2); ++i)
+    combustivelPrimeiraRota = poluicaoPrimeiraRota = 0.0;
+
+    for(int i = 0; i < tam; ++i)
+        vetClienteRotaAux[i].cliente = vetClienteRota[i].cliente;
+
+    //static double vetLimiteTempo[20];
+
+    for(int i = 0; i <= (tam - 2); ++i)
     {
-        if(!Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[i+1], instancia, pesoParcial, tipoVeiculo, NULL))
+        if(!Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[i + 1], instancia, pesoParcial, tipoVeiculo, NULL, NULL))
         {
-            auto c_end = std::chrono::high_resolution_clock::now();
 
-            std::chrono::duration<double> tempoCpu  = c_end - c_start;
-            tempoCriaRota->tempoCpu += tempoCpu.count();
+            if(tempoCriaRota)
+            {
+                auto c_end = std::chrono::high_resolution_clock::now();
+
+                std::chrono::duration<double> tempoCpu = c_end - c_start;
+                tempoCriaRota->tempoCpu += tempoCpu.count();
+            }
 
             return false;
 
         }
+
+
+
+
+/*        for(int p = 0; p < 5; ++p)
+        {
+            vetClienteRotaAux[i+1].percorrePeriodo[p] = vetClienteRota[i+1].percorrePeriodo[p];
+            vetClienteRotaAux[i+1].tempoPorPeriodo[p] = vetClienteRota[i+1].tempoPorPeriodo[p];
+
+        }*/
+
+
+        vetClienteRotaAux[i+1].swap(&vetClienteRota[i+1]);
+
+        combustivelPrimeiraRota += vetClienteRota[i+1].combustivel;
+        poluicaoPrimeiraRota += vetClienteRota[i+1].poluicao;
 
         if(folga)
         {
@@ -822,11 +856,66 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
                 menor = aux;
         }
 
+        if(vetClienteRota[i+1].cliente != 0)
+            vetLimiteTempo[i+1] = vetClienteRota[i+1].tempoSaida + 1.8;
+
         pesoParcial -= instancia->vetorClientes[vetClienteRota[i+1].cliente].demanda;
     }
 
+
+
+
     if(folga)
         *folga = menor;
+
+    Solucao::ClienteRota solucaoPrimeiroC;
+    solucaoPrimeiroC.swap(&vetClienteRota[1]);
+
+
+
+    geraLimiteTempo(instancia, vetClienteRotaAux, tam, tipoVeiculo, vetLimiteTempo);
+
+    vetClienteRota[1].swap(&solucaoPrimeiroC);
+    pesoParcial = peso;
+
+    if(VerificaSolucao::verificaCombustivel(combustivelPrimeiraRota, tipoVeiculo, instancia))
+    {
+        if((vetLimiteTempo[tam-1] - vetClienteRota[tam-1].tempoSaida) <  0.166666667)
+        {
+            *combustivel = combustivelPrimeiraRota;
+            *poluicao = poluicaoPrimeiraRota;
+
+            if(tempoCriaRota)
+            {
+                auto c_end = std::chrono::high_resolution_clock::now();
+
+                std::chrono::duration<double> tempoCpu = c_end - c_start;
+                tempoCriaRota->tempoCpu += tempoCpu.count();
+            }
+
+            return true;
+        }
+    }
+
+
+    /*double maior = -HUGE_VAL;
+
+    for(int i = 0; i < tam-1; ++i)
+    {
+        double aux = vetLimiteTempo[i] - vetClienteRota[i].tempoSaida;
+
+        if(aux > maior)
+            maior = aux;
+    }
+
+
+
+
+    if(tempoCriaRota)
+    {
+        if(maior > tempoCriaRota->maior)
+            tempoCriaRota->maior = maior;
+    }*/
 
     //Cria estruturas auxiliares
     std::unordered_map<int, No *> hashNo;
@@ -905,10 +994,15 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
         hashNo.erase(hashNo.begin(), hashNo.end());
 
-        auto c_end = std::chrono::high_resolution_clock::now();
+        if(tempoCriaRota)
+        {
+            auto c_end = std::chrono::high_resolution_clock::now();
 
-        std::chrono::duration<double> tempoCpu  = c_end - c_start;
-        tempoCriaRota->tempoCpu += tempoCpu.count();
+            std::chrono::duration<double> tempoCpu = c_end - c_start;
+            tempoCriaRota->tempoCpu += tempoCpu.count();
+        }
+
+        //delete []vetLimiteTempo;
 
     };
 
@@ -916,6 +1010,7 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
     //A cada interacao cria arcos i-j
     for (int i = 1; i < (tam - 1); ++i)
     {
+
 
         int j = i + 1;
 
@@ -933,9 +1028,15 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
         for(int k = 0; k < clienteI.tam; ++k)
         {
 
-            vetClienteRota[i].tempoSaida = clienteI.vetCliente[k].tempo;
 
-            bool resultado = Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial, tipoVeiculo, NULL);
+            vetClienteRota[i].tempoSaida = clienteI.vetCliente[k].tempo;
+            bool resultado = true;
+
+            if(k != 0)
+                resultado = Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial, tipoVeiculo, NULL, nullptr);
+
+
+
 
             //Verifica viabilidade da janela de tempo
             if(resultado)
@@ -1019,7 +1120,8 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
                 //Cria uma nova aresta
                 vetClienteRota[i].tempoSaida = clienteI.vetCliente[k].tempo + IncrementoTempo;
 
-                if(Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial, tipoVeiculo, NULL))
+                if(Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial,
+                                                 tipoVeiculo, NULL, nullptr))
                 {
 
                     //Compara poluicao com k e k+1
@@ -1125,43 +1227,24 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
         int k = 1;
 
+        /* |********************************************************************************************** */
         //Enquanto o incremento no tempo de saida da ultima rota for menor que o tempoMax, adicionar uma nova aresta
-        while(((clienteI.vetCliente[clienteI.tam-1].tempo - clienteI.vetCliente[0].tempo) + k*IncrementoTempo) <= TempoMax)
+
+        //while(((clienteI.vetCliente[clienteI.tam-1].tempo - clienteI.vetCliente[0].tempo) + k*IncrementoTempo) <= TempoMax)
+        while((clienteI.vetCliente[clienteI.tam-1].tempo + k*IncrementoTempo) <= vetLimiteTempo[i])
         {
             if((clienteI.tam + 1) > TamRealVetor)
                 break;
 
             //Cria aresta i-j
             vetClienteRota[i].tempoSaida = clienteI.vetCliente[clienteI.tam - 1].tempo + k * IncrementoTempo;
-            bool resultado = Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial, tipoVeiculo, NULL);
+            bool resultado = Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[j], instancia, pesoParcial, tipoVeiculo, NULL, nullptr);
 
             if(resultado)
             {
                 //Verifica se a poluicao é igual a ultima rota
                 if(vetClienteRota[j].poluicao != clienteJ.vetCliente[clienteI.tam - 1].aresta.poluicao)
                 {
-                    //Realiza uma verificacao de viabilidade a cada (FreqVerificacao-1).
-                    if((k % FreqVerificacao) == 0)
-                    {
-                        int pesoAux = pesoParcial - instancia->vetorClientes[vetClienteRota[j].cliente].demanda;
-
-                        bool viavel = true;
-                        int p = j;
-
-                        for(; (p + 1) < tam; ++p)
-                        {
-                            if(!Construtivo::determinaHorario(&vetClienteRota[p], &vetClienteRota[p+1], instancia, pesoAux, tipoVeiculo, NULL))
-                            {
-                                viavel = false;
-                                break;
-                            }
-
-                            pesoAux -= instancia->vetorClientes[vetClienteRota[p+1].cliente].demanda;
-                        }
-
-                        if(!viavel)
-                            break;
-                    }
 
                     //Verifica o espaco
                     if((clienteI.tam + 1) > clienteI.tamReal)
@@ -1233,6 +1316,8 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
                     aresta = NULL;
                     no = NULL;
 
+                    k = 0;
+
 
                 }
             }
@@ -1254,6 +1339,7 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
         //Verifica se foram criadas arestas
         if(clienteJ.tam == 0)
         {
+
             return false;
         }
 
@@ -1381,7 +1467,7 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
 
         if(atualizacao == false)
-        {
+        {   
             //Não existe solucao!!!
             //cout<<"Nao existe solucao\n\n";
             funcLiberaMemoria();
@@ -1553,9 +1639,93 @@ bool Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, S
 
     //*****************************************************************************************************************************************
 
-    tempoCriaRota->num += 1;
-    tempoCriaRota->tamVet += clienteI.tam;
+    if(tempoCriaRota)
+    {
+        tempoCriaRota->num += 1;
+        tempoCriaRota->tamVet += clienteI.tam;
+    }
 
     funcLiberaMemoria();
     return true;
+}
+
+void Movimentos_Paradas::geraLimiteTempo(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, const int tam,
+                                         const int tipoVeiculo, double *vetLimiteTempo)
+{
+
+
+    //Inicializa o limite de tempo do deposito
+    vetLimiteTempo[tam - 1] = 9.0;
+
+    double menor;
+    double janelaFinal;
+    double diferenca;
+
+    for(int i = tam - 2; i >= 1; --i)
+    {
+        janelaFinal = instancia->vetorClientes[vetClienteRota[i].cliente].fimJanela;
+        menor = (janelaFinal < vetLimiteTempo[i+1]) ? janelaFinal : vetLimiteTempo[i+1];
+        menor -= 0.5;
+
+
+        if(menor < instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela)
+        {
+            menor = instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela + instancia->vetorClientes[vetClienteRota[i].cliente].tempoServico;
+        }
+
+
+        vetClienteRota[i].tempoSaida = menor;
+
+
+
+        if(menor < 0.0)
+        {
+            cout<<"Arquivo: Movimentos_parados.cpp Erro linha: "<<__LINE__<<"\nTempo negativo\n";
+            cout<<"tam: "<<tam<<'\n';
+            cout<<"janelaFinal "<<janelaFinal<<'\n';
+            cout<<"janelaInicio: "<<instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela<<'\n';
+            cout<<"vetLimiteTempo[i + 1] "<<vetLimiteTempo[i + 1]<<'\n';
+            cout<<"janelaInicio[i+1] "<<instancia->vetorClientes[vetClienteRota[i+1].cliente].inicioJanela<<'\n';
+
+
+            exit(-1);
+        }
+
+        if(!Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[i+1], instancia, 0, tipoVeiculo, NULL, &diferenca))
+        {
+            do
+            {
+                menor -= diferenca;
+
+
+                if(menor < 0.0)
+                {
+                    cout<<"Arquivo: Movimentos_parados.cpp Erro linha: "<<__LINE__<<"\nTempo negativo\n";
+                    exit(-1);
+                }
+
+                if(menor < instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela)
+                {
+                    menor = instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela + instancia->vetorClientes[vetClienteRota[i].cliente].tempoServico;
+                }
+
+                vetClienteRota[i].tempoSaida = menor;
+/*                cout<<"while\n";
+
+                cout<<"c "<<vetClienteRota[i].cliente<<" tS "<<vetClienteRota[i].tempoSaida<<"\n";
+                cout<<instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela<<"\n";
+                cout<<"c "<<vetClienteRota[i+1].cliente<<"\n";
+                cout<<instancia->vetorClientes[vetClienteRota[i].cliente].fimJanela<<'\n';
+                cout<<"diferenca "<<diferenca<<"\n\n\n";*/
+
+            }while (!Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[i+1], instancia, 0, tipoVeiculo, NULL, &diferenca));
+        }
+
+        if(menor < vetLimiteTempo[i])
+            vetLimiteTempo[i] = menor;
+
+    }
+
+
+
 }

@@ -26,6 +26,7 @@ namespace Construtivo
 
         double incrementoPoluicao;
         Solucao::Veiculo *veiculo;
+        int indiceVeiculo;
         std::list<Solucao::ClienteRota *>::iterator posicao;
         Solucao::ClienteRota *candidato;
         double folgaRota; //Menor folga do veiculo.
@@ -34,6 +35,19 @@ namespace Construtivo
         double distanciaRotaCompleta;
         double poluicao;
         double combustivel;
+    };
+
+    struct GuardaCandInteracoes
+    {
+        bool valido;
+        int indiceVeiculo;
+        double poluicao;
+        double combustivel;
+        double distanciaRotaCompleta;
+        int tam;
+        std::list<Solucao::ClienteRota *>::iterator it;
+        double folga;
+        Solucao::Veiculo *veiculo;
     };
 
     int compCandidato(const void* cand1, const void* cand2);
@@ -46,14 +60,18 @@ namespace Construtivo
           const int numIntAtualizarProb, bool log, stringstream *strLog, boost::tuple<int, int> *VetHeuristica,
           const int tamVetHeuristica, const double *const vetorParametros,
           Vnd::EstatisticaMv *vetEstatisticaMv, Solucao::ClienteRota **matrixClienteBest,
-          Movimentos_Paradas::TempoCriaRota *tempoCriaRota);
+          Movimentos_Paradas::TempoCriaRota *tempoCriaRota, GuardaCandInteracoes *vetCandInteracoes,
+          double *vetLimiteTempo);
 
-    Solucao::Solucao *geraSolucao(const Instancia::Instancia *const instancia, float alfa,
-                                  Solucao::ClienteRota *vetorClienteBest,
-                                  Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
-                                  Construtivo::Candidato *vetorCandidatos, boost::tuple<int, int> heuristica,
-                                  const double *const vetorParametros,
-                                  Solucao::ClienteRota **matrixClienteBest, Movimentos_Paradas::TempoCriaRota *tempoCriaRota);
+    Solucao::Solucao *
+    geraSolucao(const Instancia::Instancia *const instancia, float alfa,
+                Solucao::ClienteRota *vetorClienteBest,
+                Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
+                Construtivo::Candidato *vetorCandidatos, boost::tuple<int, int> heuristica,
+                const double *const vetorParametros,
+                Solucao::ClienteRota **matrixClienteBest,
+                Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
+                GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo);
 
     void insereCandidato(Candidato *candidato, const Instancia::Instancia *instancia,
                          Solucao::ClienteRota *vetCliente, Solucao::Solucao *solucao,
@@ -61,13 +79,15 @@ namespace Construtivo
 
     bool determinaHorario(Solucao::ClienteRota *cliente1, Solucao::ClienteRota *cliente2,
                           const Instancia::Instancia *const instancia, const int peso, const int tipoVeiculo,
-                          string *erro);
+                          string *erro, double *tempoParaJanela);
 
     TupleBID viabilidadeInserirCandidato(Solucao::ClienteRota *vetorClientes, ItClienteRota iteratorCliente,
                                          const Instancia::Instancia *const instancia,
                                          Solucao::ClienteRota *candidato, double combustivelParcial,
                                          double poluicaoParcial, Solucao::Veiculo *veiculo, int peso,
-                                         int posicao, double *folga,  Movimentos_Paradas::TempoCriaRota *tempoCriaRota);
+                                         int posicao, double *folga,
+                                         Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
+                                         double *vetLimiteTempo, Solucao::ClienteRota *vetClienteRotaAux);
 
     void atualizaProbabilidade(double *vetorProbabilidade, int *vetorFrequencia, double *solucaoAcumulada, double *vetorMedia, double *proporcao, int tam, double melhorSolucao);
     void atualizaPesos(double *beta, double *teta, int numClientes, const int k, double *gama, const int Heuristica, const double *const vetorParametros);

@@ -218,15 +218,20 @@ int main(int num, char **agrs)
     string logAux;
 
     Movimentos_Paradas::TempoCriaRota tempoCriaRota;
+    Vnd::EstatisticaMv vetEstatisticaMv[9];
+    Construtivo::GuardaCandInteracoes *vetCandInteracoes = new Construtivo::GuardaCandInteracoes[instancia->numClientes+2];
+    double vetLimiteTempo[20];
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
-    Vnd::EstatisticaMv vetEstatisticaMv[9];
-
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 200, 20, logAtivo, &strLog, vetHeuristicas,
-                                       TamVetH, vetParametro, vetEstatisticaMv, matrixClienteBest, &tempoCriaRota);
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 200, 20, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
+                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
 
     auto c_end = std::chrono::high_resolution_clock::now();
+
+
+
+    delete []vetCandInteracoes;
 
     //desaloca matrix
     for(int i = 0; i < instancia->numClientes; ++i)
@@ -327,6 +332,7 @@ int main(int num, char **agrs)
     tempo<<"Tempo na funcao criaRota: "<<tempoCriaRota.tempoCpu<<" S\n";
     tempo<<"Tamanho medio vetor: "<<double(tempoCriaRota.tamVet)/ tempoCriaRota.num<<'\n';
     tempo<<"Numero chamadas: "<<tempoCriaRota.num<<"\n";
+    tempo<<"Maior intervalo tempo: "<<tempoCriaRota.maior<<'\n';
     tempo << "Verificacao: " <<(Veificacao) << "\n";
     tempo << "Poluicao: " <<(solucao->poluicao + solucao->poluicaoPenalidades) << '\n';
     tempo << "Ultima atualizacao: " << (solucao->ultimaAtualizacao) << '\n';

@@ -53,6 +53,7 @@ namespace Solucao
         void operator = (const ClienteRota &outro)
         {
 
+
             cliente = outro.cliente;
             tempoChegada = outro.tempoChegada;
             tempoSaida = outro.tempoSaida;
@@ -64,7 +65,29 @@ namespace Solucao
             distanciaAteCliente = outro.distanciaAteCliente;
 
             for(int i = 0; i < 5; ++i)
+            {
                 percorrePeriodo[i] = outro.percorrePeriodo[i];
+                tempoPorPeriodo[i] = outro.tempoPorPeriodo[i];
+            }
+        }
+
+        void swap(ClienteRota *outro)
+        {
+            cliente = outro->cliente;
+            tempoChegada = outro->tempoChegada;
+            tempoSaida = outro->tempoSaida;
+            poluicao = outro->poluicao;
+            combustivel = outro->combustivel;
+            poluicaoRota = outro->poluicaoRota;
+            produtoCarga = outro->produtoCarga;
+            combustivelRota = outro->combustivelRota;
+            distanciaAteCliente = outro->distanciaAteCliente;
+
+            for(int i = 0; i < 5; ++i)
+            {
+                percorrePeriodo[i] = outro->percorrePeriodo[i];
+                tempoPorPeriodo[i] = outro->tempoPorPeriodo[i];
+            }
         }
 
 
@@ -83,6 +106,19 @@ namespace Solucao
         double poluicao;
         int carga;                            //Quantidade de produtos
         int  tipo;                            //tipo == 0 => tipo 1; tipo == 1 => tipo 2;
+        int id;
+
+        Veiculo(int  tipo, int _id)
+        {
+            poluicao = 0.0;
+            combustivel = 0.0;
+            carga = 0;
+            this->tipo = tipo;
+            id = _id;
+
+            inicialisaVeiculo(tipo);
+
+        }
 
         Veiculo(int  tipo)
         {
@@ -90,6 +126,7 @@ namespace Solucao
             combustivel = 0.0;
             carga = 0;
             this->tipo = tipo;
+            id = -1;
 
             inicialisaVeiculo(tipo);
 
@@ -119,6 +156,8 @@ namespace Solucao
             poluicao = outro.poluicao;
             carga = outro.carga;
             tipo = outro.tipo;
+            id = outro.id;
+
             ClienteRota *clientePtr = 0;
 
             for(auto it : outro.listaClientes)

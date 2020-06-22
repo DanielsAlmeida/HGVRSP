@@ -30,6 +30,7 @@ namespace Instancia
         double distanciaDeposito;
         int periodoFimJanela;
 
+
         bool operator == (const Cliente &cli1)
         {
             if(cli1.cliente == cliente)

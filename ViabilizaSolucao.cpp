@@ -151,7 +151,8 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                                                                                                       poluicaoParcial,
                                                                                                       *veiculo, peso,
                                                                                                       posicaoVetor,
-                                                                                                      &aux, nullptr);
+                                                                                                      &aux, nullptr,
+                                                                                                      nullptr, nullptr);
 
                     if (viavel)
                     {
@@ -633,7 +634,9 @@ bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instanc
             for (k = 0; k < interacoesPorMv; ++k)
             {
                 //cout<<"Antes\n";
-                resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[j], instancia, solucao, vetorClienteBest, vetorClienteAux, true, vetClienteRotaSecundBest, vetClienteSecondAux);
+                resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[j], instancia, solucao, vetorClienteBest,
+                                                             vetorClienteAux, true, vetClienteRotaSecundBest,
+                                                             vetClienteSecondAux, nullptr);
                 //cout<<"Depois\n";
 
                 if(resultadosRota.viavel)

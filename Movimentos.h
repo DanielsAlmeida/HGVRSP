@@ -29,14 +29,20 @@ namespace Movimentos
     };
 
     ResultadosRota mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
-                                    const bool percorreVeiculos, const bool percorreClientes, const bool pertubacao = false);
+                                    Solucao::ClienteRota *vetClienteRotaBest,
+                                    Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
+                                    const bool percorreClientes, const bool pertubacao, double *vetLimiteTempo);
 
-    ResultadosRota mvIntraRotaSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
-                                   Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos, const bool percorreClientes, bool pertubacao = false);
+    ResultadosRota mvIntraRotaSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
+                                   Solucao::ClienteRota *vetClienteRotaBest,
+                                   Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
+                                   const bool percorreClientes, bool pertubacao, double *vetLimiteTempo);
 
-    ResultadosRota mvInterRotasShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
-                                     Solucao::ClienteRota *vetClienteRotaAux, Solucao::ClienteRota *vetClienteRotaSecundBest, const bool percorreVeiculos, bool pertubacao = false);
+    ResultadosRota mvInterRotasShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
+                                     Solucao::ClienteRota *vetClienteRotaBest,
+                                     Solucao::ClienteRota *vetClienteRotaAux,
+                                     Solucao::ClienteRota *vetClienteRotaSecundBest,
+                                     const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo);
 
     ResultadosRota mvInterRotasSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
                                     Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux, const bool percorreVeiculos, bool pertubacao = false);
@@ -76,8 +82,11 @@ namespace Movimentos
 
     void copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest, double *combustivelBest, ResultadosRota resultado, int *posicao);
 
-    ResultadosRota aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest,
-                                   Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest = NULL, Solucao::ClienteRota *vetClienteRotaSecundAux = NULL);
+    Movimentos::ResultadosRota
+    aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
+                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
+                    bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
+                    Solucao::ClienteRota *vetClienteRotaSecundAux, double *vetLimiteTempo);
 
     void atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaSecundBest);
 

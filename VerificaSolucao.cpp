@@ -346,7 +346,14 @@ double VerificaSolucao::poluicaoRota(const Instancia::Instancia *const instancia
 
     if(!(i >=0 && i < instancia->numClientes && j >=0 && j < instancia->numClientes && k < 5 && k >=0))
     {
-        cout<<"Erro poluicao rota\n";
+        cout<<"Arquivo: VerificaSolucao.cpp Linha: "<<__LINE__<<" Erro poluicao rota\n";
+
+        if(!(i >=0 && i < instancia->numClientes && j >=0 && j < instancia->numClientes))
+            cout<<"Indice i ou j: "<<i<<" "<<j<<"\n";
+
+        if(k < 0)
+            cout<<"Erro indice k: "<<k<<'\n';
+
         exit(-1);
     }
 
@@ -422,7 +429,8 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
         erro+= "Peso: "+std::to_string(vetClienteRotaAux[posicao].cliente)+"   "+std::to_string(vetClienteRotaAux[posicao + 1].cliente)+": "+std::to_string(peso)+'\n';
 
-        if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia, peso, veiculo->tipo, NULL))
+        if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia, peso,
+                                          veiculo->tipo, NULL, nullptr))
         {
             cout<<"ERRO\n"<<vetClienteRotaAux[posicao].cliente<<" "<<vetClienteRotaAux[posicao+1].cliente<<'\n';
             cout<<"Motivo: "<<erro<<'\n';
@@ -519,6 +527,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
         posicao+=1;
         clienteIt++;
     }
+
 
     if(fabs(combustivel - veiculo->combustivel) > 0.001)
     {

@@ -7,10 +7,12 @@
 using namespace Vnd;
 
 
-void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
-             Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux, int interacao, EstatisticaMv *vetEstatisticaMv)
+void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
+              Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
+              Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
+              int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo)
 {
-    
+
     return;
 
     static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -45,8 +47,8 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
     while(posicao < Num)
     {
 
-            resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false,
-                                                         vetClienteRotaSecundBest,vetClienteRotaSecundAux);
+            resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false, vetClienteRotaSecundBest,
+                    vetClienteRotaSecundAux, vetLimiteTempo);
 
             if (resultadosRota.viavel)
             {

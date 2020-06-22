@@ -18,7 +18,7 @@ Solucao::Solucao::Solucao(int numVeiculos)
     for(int i = 0; i < numVeiculos; ++i)
     {
 
-        veiculo = new Veiculo(tipo);
+        veiculo = new Veiculo(tipo, i);
         vetorVeiculos.push_back(veiculo);
 
         if(tipo == 0)

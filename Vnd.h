@@ -29,9 +29,9 @@ namespace Vnd
     };
 
     void vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-             Solucao::ClienteRota *vetClienteRotaBest,
-             Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
-             Solucao::ClienteRota *vetClienteRotaSecundAux, int interacao, EstatisticaMv *vetEstatisticaMv);
+             Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
+             Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
+             int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo);
 
     bool avaliaSolucao(Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota);
 
