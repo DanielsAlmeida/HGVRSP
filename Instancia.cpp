@@ -369,3 +369,11 @@ void Instancia::Instancia::getClientes()
     }*/
 
 }
+
+void Instancia::atualizaPoluicaoSolucao(Construtivo::Solucao *solucao) const
+{
+
+    
+
+
+}

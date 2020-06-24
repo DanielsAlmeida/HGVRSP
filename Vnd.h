@@ -15,15 +15,19 @@ namespace Vnd
 
     struct EstatisticaMv
     {
-        int num;
+        u_int64_t num;
         double gap;
         double poluicao;
+        u_int64_t numTempo;
+        double tempo;
 
         EstatisticaMv()
         {
             num = 0;
             gap = 0.0;
             poluicao = 0;
+            tempo = 0.0;
+            numTempo = 0;
         }
 
     };
@@ -35,7 +39,8 @@ namespace Vnd
 
     bool avaliaSolucao(Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota);
 
-    void atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota);
+    void atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao,
+                               Movimentos::ResultadosRota resultadosRota);
 
 };
 

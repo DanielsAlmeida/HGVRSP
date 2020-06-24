@@ -197,9 +197,9 @@ int main(int num, char **agrs)
     float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
     //{{2,1}, {1,3}, {5, 3}};
 
-    #define TamVetH 1
+    #define TamVetH 2
 
-    boost::tuple<int,int> vetHeuristicas[TamVetH] = {{2,1}};
+    boost::tuple<int,int> vetHeuristicas[TamVetH] = {{2,1}, {2,3}};
     
     if(vetHeuristicas[0].get<1>() < 0 || vetHeuristicas[0].get<1>() > 3)
     {
@@ -224,7 +224,7 @@ int main(int num, char **agrs)
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 200, 20, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
                                        matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
 
     auto c_end = std::chrono::high_resolution_clock::now();
@@ -328,8 +328,11 @@ int main(int num, char **agrs)
 
     std::chrono::duration<double> tempoCpu = c_end-c_start;
 
-    tempo << "Tempo cpu: " << tempoCpu.count()<< " S\n";
-    tempo<<"Tempo na funcao criaRota: "<<tempoCriaRota.tempoCpu<<" S\n";
+    tempo << "Tempo total cpu: " << tempoCpu.count()<< " S\n";
+    tempo <<"Tempo total construtivo: "<<solucao->tempoConstrutivo<<" S\n";
+    tempo <<"Tempo total viabilizador: "<<solucao->tempoViabilizador<<" S\n";
+    tempo <<"Tempo total Vnd: "<<solucao->tempoVnd<<" S\n\n";
+
     tempo<<"Tamanho medio vetor: "<<double(tempoCriaRota.tamVet)/ tempoCriaRota.num<<'\n';
     tempo<<"Numero chamadas: "<<tempoCriaRota.num<<"\n";
     tempo<<"Maior intervalo tempo: "<<tempoCriaRota.maior<<'\n';
@@ -337,6 +340,7 @@ int main(int num, char **agrs)
     tempo << "Poluicao: " <<(solucao->poluicao + solucao->poluicaoPenalidades) << '\n';
     tempo << "Ultima atualizacao: " << (solucao->ultimaAtualizacao) << '\n';
     tempo << "Numero de solucoes inviaveis: " << (solucao->numSolucoesInv) << '\n';
+    tempo << "Solucoes viabilizadas: "<<solucao->solucoesViabilizadas<<'\n';
     tempo << "Tempo total de viagem: " << (tempoViagem*60.0) << '\n';
     tempo << "Distancia total: " << (distanciaTotal);
     texto += tempo.str();
@@ -379,22 +383,34 @@ int main(int num, char **agrs)
             {
                 vetEstatisticaMv[i].poluicao /= vetEstatisticaMv[i].num;
                 vetEstatisticaMv[i].gap /= vetEstatisticaMv[i].num;
+                vetEstatisticaMv[i].tempo /= vetEstatisticaMv[i].numTempo;
             }
         }
 
             // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
 
         if(Veificacao)
-            file << std::to_string(solucao->poluicao) << " " << tempoCpu.count() <<
-            " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) << " "<<std::to_string(solucao->numSolucoesInv) << " "<<std::to_string(solucao->ultimaAtualizacao)
-            <<" "<<vetEstatisticaMv[0].poluicao<<" "<<vetEstatisticaMv[1].poluicao<<" "<<vetEstatisticaMv[2].poluicao<<" "<<vetEstatisticaMv[3].poluicao<<" "<<vetEstatisticaMv[4].poluicao<<" "<<vetEstatisticaMv[5].poluicao
-            <<" "<<vetEstatisticaMv[6].poluicao<<" "<<vetEstatisticaMv[7].poluicao<<" "<<vetEstatisticaMv[8].poluicao<<" "<<vetEstatisticaMv[0].gap<<" "<<vetEstatisticaMv[1].gap<<" "<<vetEstatisticaMv[2].gap<<" "<<
-            vetEstatisticaMv[3].gap<<" "<<vetEstatisticaMv[4].gap<<" "<<vetEstatisticaMv[5].gap<<" "<<vetEstatisticaMv[6].gap<<" "<<vetEstatisticaMv[7].gap<<" "<<vetEstatisticaMv[8].gap<<" "<<'\n';
+        {
 
+
+            file << std::to_string(solucao->poluicao) << ' ' << tempoCpu.count() <<' '<< std::to_string(instancia->numVeiculos) <<' '<< std::to_string(numVeiculosUsados) << ' '
+            << std::to_string(solucao->numSolucoesInv) << ' ' << std::to_string(solucao->ultimaAtualizacao)<<' '<<solucao->solucoesViabilizadas<<' '<<solucao->tempoConstrutivo<<' '
+            <<solucao->tempoViabilizador<<' '<<solucao->tempoVnd;
+
+            for(int i = 0; i < 8; ++i)
+                file<<" "<<vetEstatisticaMv[i].poluicao;
+
+            for(int i = 0; i < 8; ++i)
+                file<<" "<<vetEstatisticaMv[i].tempo;
+
+            file<<'\n';
+
+        }
         else
             file << std::to_string(0.0) << " " <<tempoCpu.count()<<
                  " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << " "<< std::to_string(solucao->ultimaAtualizacao)<<
-                 " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"<<'\n';
+                 solucao->solucoesViabilizadas<<' '<<solucao->tempoConstrutivo<<' ' <<solucao->tempoViabilizador<<' '<<solucao->tempoVnd<<
+                 " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"<<'\n';
 
          /*if(Veificacao)
              file << std::to_string(solucao->poluicao) << " " << tempoCpu.count() <<
@@ -422,17 +438,14 @@ int main(int num, char **agrs)
 
         cout<<"\n";
 
+        cout<<std::fixed << std::setprecision(4);
 
-
-        for(int i = 0; i < 9 ; ++i)
-            cout<<vetEstatisticaMv[i].poluicao<<"    ";
-
-        cout<<"\n\n";
-
-        for(int i = 0; i < 9 ; ++i)
-            cout<<vetEstatisticaMv[i].gap<<"    ";
+        for(int i = 0; i < 8 ; ++i)
+            cout<<vetEstatisticaMv[i].poluicao<<" ("<<vetEstatisticaMv[i].tempo<<")    ";
 
         cout<<"\n\n";
+
+
 
     #endif
 

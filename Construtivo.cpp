@@ -3,6 +3,7 @@
 #include <tuple>
 #include "mersenne-twister.h"
 #include <unordered_map>
+#include <chrono>
 #include "Movimentos.h"
 #include "ViabilizaSolucao.h"
 #include "Movimentos_Paradas.h"
@@ -149,6 +150,13 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     std::string sequencia;
 
     int tentativasViabilizar = 0;
+    double tempoConstrutivo = 0.0;
+    double tempoVnd = 0.0;
+    double tempoViabilizador = 0.0;
+
+    auto c_start = std::chrono::high_resolution_clock::now();
+    auto c_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> tempoCpu = c_end-c_start;
 
     for(int i = 0; i < numInteracoes; ++i)
     {
@@ -215,9 +223,18 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
         sequencia = "";
 
+
+        c_start = std::chrono::high_resolution_clock::now();
+
         solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log,
                                  vetorCandidatos, heuristica, vetorParametros, matrixClienteBest, tempoCriaRota,
                                  vetCandInteracoes, vetLimiteTempo);
+
+        c_end = std::chrono::high_resolution_clock::now();
+
+        tempoCpu = c_end - c_start;
+
+        tempoConstrutivo += tempoCpu.count();
 
         solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
         vetorFrequencia[posicaoAlfa] += 1;
@@ -246,6 +263,23 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             }
         }*/
 
+        if(solucaoAux->veiculoFicticil)
+        {
+
+            c_start = std::chrono::high_resolution_clock::now();
+            ViabilizaSolucao::viabilizaSolucao(solucaoAux, instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos,45, 30,
+                                               vetClienteBestSecund, vetClienteRotaSecundAux, heuristica, vetorParametros, vetLimiteTempo, vetCandInteracoes, matrixClienteBest); //45 20
+
+            c_end = std::chrono::high_resolution_clock::now();
+
+            tempoCpu = c_end - c_start;
+
+            tempoViabilizador += tempoCpu.count();
+
+            if(solucaoAux->veiculoFicticil == false)
+                ++tentativasViabilizar;
+        }
+
 
 
 
@@ -253,9 +287,16 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             numSolInviaveis += 1;
         else
         {
+            c_start = std::chrono::high_resolution_clock::now();
 
             Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
                      vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo);
+
+            c_end = std::chrono::high_resolution_clock::now();
+
+            tempoCpu = c_end - c_start;
+            tempoVnd  += tempoCpu.count();
+
 
         }
             if(log)
@@ -381,6 +422,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     best->numSolucoesInv = numSolInviaveis;
     best->ultimaAtualizacao = ultimaAtualizacao;
+    best->solucoesViabilizadas = tentativasViabilizar;
+    best->tempoVnd = tempoVnd;
+    best->tempoViabilizador = tempoViabilizador;
+    best->tempoConstrutivo = tempoConstrutivo;
 
     if(log)
     {
@@ -545,7 +590,9 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
     while (!listaCandidatos.empty())
     {
 
-        atualizaPesos(&beta, &teta, instancia->numClientes, numClientesSol, &gama, heuristica.get<0>(), vetorParametros);
+        if(heuristica.get<0>() != 2)
+            atualizaPesos(&beta, &teta, instancia->numClientes, numClientesSol, &gama, heuristica.get<0>(), vetorParametros);
+
         numClientesSol += 1;
 
 
@@ -1050,7 +1097,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
             int tamLista1Crit = tam * alfa + 1;
 
-            double *vetorProb = new double[instancia->numClientes];
             auto ptrEscolhido = vetorCandidatos;
             int tamLista2Crit, tamLista3Crit;
 
@@ -1150,7 +1196,7 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
 
             }
             
-            delete []vetorProb;
+
 
 
         }

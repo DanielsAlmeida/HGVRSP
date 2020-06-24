@@ -10,8 +10,12 @@
 using namespace ViabilizaSolucao;
 using namespace Construtivo;
 
-bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log,
-                                   Construtivo::Candidato *vetorCandidatos, boost::tuple<int,int> heuristica, const double *const vetorParametros)
+bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa,
+                                   Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
+                                   string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos,
+                                   boost::tuple<int, int> heuristica, const double *const vetorParametros,
+                                   double *vetLimiteTempo, Solucao::ClienteRota **matrixClienteBest,
+                                   Construtivo::GuardaCandInteracoes *vetCandInteracoes)
 {
 
     if(!solucao->veiculoFicticil)
@@ -34,6 +38,7 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
         if(cliente->cliente != 0)
         {
             listaCandidatos.push_back(instancia->vetorClientes[cliente->cliente]);
+            vetCandInteracoes[cliente->cliente].valido = false;
             numClientesFora++;
         }
 
@@ -88,20 +93,21 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
     Candidato *ultimo = NULL;
 
     bool incrementarIt = true;
+    int ultimoVeiculoAtualizado = -1;
 
     solucao->poluicaoPenalidades = 0;
 
     while (!listaCandidatos.empty())
     {
-
-        atualizaPesos(&beta, &teta, instancia->numClientes, numClientesSol, &gama, heuristica.get<0>(), vetorParametros);
+        if(heuristica.get<0>() != 2)
+            atualizaPesos(&beta, &teta, instancia->numClientes, numClientesSol, &gama, heuristica.get<0>(), vetorParametros);
         numClientesSol += 1;
 
         //Pega a melhor solucao de cada candidato.
         for (auto iteratorLisCand = listaCandidatos.begin(); iteratorLisCand != listaCandidatos.end(); )
         {
             incrementarIt = true;
-
+            int indiceVeiculo = 0;
 
             melhorPoluicao = HUGE_VALF;
             folgaRota = HUGE_VALF;
@@ -110,6 +116,30 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
             clienteAux = (*iteratorLisCand);
 
             candidato->cliente = clienteAux.cliente;
+            bool somentePercorreUmVeiculo = false;
+
+            if( ((ultimoVeiculoAtualizado == vetCandInteracoes[candidato->cliente].indiceVeiculo) && (heuristica.get<0>() == Heuristica_2) )|| (ultimoVeiculoAtualizado == -1))
+                vetCandInteracoes[candidato->cliente].valido = false;
+            else
+            {
+                if(vetCandInteracoes[candidato->cliente].valido && (heuristica.get<0>() == Heuristica_2))
+                {
+
+                    somentePercorreUmVeiculo = true;
+                    indiceVeiculo = ultimoVeiculoAtualizado;
+                    nullMelhorVeiculo = false;
+                    //melhorVeiculo = solucao->vetorVeiculos[vetCandInteracoes[candidato->cliente].indiceVeiculo];
+                    melhorVeiculo = vetCandInteracoes[candidato->cliente].veiculo;
+                    melhorPoluicao = vetCandInteracoes[candidato->cliente].poluicao;
+                    melhorCombustivel = vetCandInteracoes[candidato->cliente].combustivel;
+                    tamVetBest = vetCandInteracoes[candidato->cliente].tam;
+
+
+                    melhorPosicao = vetCandInteracoes[candidato->cliente].it;
+                    folgaRota = vetCandInteracoes[candidato->cliente].folga;
+                    bestDistanciaRotaCompleta = vetCandInteracoes[candidato->cliente].distanciaRotaCompleta;
+                }
+            }
 
             if (log)
                 (*sequencia) += to_string(candidato->cliente) + ' ';
@@ -151,8 +181,8 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                                                                                                       poluicaoParcial,
                                                                                                       *veiculo, peso,
                                                                                                       posicaoVetor,
-                                                                                                      &aux, nullptr,
-                                                                                                      nullptr, nullptr);
+                                                                                                      &aux, NULL,
+                                                                                                      vetLimiteTempo, vetorClienteBest);
 
                     if (viavel)
                     {
@@ -180,22 +210,46 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                             melhorCombustivel = auxCombustivel;
                             tamVetBest = tamVetAux;
                             melhorPosicao = clienteIt;
-                            if(aux < folgaRotaAux)
-                                folgaRota = aux;
-                            else
-                                folgaRota = folgaRotaAux;
+
+                            folgaRota = aux;
+
 
 
                             distRotaBest = disTemp;
                             bestDistanciaRotaCompleta = auxDistanciaRotaCompleta;
 
-                            //trocar vetores
-                            vetorClienteSwap = vetorClienteBest;
-                            vetorClienteBest = vetorClienteAux;
-                            vetorClienteAux = vetorClienteSwap;
+                            if((posicaoVetor + 1) > MaxTamVetClientesMatrix)
+                            {
+                                cout<<"Erro, tamanho do vetor MaxTamVetClientesMatrix[x] eh insuficientente\n";
+                                exit(-1);
+                            }
 
-                            for (int i = 0; i <= posicaoVetor; ++i)
-                                vetorClienteAux[i] = vetorClienteBest[i];
+                            auto ptrVetMat = matrixClienteBest[candidato->cliente];
+                            auto ptrVetCliente = vetorClienteAux;
+
+                            for (int i = 0; i < (*veiculo)->listaClientes.size() + 1; ++i)
+                            {
+                                *ptrVetMat = *ptrVetCliente;
+
+                                ++ptrVetMat;
+                                ++ptrVetCliente;
+                            }
+
+                            if(heuristica.get<0>() == Heuristica_2)
+                            {
+                                vetCandInteracoes[candidato->cliente].valido = true;
+                                vetCandInteracoes[candidato->cliente].indiceVeiculo = (*veiculo)->id;
+                                vetCandInteracoes[candidato->cliente].combustivel = melhorCombustivel;
+                                vetCandInteracoes[candidato->cliente].poluicao = melhorPoluicao;
+                                vetCandInteracoes[candidato->cliente].distanciaRotaCompleta = bestDistanciaRotaCompleta;
+                                vetCandInteracoes[candidato->cliente].tam = (*veiculo)->listaClientes.size() + 1;
+                                vetCandInteracoes[candidato->cliente].it = melhorPosicao;
+                                vetCandInteracoes[candidato->cliente].veiculo = (*veiculo);
+
+
+                            }
+
+
 
                         }
                         else
@@ -214,10 +268,9 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                                 distBest = distRotaBest;
                             }
 
-                            if(aux < folgaRotaAux)
-                                folgaSolParcial = aux;
-                            else
-                                folgaSolParcial = folgaRotaAux;
+
+                            folgaSolParcial = aux;
+
 
                             //Valor que eh incrementado na funcao objetivo
                             double incAtual = (auxPoluicao - (*veiculo)->poluicao);
@@ -296,23 +349,39 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                                 melhorPosicao = clienteIt;
                                 bestDistanciaRotaCompleta = auxDistanciaRotaCompleta;
 
+                                if((posicaoVetor + 1) > MaxTamVetClientesMatrix)
+                                {
+                                    cout<<"Erro, tamanho do vetor MaxTamVetClientesMatrix[x] eh insuficientente\n";
+                                    exit(-1);
+                                }
 
-                                distRotaBest = distParcial;
+                                auto ptrVetMat = matrixClienteBest[candidato->cliente];
+                                auto ptrVetCliente = vetorClienteAux;
 
-                                if (aux < folgaRotaAux)
-                                    folgaRota = aux;
-                                else
+                                for (int i = 0; i < (*veiculo)->listaClientes.size() + 1; ++i)
+                                {
+                                    *ptrVetMat = *ptrVetCliente;
 
-                                    folgaRota = folgaRotaAux;
+                                    ++ptrVetMat;
+                                    ++ptrVetCliente;
+                                }
 
+                                if(heuristica.get<0>() == Heuristica_2)
+                                {
+                                    /*if(vetCandInteracoes[candidato->cliente].valido)
+                                        cout<<"Linha "<<__LINE__<<" Cliente "<<candidato->cliente<<" com sulucao da interacao anterior\n\n";*/
 
-                                //trocar vetores
-                                vetorClienteSwap = vetorClienteBest;
-                                vetorClienteBest = vetorClienteAux;
-                                vetorClienteAux = vetorClienteSwap;
+                                    vetCandInteracoes[candidato->cliente].valido = true;
+                                    vetCandInteracoes[candidato->cliente].indiceVeiculo =  (*veiculo)->id;
+                                    vetCandInteracoes[candidato->cliente].combustivel = melhorCombustivel;
+                                    vetCandInteracoes[candidato->cliente].poluicao = melhorPoluicao;
+                                    vetCandInteracoes[candidato->cliente].distanciaRotaCompleta = bestDistanciaRotaCompleta;
+                                    vetCandInteracoes[candidato->cliente].tam = (*veiculo)->listaClientes.size() + 1;
+                                    vetCandInteracoes[candidato->cliente].it = melhorPosicao;
+                                    vetCandInteracoes[candidato->cliente].veiculo = (*veiculo);
 
-                                for (int i = 0; i <= posicaoVetor; ++i)
-                                    vetorClienteAux[i] = vetorClienteBest[i];
+                                }
+
                             }
 
                         }
@@ -327,9 +396,11 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
 
 
                     posicaoVetor += 1;
+                    vetorClienteAux[posicaoVetor] = **(clienteIt);
 
                     //Calcula poluicao e combustivel entre --clienteIt --> clienteIt
-                    if ((*clienteIt)->cliente != 0)
+
+                    /*if ((*clienteIt)->cliente != 0)
                     {
 
                         clienteItAux = clienteIt;
@@ -367,10 +438,14 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                     }
                     if ((clienteIt) != (*veiculo)->listaClientes.end())
                         peso -= instancia->vetorClientes[(*clienteIt)->cliente].demanda;
+                   */
 
 
 
                 }
+
+                if(somentePercorreUmVeiculo && vetCandInteracoes[candidato->cliente].valido)
+                    break;
 
             }
 
@@ -444,6 +519,9 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
                 ultimo->posicao = melhorPosicao;
                 ultimo->folgaRota = folgaRota;
                 ultimo->distanciaRotaCompleta = bestDistanciaRotaCompleta;
+                ultimo->combustivel = melhorCombustivel;
+                ultimo->poluicao = melhorPoluicao;
+                ultimo->indiceVeiculo =  melhorVeiculo->id;
 
                 candidato = new Solucao::ClienteRota;
 
@@ -473,44 +551,9 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
 
             int tamLista1Crit = tam * alfa + 1;
 
-            double *vetorProb = new double[instancia->numClientes];
             auto ptrEscolhido = vetorCandidatos;
             int tamLista2Crit, tamLista3Crit;
 
-
-            auto escolhaProporcional = [](double *vetorProb, Construtivo::Candidato *vetorCandidatos, int tamLista1Crit, int valAleatorio, int *tamRestante, Construtivo::Candidato *ptrEscolhido, int atributo)
-            {
-
-                double soma = 0.0;
-                for(int i = 0; i < tamLista1Crit; ++i)
-                {
-                    if(atributo == 0)
-                        vetorProb[i] = vetorCandidatos[i].folgaRota;
-
-                    else if(atributo == 1)
-                        vetorProb[i] = .1/vetorCandidatos[i].incrementoPoluicao;
-                    else
-                        vetorProb[i] = .1/vetorCandidatos[i].distanciaArcos;
-
-                    soma += vetorProb[i];
-                }
-                int aux = 0;
-                for(int j = 0; j < tamLista1Crit; ++j)
-                {
-                    aux += int(100.0*vetorProb[j]/soma);
-
-                    if(tamRestante)
-                        *tamRestante = j + 1;
-
-                    if(aux >= valAleatorio || (j +1) == tamLista1Crit)
-                        break;
-
-                    if(ptrEscolhido)
-                        ptrEscolhido++;
-
-                }
-
-            };
 
             /*  0: compCandidatoFolga, compCandidatoDist, compCandidato
              *  1: compCandidatoFolga, compCandidato, compCandidatoDist
@@ -556,11 +599,43 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
 
             listaCandidatos.remove(instancia->vetorClientes[ptrEscolhido->candidato->cliente]);
 
-            delete []vetorProb;
             double polAntes = ptrEscolhido->veiculo->poluicao;
 
             //Insere candidato escolhido
-            insereCandidato(ptrEscolhido, instancia, vetorClienteAux, nullptr, nullptr);
+            //insereCandidato(ptrEscolhido, instancia, vetorClienteAux, nullptr, nullptr);
+
+            auto veiculoAux = ptrEscolhido->veiculo;
+
+            auto clienteAux = new Solucao::ClienteRota;
+
+            veiculoAux->listaClientes.push_back(clienteAux);
+            clienteAux = matrixClienteBest[ptrEscolhido->candidato->cliente];
+
+
+            for(auto cliente : veiculoAux->listaClientes)
+            {
+
+                *cliente = *clienteAux;
+
+                ++clienteAux;
+            }
+
+
+
+            --clienteAux;
+
+
+            if(clienteAux->cliente != 0)
+            {
+                cout<<"Linha "<<__LINE__<<"\nErro fim do veiculo nao e 0\n";
+
+                exit(-1);
+            }
+
+            veiculoAux->carga += instancia->vetorClientes[ptrEscolhido->candidato->cliente].demanda;
+            veiculoAux->poluicao = ptrEscolhido->poluicao;
+            veiculoAux->combustivel = ptrEscolhido->combustivel;
+            ultimoVeiculoAtualizado = ptrEscolhido->indiceVeiculo;
 
             solucao->poluicao -= polAntes;
             solucao->poluicao += ptrEscolhido->veiculo->poluicao;
@@ -590,10 +665,15 @@ bool ViabilizaSolucao::geraSolucao(Solucao::Solucao *solucao, const Instancia::I
 
 #define NUM 8
 
-bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa, Solucao::ClienteRota *vetorClienteBest,
-                                   Solucao::ClienteRota *vetorClienteAux, string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos,
-                                   const int interacoes, const int interacoesPorMv, Solucao::ClienteRota *vetClienteRotaSecundBest,
-                                   Solucao::ClienteRota *vetClienteSecondAux, boost::tuple<int,int> heuristica, const double *const vetorParametros)
+bool
+ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::Instancia *const instancia, float alfa,
+                                   Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux,
+                                   string *sequencia, bool log, Construtivo::Candidato *vetorCandidatos,
+                                   const int interacoes, const int interacoesPorMv,
+                                   Solucao::ClienteRota *vetClienteRotaSecundBest,
+                                   Solucao::ClienteRota *vetClienteSecondAux, boost::tuple<int, int> heuristica,
+                                   const double *const vetorParametros, double *vetLimiteTempo,
+                                   GuardaCandInteracoes *vetCandInteracoes, Solucao::ClienteRota **matrixClienteBest)
 {
 
 
@@ -605,7 +685,7 @@ bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instanc
 //{5, 4, 6, 7, 2, 3, 1, 0};
     static int vetMovimentos[NUM] = {5, 4, 6, 7, 2, 3, 1, 0};//{0, 1, 6, 7, 2, 3};
 
-    /*for(int i = 0; i < NUM; ++i)
+    for(int i = 0; i < NUM; ++i)
     {
         int mv = rand_u32() % NUM;
 
@@ -623,7 +703,7 @@ bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instanc
 
         vetMovimentos[i] = mv;
 
-    }*/
+    }
 
     while(i < interacoes)
     {
@@ -636,7 +716,7 @@ bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instanc
                 //cout<<"Antes\n";
                 resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[j], instancia, solucao, vetorClienteBest,
                                                              vetorClienteAux, true, vetClienteRotaSecundBest,
-                                                             vetClienteSecondAux, nullptr);
+                                                             vetClienteSecondAux, vetLimiteTempo);
                 //cout<<"Depois\n";
 
                 if(resultadosRota.viavel)
@@ -661,7 +741,7 @@ bool ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instanc
             int numClientes = solucao->vetorVeiculos[solucao->vetorVeiculos.size() - 1]->listaClientes.size() - 2;
 
             bool resultado = geraSolucao(solucao, instancia, alfa, vetorClienteBest, vetorClienteAux, sequencia, log,
-                                         vetorCandidatos, heuristica, vetorParametros);
+                                         vetorCandidatos, heuristica, vetorParametros, vetLimiteTempo, matrixClienteBest, vetCandInteracoes);
 
             if(resultado)
                 return true;

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <map>
+#include "Construtivo.h"
 
 #ifndef HGVRSP_INSTANCIA_H
 #define HGVRSP_INSTANCIA_H
@@ -79,6 +80,7 @@ namespace Instancia
 
         std::map<int, int> penalizacao;
 
+        void atualizaPoluicaoSolucao(Construtivo::Solucao *solucao) const;
 
         ~Instancia();
 

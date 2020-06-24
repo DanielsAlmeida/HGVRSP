@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 
+
 namespace Solucao
 {
 
@@ -222,8 +223,11 @@ namespace Solucao
         bool veiculoFicticil;
         int ultimaAtualizacao;
         int numSolucoesInv;
+        int solucoesViabilizadas;
         double poluicaoPenalidades;
-
+        double tempoConstrutivo;
+        double tempoVnd;
+        double tempoViabilizador;
         Solucao(int numVeiculos);
 
         ~Solucao();

@@ -1,6 +1,7 @@
 //
 // Created by igor on 13/04/2020.
 
+#include <chrono>
 #include "Vnd.h"
 #include "Construtivo.h"
 #include "mersenne-twister.h"
@@ -13,7 +14,7 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
               int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo)
 {
 
-    return;
+
 
     static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     //static int vetMovimentos[1] = {7};
@@ -46,9 +47,19 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
     while(posicao < Num)
     {
+            auto c_start = std::chrono::high_resolution_clock::now();
+
+
 
             resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false, vetClienteRotaSecundBest,
-                    vetClienteRotaSecundAux, vetLimiteTempo);
+                                                         vetClienteRotaSecundAux, vetLimiteTempo);
+
+            auto c_end = std::chrono::high_resolution_clock::now();
+
+            std::chrono::duration<double, std::milli>  tempoCpu = (c_end - c_start);
+
+            vetEstatisticaMv[vetMovimentos[posicao]].numTempo += 1;
+            vetEstatisticaMv[vetMovimentos[posicao]].tempo += tempoCpu.count();
 
             if (resultadosRota.viavel)
             {
@@ -78,7 +89,8 @@ bool Vnd::avaliaSolucao(Solucao::Solucao *solucao, Movimentos::ResultadosRota re
         return (resultadosRota.poluicao) < (resultadosRota.veiculo->poluicao);
 }
 
-void Vnd::atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota)
+void Vnd::atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao,
+                                Movimentos::ResultadosRota resultadosRota)
 {
 
     double poluicao = solucao->poluicao;
@@ -96,5 +108,6 @@ void Vnd::atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *
     estatisticaMv->num += 1;
     estatisticaMv->poluicao += poluicao - solucao->poluicao;
     estatisticaMv->gap += 100.0 * ((poluicao - solucao->poluicao)/solucao->poluicao);
+
 }
 
