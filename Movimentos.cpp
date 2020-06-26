@@ -872,6 +872,7 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                             clienteIt++;
 
                         }
+                        //
 
                         bool resultado = false;
 
@@ -2581,6 +2582,7 @@ Movimentos::aplicaMovimento(int movimento, const Instancia::Instancia *const ins
 
 }
 
+//Funcao
 void Movimentos::atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao,
                                  Solucao::ClienteRota *vetClienteRotaBest,
                                  Solucao::ClienteRota *vetClienteRotaSecundBest,
