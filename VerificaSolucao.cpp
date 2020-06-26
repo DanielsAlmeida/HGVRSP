@@ -89,7 +89,8 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
             if(distancia == 0.0)
             {
-                cout<<"Erro, distancia igual a 0\n";
+                cout<<"Erro, distancia igual a 0 entre: "<<(*iterator)->cliente<<" "<<(*itCliente)->cliente<<'\n';
+                cout<<"Tamanho lista: "<<it->listaClientes.size()<<'\n';
                 delete []vetorClientes;
                 return false;
             }

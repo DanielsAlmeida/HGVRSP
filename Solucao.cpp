@@ -67,4 +67,5 @@ void Solucao::Veiculo::inicialisaVeiculo(int tipo)
     clienteRota->distanciaAteCliente = 0.0;
 
     listaClientes.push_back(clienteRota);
+    poluicao = 0.0;
 }

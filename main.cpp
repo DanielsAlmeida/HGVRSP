@@ -14,9 +14,10 @@
 //  1588722899
 
 //1586725703
-#define Saida false
+#define Saida true
 #define TesteParametro false
 
+//  UK_50x5_6 1593111849
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /* 1585430665
  * Debug memória : g++ *.cpp -Wall -fsanitize=address -g

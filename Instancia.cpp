@@ -370,10 +370,24 @@ void Instancia::Instancia::getClientes()
 
 }
 
-void Instancia::atualizaPoluicaoSolucao(Construtivo::Solucao *solucao) const
+void Instancia::Instancia::atualizaPoluicaoSolucao(Solucao::Solucao *solucao) const
 {
 
-    
+
+    if(!solucao->veiculoFicticil)
+        solucao->poluicaoPenalidades = 0.0;
+    else
+    {
+        solucao->poluicaoPenalidades = double(penalizacao.at(numClientes - 1)) * solucao->vetorVeiculos[solucao->vetorVeiculos.size() - 1]->listaClientes.size() - 2;
+        solucao->vetorVeiculos[solucao->vetorVeiculos.size() - 1]->poluicao = 0.0;
+
+    }
 
 
+
+}
+
+double Instancia::Instancia::poluicaoCientesNaoAtendidos(int num) const
+{
+    return double(penalizacao.at(numClientes - 1)) * num;
 }

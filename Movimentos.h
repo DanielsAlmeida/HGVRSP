@@ -104,7 +104,10 @@ namespace Movimentos
                     bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
                     Solucao::ClienteRota *vetClienteRotaSecundAux, double *vetLimiteTempo);
 
-    void atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao, Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaSecundBest);
+    void atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao,
+                         Solucao::ClienteRota *vetClienteRotaBest,
+                         Solucao::ClienteRota *vetClienteRotaSecundBest,
+                         const Instancia::Instancia *const instancia, const int movimento);
 
 
 

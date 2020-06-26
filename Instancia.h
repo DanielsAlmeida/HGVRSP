@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <map>
-#include "Construtivo.h"
+#include "Solucao.h"
 
 #ifndef HGVRSP_INSTANCIA_H
 #define HGVRSP_INSTANCIA_H
@@ -80,7 +80,8 @@ namespace Instancia
 
         std::map<int, int> penalizacao;
 
-        void atualizaPoluicaoSolucao(Construtivo::Solucao *solucao) const;
+        void atualizaPoluicaoSolucao(Solucao::Solucao *solucao) const;
+        double poluicaoCientesNaoAtendidos(int num) const;
 
         ~Instancia();
 

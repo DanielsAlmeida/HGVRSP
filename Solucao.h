@@ -230,6 +230,11 @@ namespace Solucao
         double tempoViabilizador;
         Solucao(int numVeiculos);
 
+        double getPoluicaoTotal()
+        {
+            return poluicao + poluicaoPenalidades;
+        }
+
         ~Solucao();
 
 

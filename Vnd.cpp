@@ -17,11 +17,19 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
 
     static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    //static int vetMovimentos[1] = {7};
+    //static int vetMovimentos[1] = {2};
 
     const int Num = 8;
+    int inicio = 0;
 
-    for(int i = 0; i < Num; ++i)
+/*    if(solucao->veiculoFicticil)
+    {
+        inicio = 2;
+        vetMovimentos[0] = 2;
+        vetMovimentos[1] = 3;
+    }*/
+
+    for(int i = inicio; i < Num; ++i)
     {
         int mv = rand_u32() % Num;
 
@@ -40,7 +48,6 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
         vetMovimentos[i] = mv;
     }
 
-
     Movimentos::ResultadosRota resultadosRota;
 
     int posicao = 0;
@@ -54,6 +61,7 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
             resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false, vetClienteRotaSecundBest,
                                                          vetClienteRotaSecundAux, vetLimiteTempo);
 
+
             auto c_end = std::chrono::high_resolution_clock::now();
 
             std::chrono::duration<double, std::milli>  tempoCpu = (c_end - c_start);
@@ -65,9 +73,10 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
             {
                 if (avaliaSolucao(solucao, resultadosRota))
                 {
+                    if(!solucao->veiculoFicticil)
+                        atualizaEstatisticaMv(&vetEstatisticaMv[vetMovimentos[posicao]], solucao, resultadosRota);
 
-                    atualizaEstatisticaMv(&vetEstatisticaMv[vetMovimentos[posicao]], solucao, resultadosRota);
-                    Movimentos::atualizaSolucao(resultadosRota, solucao, vetClienteRotaBest, vetClienteRotaSecundBest);
+                    Movimentos::atualizaSolucao(resultadosRota, solucao, vetClienteRotaBest, vetClienteRotaSecundBest, instancia, vetMovimentos[posicao]);
                     posicao = 0;
                 } else
                     posicao++;
@@ -78,19 +87,25 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
     }
 
+
+
 }
 
 bool Vnd::avaliaSolucao(Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota)
 {
     if(resultadosRota.veiculoSecundario)
-        return (resultadosRota.poluicao + resultadosRota.poluicaoSecundario) < (resultadosRota.veiculo->poluicao + resultadosRota.veiculoSecundario->poluicao);
+    {
+        if(resultadosRota.veiculoSecundario->tipo != 2)
+            return (resultadosRota.poluicao + resultadosRota.poluicaoSecundario) < (resultadosRota.veiculo->poluicao + resultadosRota.veiculoSecundario->poluicao);
+        else
+            return true;
+    }
 
     else
         return (resultadosRota.poluicao) < (resultadosRota.veiculo->poluicao);
 }
 
-void Vnd::atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao,
-                                Movimentos::ResultadosRota resultadosRota)
+void Vnd::atualizaEstatisticaMv(EstatisticaMv *estatisticaMv, Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota)
 {
 
     double poluicao = solucao->poluicao;

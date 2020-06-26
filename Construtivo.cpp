@@ -156,7 +156,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     auto c_start = std::chrono::high_resolution_clock::now();
     auto c_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> tempoCpu = c_end-c_start;
+    std::chrono::duration<double> tempoCpu;
 
     for(int i = 0; i < numInteracoes; ++i)
     {
@@ -239,31 +239,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
         vetorFrequencia[posicaoAlfa] += 1;
 
-/*        if(solucaoAux->veiculoFicticil && i >= 100)
-        {
-            //Calcular probabilidade
 
-            double taxa = numSolInviaveis/double(i+1); // 1 - 0.6 = 0.4
-
-            int p = 100.0*(1-taxa);
-
-            if((1+(rand_u32()%100)) > p)
-            {
-                int num = solucaoAux->vetorVeiculos[solucaoAux->vetorVeiculos.size()-1]->listaClientes.size()-2;
-                taxa = 1.0/double(num);
-                p = 100.0*(1-taxa);
-
-                if(((1+(rand_u32()%100)) > p) || (num == 1))
-                {
-                    //cout<<"Tentando viabilizar\n";
-                    ViabilizaSolucao::viabilizaSolucao(solucaoAux, instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos,
-                                                       5, 15, vetClienteBestSecund, vetClienteRotaSecundAux, heuristica, vetorParametros);
-                    tentativasViabilizar++;
-                }
-            }
-        }*/
-
-        if(solucaoAux->veiculoFicticil)
+/*        if(solucaoAux->veiculoFicticil)
         {
 
             c_start = std::chrono::high_resolution_clock::now();
@@ -278,14 +255,19 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
             if(solucaoAux->veiculoFicticil == false)
                 ++tentativasViabilizar;
-        }
+        }*/
 
-
-
+        bool inviavel = false;
 
         if(solucaoAux->veiculoFicticil)
+            inviavel = true;
+
+
+        instancia->atualizaPoluicaoSolucao(solucaoAux);
+
+/*        if(solucaoAux->veiculoFicticil)
             numSolInviaveis += 1;
-        else
+        else*/
         {
             c_start = std::chrono::high_resolution_clock::now();
 
@@ -298,6 +280,13 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             tempoVnd  += tempoCpu.count();
 
 
+        }
+
+        if(solucaoAux->veiculoFicticil)
+            numSolInviaveis += 1;
+        else if(inviavel)
+        {
+            ++tentativasViabilizar;
         }
             if(log)
             {
@@ -637,29 +626,6 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
                     melhorPoluicao = vetCandInteracoes[candidato->cliente].poluicao;
                     melhorCombustivel = vetCandInteracoes[candidato->cliente].combustivel;
                     tamVetBest = vetCandInteracoes[candidato->cliente].tam;
-
-                    /*if(tamVetBest != (melhorVeiculo->listaClientes.size()+ 1))
-                    {
-                        cout<<"Linha: "<<__LINE__<<"\nErro tamanho de veiculo errado\n\n";
-                        cout<<"indice melhorVeiculo: "<<vetCandInteracoes[candidato->cliente].indiceVeiculo<<'\n';
-                        cout<<"Indice ultimo veiculo atualizado: "<<ultimoVeiculoAtualizado<<"\n";
-                        cout<<"Indice de ptr veiculo: "<<vetCandInteracoes[candidato->cliente].veiculo->id<<'\n';
-                        cout<<"Melhor veiculo tam "<<melhorVeiculo->listaClientes.size()<<'\n';
-                        cout<<"Melhor veiculo: ";
-
-                        for(auto it:melhorVeiculo->listaClientes)
-                            cout<<it->cliente<<" ";
-
-                        cout<<"\nTamanho no vetor: "<<tamVetBest<<'\n';
-
-                        cout<<"Ultimo veiculo atualizado: ";
-
-                        melhorVeiculo = solucao->vetorVeiculos[ultimoVeiculoAtualizado];
-                        for(auto it:melhorVeiculo->listaClientes)
-                            cout<<it->cliente<<" ";
-                        cout<<"\n";
-                        exit(-1);
-                    }*/
 
                     melhorPosicao = vetCandInteracoes[candidato->cliente].it;
                     folgaRota = vetCandInteracoes[candidato->cliente].folga;

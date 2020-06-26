@@ -736,7 +736,8 @@ ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::I
 
         if(pertubacao)
         {
-            Movimentos::atualizaSolucao(resultadosRota, solucao, vetorClienteBest, vetClienteRotaSecundBest);
+            Movimentos::atualizaSolucao(resultadosRota, solucao, vetorClienteBest, vetClienteRotaSecundBest, nullptr,
+                                        0);
 
             int numClientes = solucao->vetorVeiculos[solucao->vetorVeiculos.size() - 1]->listaClientes.size() - 2;
 

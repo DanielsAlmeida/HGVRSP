@@ -788,9 +788,23 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
                              Solucao::ClienteRota *vetClienteRotaAux)
 {
 
-    if (tam <= 2)
+    if (tam == 2)
     {
-        return false;
+
+        vetClienteRota[0].tempoSaida = (tipoVeiculo == 0 ? 0.0 : 0.5);
+
+        if(poluicao)
+            *poluicao = 0.0;
+
+        if(combustivel)
+            *combustivel = 0.0;
+
+        return true;
+    }
+    else if(tam < 2)
+    {
+        cout<<"Erro, tamanho do veiculo menor que 2!!\n";
+        exit(-1);
     }
 
 
