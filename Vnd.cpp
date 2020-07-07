@@ -22,12 +22,12 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
     const int Num = 8;
     int inicio = 0;
 
-/*    if(solucao->veiculoFicticil)
+    if(solucao->veiculoFicticil)
     {
         inicio = 2;
         vetMovimentos[0] = 2;
         vetMovimentos[1] = 3;
-    }*/
+    }
 
     for(int i = inicio; i < Num; ++i)
     {

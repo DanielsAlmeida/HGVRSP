@@ -14,7 +14,7 @@
 //  1588722899
 
 //1586725703
-#define Saida true
+#define Saida false
 #define TesteParametro false
 
 //  UK_50x5_6 1593111849
@@ -329,6 +329,16 @@ int main(int num, char **agrs)
 
     std::chrono::duration<double> tempoCpu = c_end-c_start;
 
+    for(int i = 0; i < 9 ; ++i)
+    {
+        if(vetEstatisticaMv[i].num > 0)
+        {
+            vetEstatisticaMv[i].poluicao /= vetEstatisticaMv[i].num;
+            vetEstatisticaMv[i].gap /= vetEstatisticaMv[i].num;
+            vetEstatisticaMv[i].tempo /= vetEstatisticaMv[i].numTempo;
+        }
+    }
+
     tempo << "Tempo total cpu: " << tempoCpu.count()<< " S\n";
     tempo <<"Tempo total construtivo: "<<solucao->tempoConstrutivo<<" S\n";
     tempo <<"Tempo total viabilizador: "<<solucao->tempoViabilizador<<" S\n";
@@ -343,7 +353,29 @@ int main(int num, char **agrs)
     tempo << "Numero de solucoes inviaveis: " << (solucao->numSolucoesInv) << '\n';
     tempo << "Solucoes viabilizadas: "<<solucao->solucoesViabilizadas<<'\n';
     tempo << "Tempo total de viagem: " << (tempoViagem*60.0) << '\n';
-    tempo << "Distancia total: " << (distanciaTotal);
+    tempo << "Distancia total: " << (distanciaTotal)<<"\n";
+
+    int numVeiculosUsados = 0;
+
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+
+        if(veiculo->listaClientes.size() > 2)
+        {
+            ++numVeiculosUsados;
+
+        }
+
+    }
+
+    tempo<<"Numero de veiculo: "<<numVeiculosUsados<<"\n\n";
+
+    tempo << std::fixed << std::setprecision(4);
+    for(int i = 0; i < 8 ; ++i)
+        tempo<<vetEstatisticaMv[i].poluicao<<" ("<<vetEstatisticaMv[i].tempo<<")    ";
+
+    tempo<<"\n";
     texto += tempo.str();
 
     //if(solucao->poluicao <= 0.1)
@@ -364,29 +396,6 @@ int main(int num, char **agrs)
         file.close();
         file.open(saidaParcial, ios::out | ios::app);
 
-        int numVeiculosUsados = 0;
-
-
-        for(auto veiculo : solucao->vetorVeiculos)
-        {
-
-            if(veiculo->listaClientes.size() > 2)
-            {
-                ++numVeiculosUsados;
-
-            }
-
-        }
-
-        for(int i = 0; i < 9 ; ++i)
-        {
-            if(vetEstatisticaMv[i].num > 0)
-            {
-                vetEstatisticaMv[i].poluicao /= vetEstatisticaMv[i].num;
-                vetEstatisticaMv[i].gap /= vetEstatisticaMv[i].num;
-                vetEstatisticaMv[i].tempo /= vetEstatisticaMv[i].numTempo;
-            }
-        }
 
             // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
 
@@ -439,12 +448,7 @@ int main(int num, char **agrs)
 
         cout<<"\n";
 
-        cout<<std::fixed << std::setprecision(4);
 
-        for(int i = 0; i < 8 ; ++i)
-            cout<<vetEstatisticaMv[i].poluicao<<" ("<<vetEstatisticaMv[i].tempo<<")    ";
-
-        cout<<"\n\n";
 
 
 
