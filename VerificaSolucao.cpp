@@ -202,7 +202,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
 
 
 
-                if((*itCliente)->tempoChegada >= instancia->vetorClientes[(*itCliente)->cliente].inicioJanela) //Chegou após o inicio da janela
+                if(((*itCliente)->tempoChegada >= instancia->vetorClientes[(*itCliente)->cliente].inicioJanela)) //Chegou após o inicio da janela
                 {
 
                     // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
@@ -210,7 +210,7 @@ bool VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instanci
                     double tempoSaida = (*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico;
                     //((*itCliente)->tempoChegada + instancia->vetorClientes[(*itCliente)->cliente].tempoServico ))
 
-                    if(!((tempoSaida <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) && ((fabs(tempoSaida - (*itCliente)->tempoSaida) <= 0.001) || ((*itCliente)->tempoSaida > tempoSaida) || ((*itCliente)->cliente == 0) )))
+                    if(!((((*itCliente)->tempoChegada <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela)  || (((*itCliente)->tempoChegada - instancia->vetorClientes[((*itCliente))->cliente].fimJanela) <= 1.0/60)) && ((fabs(tempoSaida - (*itCliente)->tempoSaida) <= 0.001) || ((*itCliente)->tempoSaida > tempoSaida) || ((*itCliente)->cliente == 0) )))
                     {
                         //Solução está ERRADA.
                         cout<<"Erro, Tempo\n";
@@ -393,7 +393,11 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
     Solucao::ClienteRota *vetClienteRotaAux = new Solucao::ClienteRota[veiculo->listaClientes.size()];
     vetClienteRotaAux[0].cliente = 0;
-    vetClienteRotaAux[0].tempoSaida = instancia->vetorVeiculos[veiculo->tipo].inicioJanela;
+    vetClienteRotaAux[0].tempoSaida = (*veiculo->listaClientes.begin())->tempoSaida;
+
+    if(vetClienteRotaAux[0].tempoSaida < instancia->vetorVeiculos[veiculo->tipo].inicioJanela)
+        return false;
+
     int peso = 0;
 
     double combustivel = 0;
@@ -414,7 +418,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
     clienteIt++;
 
-    string erro = "";
+
     while(1)
     {
         vetClienteRotaAux[posicao+1].cliente = (*clienteIt)->cliente;
@@ -428,18 +432,13 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
         }
 
 
-        erro+= "Peso: "+std::to_string(vetClienteRotaAux[posicao].cliente)+"   "+std::to_string(vetClienteRotaAux[posicao + 1].cliente)+": "+std::to_string(peso)+'\n';
 
-        if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia, peso,
-                                          veiculo->tipo, NULL, nullptr))
+
+        if(!Construtivo::determinaHorario(&vetClienteRotaAux[posicao], &vetClienteRotaAux[posicao + 1], instancia, peso, veiculo->tipo, NULL, NULL))
         {
             cout<<"ERRO\n"<<vetClienteRotaAux[posicao].cliente<<" "<<vetClienteRotaAux[posicao+1].cliente<<'\n';
-            cout<<"Motivo: "<<erro<<'\n';
 
-            double distancia = instancia->matrizDistancias[0][46];
 
-            cout<<"Distancia: "<<distancia<<'\n';
-            cout<<"posicao: "<<posicao<<"\n";
             delete []vetClienteRotaAux;
             return false;
         }
@@ -462,6 +461,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
                 if (!((((*clienteIt)->tempoSaida > vetClienteRotaAux[posicao + 1].tempoSaida) ||
                        (fabs((*clienteIt)->tempoSaida - vetClienteRotaAux[posicao + 1].tempoSaida) <= 0.001))))
                 {
+                    cout<<"Erro, veiculo deveria ser viavel.\nArquivo: VerificaSolucao.cpp; Linha: "<<__LINE__<<'\n';
                     cout << "Tempo de saida errado\n";
                     cout << "Cliente: " << (*clienteIt)->cliente << '\n';
                     cout<<"Tempo rota "<<vetClienteRotaAux[posicao + 1].tempoSaida<<'\n';
@@ -473,8 +473,8 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
             if(fabs(vetClienteRotaAux[posicao+1].combustivel - (*clienteIt)->combustivel) > 0.001)
             {
-                cout<<erro<<"\n\n\n\n";
 
+                cout<<"Erro, veiculo deveria ser viavel.\nArquivo: VerificaSolucao.cpp; Linha: "<<__LINE__<<'\n';
                 cout<<"Cliente: "<<(*clienteIt)->cliente<<'\n';
                 cout<<"Combustivel\n";
                 cout<<"Diferenca: "<<fabs(vetClienteRotaAux[posicao+1].combustivel - (*clienteIt)->combustivel)<<'\n';
@@ -508,6 +508,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
             }
             if(fabs(vetClienteRotaAux[posicao+1].poluicao - (*clienteIt)->poluicao) > 0.001)
             {
+                cout<<"Erro, veiculo deveria ser viavel.\nArquivo: VerificaSolucao.cpp; Linha: "<<__LINE__<<'\n';
                 cout<<"Cliente: "<<(*clienteIt)->cliente<<'\n';
                 cout<<"poluicao\n";
                 delete []vetClienteRotaAux;
@@ -532,6 +533,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
     if(fabs(combustivel - veiculo->combustivel) > 0.001)
     {
+        cout<<"Erro, veiculo deveria ser viavel.\nArquivo: VerificaSolucao.cpp; Linha: "<<__LINE__<<'\n';
         cout<<"Combustivel\n";
         cout<<"Diferenca: "<<fabs(combustivel - veiculo->combustivel)<<'\n';
         delete []vetClienteRotaAux;
@@ -541,6 +543,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
     if(fabs(poluicao - veiculo->poluicao) > 0.001)
     {
+        cout<<"Erro, veiculo deveria ser viavel.\nArquivo: VerificaSolucao.cpp; Linha: "<<__LINE__<<'\n';
         cout<<"Poluicao\n";
         cout<<"Diferenca: "<<fabs(poluicao - veiculo->poluicao)<<'\n';
         delete []vetClienteRotaAux;
@@ -549,6 +552,7 @@ bool VerificaSolucao::verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia
 
     if(peso < 0)
     {
+        cout<<"Erro, veiculo deveria ser viavel.\nArquivo: VerificaSolucao.cpp; Linha: "<<__LINE__<<'\n';
         cout<<"Peso negativo\n";
         delete []vetClienteRotaAux;
         return false;

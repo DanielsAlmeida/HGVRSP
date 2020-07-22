@@ -15,7 +15,7 @@ namespace Movimentos_Paradas
 
     struct TempoCriaRota
     {
-        double tempoCpu, maior;
+        long double tempoCpu, maior;
         int tamVet;
         u_int64_t num;
 
@@ -29,13 +29,15 @@ namespace Movimentos_Paradas
 
     struct Aresta
     {
-        double poluicao, combustivel;
-        double poluicaoRotas, combustivelRotas;
+        long double poluicao, combustivel;
+        long double poluicaoRotas, combustivelRotas;
         bool vetPeriodos[5];
+        long double vetDistancia[5];
+        long double vetTempo[5];
 
         Aresta(){}
 
-        Aresta(double _poluicao, double _combustivel, double _poluicaoRotas, double _combustivelRotas) : poluicao(_poluicao), combustivel(_combustivel),
+        Aresta(long double _poluicao, long double _combustivel, long double _poluicaoRotas, long double _combustivelRotas) : poluicao(_poluicao), combustivel(_combustivel),
         poluicaoRotas(_poluicaoRotas), combustivelRotas(_combustivelRotas)
         {
 
@@ -48,15 +50,15 @@ namespace Movimentos_Paradas
             poluicaoRotas = aresta.poluicaoRotas;
             combustivelRotas = aresta.combustivelRotas;
 
-            auto ptr = vetPeriodos;
-            auto outroPtr = aresta.vetPeriodos;
+
 
             for(int i = 0; i < 5; ++i)
             {
-                *ptr = *outroPtr;
 
-                ++ptr;
-                ++outroPtr;
+                vetPeriodos[i] = aresta.vetPeriodos[i];
+                vetDistancia[i] = aresta.vetDistancia[i];
+                vetTempo[i] = aresta.vetTempo[i];
+
             }
         }
     };
@@ -81,19 +83,19 @@ namespace Movimentos_Paradas
     {
         const int id;
         const int cliente;
-        const double tempoSaida;
+        const long double tempoSaida;
         int predecessorId;
-        double predecessorTempoSaida;
-        double poluicao;
-        double combustivel;
+        long double predecessorTempoSaida;
+        long double poluicao;
+        long double combustivel;
         Aresta *aresta;   //Aresta predecessor
-        const bool final; //somente para 0; 0 - ... - i - j - 0
+        const long double final; //somente para 0; 0 - ... - i - j - 0
         handle_type handle;
-        const double tempoChegada;
+        const long double tempoChegada;
         bool fechado;
 
-        No(int _id, int _cliente, double _tempoSaida, int _predecessorId, double _predecessorTempoSaida, double _poluicao, double _combustivel, Aresta *_aresta, bool _final,
-                double _tempoChegada, double _fechado) : id(_id), cliente(_cliente), tempoSaida(_tempoSaida), predecessorId(_predecessorId), predecessorTempoSaida(_predecessorTempoSaida),
+        No(int _id, int _cliente, long double _tempoSaida, int _predecessorId, long double _predecessorTempoSaida, long double _poluicao, long double _combustivel, Aresta *_aresta, bool _final,
+           long double _tempoChegada, long double _fechado) : id(_id), cliente(_cliente), tempoSaida(_tempoSaida), predecessorId(_predecessorId), predecessorTempoSaida(_predecessorTempoSaida),
                 poluicao(_poluicao), combustivel(_combustivel), aresta(_aresta), final(_final), tempoChegada(_tempoChegada), fechado(_fechado)
         {}
 
@@ -107,7 +109,7 @@ namespace Movimentos_Paradas
 
     struct Cliente
     {
-        double tempo;
+        long double tempo;
         int id;
         Aresta aresta;
 
@@ -137,7 +139,13 @@ namespace Movimentos_Paradas
         VetCliente(int _tam, int _tamReal):  tam(_tam), tamReal(_tamReal)
         {
 
-            vetCliente = (Cliente*)(malloc(sizeof(Cliente) * _tamReal));
+            vetCliente = new Cliente[_tamReal];
+
+            if(!vetCliente)
+            {
+                std::cout<<"Erro ao alocar vetor de vetCliente\n";
+                exit(-1);
+            }
 
 
         }
@@ -146,7 +154,8 @@ namespace Movimentos_Paradas
 
         ~VetCliente()
         {
-            free(vetCliente);
+            delete []vetCliente;
+
         }
 
         void swap(VetCliente *outroVetCliente)

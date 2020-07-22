@@ -231,16 +231,17 @@ bool Movimentos_Paradas::mvPercorreRotaParadas(const Instancia::Instancia *const
                                             vetClienteRota[j].poluicaoRota, vetClienteRota[j].combustivelRota};
                         listaAresta.push_back(aresta);
 
-                        bool *ptrVetCliente = vetClienteRota[j].percorrePeriodo;
-                        bool *ptrAresta = aresta->vetPeriodos;
+
 
                         //Copia os periodos percorridos
                         for (int k = 0; k < 5; ++k)
                         {
-                            *ptrAresta = *ptrVetCliente;
 
-                            ptrAresta++;
-                            ptrVetCliente++;
+                            aresta->vetPeriodos[k] = vetClienteRota[j].percorrePeriodo[k];
+                            aresta->vetTempo[k] = vetClienteRota[j].tempoPorPeriodo[k];
+                            aresta->vetDistancia[k] = vetClienteRota[j].distanciaPorPeriodo[k];
+
+
                         }
 
                         bool final = false;
@@ -388,16 +389,14 @@ bool Movimentos_Paradas::mvPercorreRotaParadas(const Instancia::Instancia *const
                                                 vetClienteRota[k].poluicaoRota, vetClienteRota[k].combustivelRota};
                             listaAresta.push_back(aresta);
 
-                            bool *ptrVetCliente = vetClienteRota[k].percorrePeriodo;
-                            bool *ptrAresta = aresta->vetPeriodos;
 
                             //Copia os periodos percorridos
                             for (int l = 0; l < 5; ++l)
                             {
-                                *ptrAresta = *ptrVetCliente;
 
-                                ptrAresta++;
-                                ptrVetCliente++;
+                                aresta->vetPeriodos[l] = vetClienteRota[k].percorrePeriodo[l];
+                                aresta->vetTempo[l] = vetClienteRota[k].tempoPorPeriodo[l];
+                                aresta->vetDistancia[l] = vetClienteRota[k].distanciaPorPeriodo[l];
                             }
 
                             bool final = false;
@@ -514,15 +513,16 @@ bool Movimentos_Paradas::mvPercorreRotaParadas(const Instancia::Instancia *const
 
                     }
 
-                    bool *ptrIt = (*it)->percorrePeriodo;
-                    bool *ptrNo = (no->aresta)->vetPeriodos;
+
 
                     for (int i = 0; i < 5; ++i)
                     {
-                        *ptrIt = *ptrNo;
 
-                        ptrIt++;
-                        ptrNo++;
+
+                        (*it)->percorrePeriodo[i] = (no->aresta)->vetPeriodos[i];
+                        (*it)->tempoPorPeriodo[i] = (no->aresta)->vetTempo[i];
+                        (*it)->distanciaPorPeriodo[i] = (no->aresta)->vetDistancia[i];
+
                     }
 
                     //cout<<no->id<<" ";
@@ -969,15 +969,14 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
     aresta->poluicaoRotas = vetClienteRota[1].poluicaoRota;
     aresta->poluicao = vetClienteRota[1].poluicao;
 
-    ptrAresta = aresta->vetPeriodos;
-    ptrVet = vetClienteRota[1].percorrePeriodo;
 
     for(int i = 0; i < 5; ++i)
     {
-        *ptrAresta = *ptrVet;
 
-        ++ptrAresta;
-        ++ptrVet;
+
+        aresta->vetPeriodos[i] = vetClienteRota[1].percorrePeriodo[i];
+        aresta->vetDistancia[i] = vetClienteRota[1].distanciaPorPeriodo[i];
+        aresta->vetTempo[i] = vetClienteRota[1].tempoPorPeriodo[i];
     }
 
     no = new No(nextId, vetClienteRota[1].cliente, vetClienteRota[1].tempoSaida, 0, (tipoVeiculo == 0 ? 0.0 : 0.5), aresta->poluicao, aresta->combustivel, aresta,
@@ -1065,15 +1064,12 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
                 aresta->poluicao = vetClienteRota[j].poluicao;
 
 
-                ptrAresta = aresta->vetPeriodos;
-                ptrVet = vetClienteRota[j].percorrePeriodo;
-
                 for(int l = 0; l < 5; ++l)
                 {
-                    *ptrAresta = *ptrVet;
 
-                    ++ptrAresta;
-                    ++ptrVet;
+                    aresta->vetPeriodos[l] = vetClienteRota[j].percorrePeriodo[l];
+                    aresta->vetDistancia[l] = vetClienteRota[j].distanciaPorPeriodo[l];
+                    aresta->vetTempo[l] = vetClienteRota[j].tempoPorPeriodo[l];
                 }
 
 
@@ -1194,16 +1190,14 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
                         aresta->poluicaoRotas = vetClienteRota[j].poluicaoRota;
                         aresta->poluicao = vetClienteRota[j].poluicao;
 
-                        ptrAresta = aresta->vetPeriodos;
-                        ptrVet = vetClienteRota[j].percorrePeriodo;
+
 
                         //Copia os periodos percorridos
                         for(int l = 0; l < 5; ++l)
                         {
-                            *ptrAresta = *ptrVet;
-
-                            ++ptrAresta;
-                            ++ptrVet;
+                            aresta->vetPeriodos[l] = vetClienteRota[j].percorrePeriodo[l];
+                            aresta->vetDistancia[l] = vetClienteRota[j].distanciaPorPeriodo[l];
+                            aresta->vetTempo[l] = vetClienteRota[j].tempoPorPeriodo[l];
                         }
 
                         no = new No(nextId, vetClienteRota[j].cliente, vetClienteRota[j].tempoSaida, -1, vetClienteRota[i].tempoSaida, HUGE_VAL, 0.0, aresta,
@@ -1262,22 +1256,8 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
 
                     //Verifica o espaco
                     if((clienteI.tam + 1) > clienteI.tamReal)
-                    {
-                        //Espaco nao é suficiente. Alacar mais espaco nos vetores
-                        clienteI.vetCliente = (Cliente*)(realloc(clienteI.vetCliente, sizeof(Cliente) * (clienteI.tamReal + IncrementoEspaco)));
-                        clienteJ.vetCliente =  (Cliente*)(realloc(clienteJ.vetCliente, sizeof(Cliente) * (clienteJ.tamReal + IncrementoEspaco)));
+                        break;
 
-                        clienteI.tamReal += IncrementoEspaco;
-                        clienteJ.tamReal += IncrementoEspaco;
-
-                        if(!clienteI.vetCliente || !clienteJ.vetCliente)
-                        {
-                            throw ExceptionNull();
-                        }
-
-                        //cout<<"Aumentando vetor para "<<clienteI.tamReal<<'\n';
-
-                    }
 
                     //Cria um novo no
                     no = new No(nextId, vetClienteRota[i].cliente, vetClienteRota[i].tempoSaida, -1, -1.0, 0.0, 0.0, NULL, true,
@@ -1299,16 +1279,14 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
                     aresta->poluicaoRotas = vetClienteRota[j].poluicaoRota;
                     aresta->poluicao = vetClienteRota[j].poluicao;
 
-                    ptrAresta = aresta->vetPeriodos;
-                    ptrVet = vetClienteRota[j].percorrePeriodo;
 
                     //Copia os periodos percorridos
                     for(int l = 0; l < 5; ++l)
                     {
-                        *ptrAresta = *ptrVet;
 
-                        ++ptrAresta;
-                        ++ptrVet;
+                        aresta->vetPeriodos[l] = vetClienteRota[j].percorrePeriodo[l];
+                        aresta->vetDistancia[l] = vetClienteRota[j].distanciaPorPeriodo[l];
+                        aresta->vetTempo[l] = vetClienteRota[j].tempoPorPeriodo[l];
                     }
 
                     //Cria um novo no
@@ -1587,15 +1565,12 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
         vetClienteRota[index].tempoSaida = tempoSaida;
         vetClienteRota[index].tempoChegada = no->tempoChegada;
 
-        ptrVet = vetClienteRota[index].percorrePeriodo;
-        ptrAresta = aresta->vetPeriodos;
 
-        for(int i = 0; i < 5; ++i)
+        for(int l = 0; l < 5; ++l)
         {
-            *ptrVet = *ptrAresta;
-
-            ++ptrAresta;
-            ++ptrVet;
+            vetClienteRota[index].percorrePeriodo[l] = aresta->vetPeriodos[l] ;
+            vetClienteRota[index].distanciaPorPeriodo[l] = aresta->vetDistancia[l];
+            vetClienteRota[index].tempoPorPeriodo[l] = aresta->vetTempo[l];
         }
 
 

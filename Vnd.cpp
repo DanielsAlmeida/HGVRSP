@@ -17,13 +17,14 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
 
     static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    //static int vetMovimentos[1] = {2};
+    //static int vetMovimentos[1] = {5};
 
     const int Num = 8;
     int inicio = 0;
 
     if(solucao->veiculoFicticil)
     {
+
         inicio = 2;
         vetMovimentos[0] = 2;
         vetMovimentos[1] = 3;

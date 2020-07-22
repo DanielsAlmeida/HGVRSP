@@ -11,7 +11,7 @@ using namespace std;
 
 Instancia::Instancia::Instancia(std::string arquivo)
 {
-
+    numPeriodos = 5;
     std::string clientes;
 
     demandaTotal = 0;

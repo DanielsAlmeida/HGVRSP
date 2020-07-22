@@ -1,0 +1,934 @@
+//
+// Created by igor on 09/07/2020.
+//v.set(GRB_DoubleAttr_UB, 0)
+//set(GRB_DoubleAttr_Start, 1);
+
+#include "Modelo.h"
+
+Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : numClientes(instancia->numClientes), numVeiculos(instancia->numVeiculos), numPeriodos(instancia->numPeriodos), modelo(grbModel)
+{
+
+    const int NumVeic = 2;
+
+    //Cria o modelo
+    tipoVeiculo = false;
+    variaveis = new Variaveis;
+
+    modelo->set(GRB_StringAttr_ModelName, "HGVRSP_model");
+
+    //Cria variaveis
+
+    //*****************************************************************************************************************************************
+
+    //Aloca variavel X
+    variaveis->X = new GRBVar *[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+        variaveis->X[i] = new GRBVar[instancia->numClientes];
+
+
+    //Cria veriaveis X_(i,j) no modelo
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+                variaveis->X[i][j] = modelo->addVar(0, 0, 0, GRB_BINARY,
+                                                    "X_" + std::to_string(i) + '_' + std::to_string(j));
+        }
+    }
+
+    //*****************************************************************************************************************************************
+
+
+    //Aloca variavel x: Variavel binária. Indica se um arco (i,j) é percorrido em um período k pelo veículo h
+    variaveis->x = new GRBVar **[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+        variaveis->x[i] = new GRBVar *[instancia->numClientes];
+
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+
+        for (int j = 0; j < instancia->numClientes; ++j)
+        {
+            variaveis->x[i][j] = new GRBVar[instancia->numPeriodos];
+        }
+
+    }
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+            {
+
+                for (int k = 0; k < instancia->numPeriodos; ++k)
+                {
+
+                    variaveis->x[i][j][k] = modelo->addVar(0, 1, 0, GRB_BINARY, "x_" + std::to_string(i) + '_' +
+                                                                                std::to_string(j) + '_' +
+                                                                                std::to_string(k));
+
+                }
+            }
+        }
+
+    }
+
+    //*****************************************************************************************************************************************
+    //Cria a variável T
+
+
+    variaveis->T = new GRBVar[2];
+
+
+    variaveis->T[0] = modelo->addVar(0, 0, 0, GRB_BINARY, "T_"+std::to_string(0));
+    variaveis->T[1] = modelo->addVar(1, 1, 0, GRB_BINARY, "T_"+std::to_string(1));
+
+    //*****************************************************************************************************************************************
+
+    //Aloca variavel d: Variavel continua. Indica a distância percorrida do arco (i,j) no período k pelo veículo h
+
+    variaveis->d = new GRBVar **[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        variaveis->d[i] = new GRBVar *[instancia->numClientes];
+    }
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+            variaveis->d[i][j] = new GRBVar[instancia->numPeriodos];
+
+    }
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+            {
+
+                for (int k = 0; k < instancia->numPeriodos; ++k)
+                {
+
+                    variaveis->d[i][j][k] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS,
+                                                           "d_" + std::to_string(i) + '_' +
+                                                           std::to_string(j) + '_' + std::to_string(k));
+
+                }
+            }
+
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+
+    //Aloca a variavel tal: Variavel continua. Indica o tempo gasto no arco (i,j) no período k pelo veículo h
+
+    variaveis->tao = new GRBVar **[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        variaveis->tao[i] = new GRBVar *[instancia->numClientes];
+    }
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+            variaveis->tao[i][j] = new GRBVar[instancia->numPeriodos];
+
+    }
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+            {
+                for (int k = 0; k < instancia->numPeriodos; ++k)
+                {
+
+                    variaveis->tao[i][j][k] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS,
+                                                             "tao_" + std::to_string(i)
+                                                             + '_' + std::to_string(j) + '_' + std::to_string(k));
+
+                }
+            }
+
+
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+
+    //Aloca a variavel l: Variavel continua. Indica o tempo de saída do cliente i
+    variaveis->l = new GRBVar[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        variaveis->l[i] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "l_" + std::to_string(i));
+    }
+
+    //*************************************************************************************************************************************************************
+
+    //Aloca a variavel a: Variavel continua. Indica o tempo de chegada do cliente i
+    variaveis->a = new GRBVar[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        variaveis->a[i] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "a_" + std::to_string(i));
+    }
+
+    //*************************************************************************************************************************************************************
+
+    //Aloca variavel f: Variavel continua. Indica a carga do veículo ao percorrer o arco (i,j) pelo veículo h
+    variaveis->f = new GRBVar *[instancia->numClientes];
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+        variaveis->f[i] = new GRBVar[instancia->numClientes];
+
+
+    for (int i = 0; i < instancia->numClientes; ++i)
+    {
+        for (int j = 0; j < instancia->numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+                variaveis->f[i][j] = modelo->addVar(0, 0, 0, GRB_CONTINUOUS,
+                                                    "f_" + std::to_string(i) + '_' + std::to_string(j));
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Cria a variavel C
+
+    variaveis->C = new GRBVar[2];
+
+    variaveis->C[0] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "C_0");
+    variaveis->C[1] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "C_1");
+
+    //*************************************************************************************************************************************************************
+    //Cria a funcao objetivo
+    variaveis->funcaoObjetivo = new GRBLinExpr[2];
+
+    //*************************************************************************************************************************************************************
+    //*************************************************************************************************************************************************************
+    //ok
+    //Adiciona as restrições
+
+    //Restrição 1. Limita a distancia da variavel d. d[i,j,k] <= D [i,j] * x [i,j,k]
+
+    GRBLinExpr linExprDist_d = 0;
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+        for (int j = 0; j < numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+            {
+
+                for (int k = 0; k < numPeriodos; ++k)
+                {
+                    linExprDist_d = 0;
+                    linExprDist_d = variaveis->d[i][j][k] - instancia->matrizDistancias[i][j] * variaveis->x[i][j][k];
+
+                    modelo->addConstr(linExprDist_d <= 0.0,
+                                      "restringe_d_" + std::to_string(i) + "_" + std::to_string(j) + "_" +
+                                      std::to_string(k));
+
+                }
+            }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Cria restrição 2, Zera a variavel x se (X = 0)
+    //ok
+    GRBLinExpr linExpr_limitaVar_x_por_X = 0;
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+        for (int j = 0; j < numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+            {
+
+                for (int k = 0; k < numPeriodos; ++k)
+                {
+                    linExpr_limitaVar_x_por_X = 0;
+                    linExpr_limitaVar_x_por_X = variaveis->X[i][j] - variaveis->x[i][j][k];
+
+                    modelo->addConstr(linExpr_limitaVar_x_por_X >= 0.0,
+                                      "restrige_x_por_X_" + std::to_string(i) + "_" + std::to_string(j) + "_" +
+                                      std::to_string(k));
+
+                }
+            }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Cria restrição 3
+    //ok
+    GRBLinExpr linExpr = 0;
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+        for (int j = 0; j < numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0.0)
+            {
+
+                linExpr = 0;
+                linExpr = variaveis->X[i][j];
+
+                for (int k = 0; k < numPeriodos; ++k)
+                    linExpr += -variaveis->x[i][j][k];
+
+                modelo->addConstr(linExpr <= 0, "restringe_soma_x_k_por_X_" + std::to_string(i) + "_" + std::to_string(j));
+            }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Restrição 4 limita o somatorio da distância parcial à distância total
+    //ok
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j < numClientes; ++j)
+        {
+
+            if(instancia->matrizDistancias[i][j] != 0.0)
+            {
+                linExpr = 0;
+
+                for(int k = 0; k < numPeriodos; ++k)
+                    linExpr += variaveis->d[i][j][k];
+
+                linExpr += -instancia->matrizDistancias[i][j] * variaveis->X[i][j];
+                modelo->addConstr(linExpr == 0, "restringe_soma_d_k_"+std::to_string(i)+"_"+std::to_string(j));
+
+
+            }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Restriçao 5, sub-ciclo
+    //ok
+    /*for (int j = 1; j < numClientes; ++j)
+    {
+
+        for (int k = 0; k < numPeriodos; ++k)
+        {
+
+            linExpr = 0;
+            for(int k_ = 1; k_ < k; ++k_)
+            {
+                for(int l = 0; l < numClientes; ++l)
+                {
+                    if((instancia->matrizDistancias[j][l] != 0.0) && (l != j))
+                        linExpr += variaveis->x[j][l][k_];
+                }
+            }
+
+            for(int i = 0; i < numClientes; ++i)
+            {
+                if((instancia->matrizDistancias[i][j] != 0.0) && (i != j))
+                    linExpr += variaveis->x[i][j][k];
+            }
+
+            modelo->addConstr(linExpr <= 1, "subCiclo_"+std::to_string(j)+"_"+std::to_string(k));
+        }
+    }*/
+
+    for (int j = 1; j < numClientes; ++j)
+    {
+        for(int i = 0; i < numClientes; ++i)
+        {
+            if (i == j)
+                continue;
+
+            for (int l = 0; l < numClientes; ++l)
+            {
+                if((l == i) || (l == j))
+                    continue;
+
+                for (int k1 = 0; k1 < numPeriodos; ++k1)
+                {
+                    for (int k2 = 0; k2 < numPeriodos; ++k2)
+                    {
+
+                        if(k1 >= k2)
+                            continue;
+
+                        modelo->addConstr(variaveis->x[j][l][k1] <= 1 - variaveis->x[i][j][k2], "subCiclo_("+std::to_string(i)+"_"+std::to_string(j) + ")_("+std::to_string(j) + "_"+std::to_string(l)+")_"+std::to_string(k1)+"_"+std::to_string(k2));
+
+                    }
+
+
+                }
+            }
+
+        }
+
+
+    }
+
+    //*************************************************************************************************************************************************************
+    //Calcula o tempo gasto ao percorrer o arco i,j no periodo k
+    //ok
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j < numClientes; ++j)
+        {
+            if(instancia->matrizDistancias[i][j] != 0.0)
+            {
+                for(int k = 0; k < numPeriodos; ++k)
+                {
+                    linExpr = 0;
+                    linExpr = instancia->matrizVelocidade[i][j][k] * variaveis->tao[i][j][k] -  variaveis->d[i][j][k];
+
+                    modelo->addConstr(linExpr == 0, "tempo_"+std::to_string(i)+"_"+std::to_string(j)+"_"+std::to_string(k));
+                }
+            }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Restrição 7, restringe o somatorio de tempo do périodo k
+    //ok
+    for(int k = 0; k < numPeriodos; ++k)
+    {
+        linExpr = 0;
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            for(int j = 0; j < numClientes; ++j)
+            {
+                if(instancia->matrizDistancias[i][j] != 0.0)
+                    linExpr += variaveis->tao[i][j][k];
+            }
+        }
+
+        linExpr += -(instancia->vetorPeriodos[0].fim - instancia->vetorPeriodos[0].inicio);
+        modelo->addConstr(linExpr <= 0, "restricao_soma_tao_k_"+std::to_string(k));
+    }
+
+    //*************************************************************************************************************************************************************
+    // restrição 8, tempo de saida do cliente i, em um arco (i,j) no périodo k
+    //ok
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j < numClientes; ++j)
+        {
+           if(instancia->matrizDistancias[i][j] != 0)
+           {
+               for (int k = 0; k < instancia->numPeriodos; ++k)
+               {
+
+                   linExpr = 0;
+                   linExpr = variaveis->l[i] - instancia->vetorPeriodos[k].fim + variaveis->tao[i][j][k];
+                   linExpr += -instancia->vetorPeriodos[4].fim * (1 - variaveis->x[i][j][k]);
+
+                   modelo->addConstr(linExpr <= 0, "tempoSaida_cliente_"+std::to_string(i)+"_("+std::to_string(i)+"_"+std::to_string(j)+")_P_"+std::to_string(k));
+
+               }
+           }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Tempo de chegada
+    //ok
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for(int j = 0; j < numClientes; ++j)
+        {
+            if(instancia->matrizDistancias[i][j] != 0)
+            {
+                for (int k = 0; k < instancia->numPeriodos; ++k)
+                {
+
+                    linExpr = 0;
+                    linExpr = variaveis->a[j] - instancia->vetorPeriodos[k].inicio - variaveis->tao[i][j][k];
+                    linExpr += instancia->vetorPeriodos[4].fim * (1 - variaveis->x[i][j][k]);
+
+                    modelo->addConstr(linExpr >= 0, "tempoChegada_"+std::to_string(j)+"_("+std::to_string(i)+"_"+std::to_string(j)+")_P_"+std::to_string(k));
+
+
+                }
+            }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Tempo chegada de j
+    //ok
+    for(int i = 0; i < numClientes; ++i)
+    {
+        for (int j = 0; j < numClientes; ++j)
+        {
+            if (instancia->matrizDistancias[i][j] != 0)
+            {
+                linExpr = 0;
+                linExpr = variaveis->a[j] - variaveis->l[i] + instancia->vetorPeriodos[4].fim * (1 - variaveis->X[i][j]);
+
+                for(int k = 0; k < numPeriodos; ++k)
+                {
+
+                    linExpr += -variaveis->tao[i][j][k];
+                }
+
+                modelo->addConstr(linExpr >= 0, "tempoChegada_"+std::to_string(j)+"_Soma_k_("+std::to_string(i)+"_"+std::to_string(j)+")");
+            }
+        }
+
+    }
+
+    //*************************************************************************************************************************************************************
+    //Restrige tempo de saida de i
+    //ok
+    for(int i = 1; i < numClientes; ++i)
+    {
+        linExpr = 0;
+        linExpr = variaveis->a[i] + instancia->vetorClientes[i].tempoServico - variaveis->l[i];
+
+        modelo->addConstr(linExpr <= 0, "restringeTempoSaida_"+std::to_string(i));
+    }
+
+    //*************************************************************************************************************************************************************
+    //restrição 12, janela de tempo do cliente i
+    //ok
+    for(int i = 1; i < numClientes; ++i)
+    {
+        modelo->addConstr(variaveis->a[i] >= instancia->vetorClientes[i].inicioJanela, "inicio_janela_"+std::to_string(i));
+        modelo->addConstr(variaveis->a[i] <= instancia->vetorClientes[i].fimJanela, "fim_janela_"+std::to_string(i));
+    }
+
+    //*************************************************************************************************************************************************************
+    //Restrições de consumo de combustível
+    //ok
+    linExpr = 0;
+    GRBLinExpr linExprAux = 0;
+
+    for(int h = 0; h < NumVeic; ++h)
+    {
+
+        linExpr = 0;
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            for(int j = 0; j < numClientes; ++j)
+            {
+                if(instancia->matrizDistancias[i][j] != 0)
+                {
+
+                    for(int k = 0; k < numPeriodos; ++k)
+                        linExpr += instancia->matrizCo2[i][j][h][k] * variaveis->d[i][j][k];
+                }
+            }
+        }
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            for (int j = 0; j < numClientes; ++j)
+            {
+                if (instancia->matrizDistancias[i][j] != 0)
+                    linExpr += instancia->vetorVeiculos[h].pVeiculo * instancia->matrizDistancias[i][j] * variaveis->f[i][j];
+            }
+
+        }
+
+        linExpr += -variaveis->C[h];
+
+        modelo->addConstr(linExpr == 0, "combustivelVeiculoTipo_"+std::to_string(h));
+
+        linExprAux = 0;
+
+
+        linExprAux = instancia->vetorVeiculos[h].combustivel *(1-variaveis->T[h])  + variaveis->T[h]*instancia->vetorVeiculos[1].combustivel;
+
+        modelo->addConstr(variaveis->C[h] <= linExprAux, "limitaCombustivelTipo_"+std::to_string(h));
+
+    }
+
+    modelo->addConstr(variaveis->T[0] + variaveis->T[1] == 1, "limitaTipoVeiculo");
+
+
+    //*************************************************************************************************************************************************************
+
+    //ok
+
+
+
+    for (int u = 0; u < NumVeic; ++u)
+    {
+        for (int j = 1; j < numClientes; ++j)
+        {
+            if(instancia->matrizDistancias[0][j] != 0)
+                for (int k = 0; k < numPeriodos; ++k)
+                {
+                    linExpr = 0;
+                    linExpr = instancia->vetorVeiculos[u].inicioJanela - instancia->vetorPeriodos[k].fim + variaveis->tao[0][j][k] - instancia->vetorPeriodos[4].fim * (1 - variaveis->x[0][j][k]);
+
+                    modelo->addConstr(linExpr <= 0, "r_0_limita_tempo_saida_veiculo_" + std::to_string(u) + "_0_" + std::to_string(j) + "_" + std::to_string(k));
+                }
+        }
+    }
+
+
+    //*************************************************************************************************************************************************************
+
+    //ok
+    for(int u = 0; u < NumVeic; ++u)
+    {
+        for(int j = 1; j < numClientes; ++j)
+        {
+            if(instancia->matrizDistancias[0][j] != 0)
+                for(int k = 0; k < numPeriodos; ++k)
+                {
+                    linExpr = 0;
+                    linExpr = variaveis->a[j] - variaveis->tao[0][j][k] + instancia->vetorPeriodos[4].fim * (1 - variaveis->x[0][j][k]);
+
+                    modelo->addConstr(instancia->vetorVeiculos[u].inicioJanela <= linExpr, "r_1_limita_tempo_saida_veiculo_"+std::to_string(u)+"_0_"+std::to_string(j)+"_"+std::to_string(k));
+                }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //ok
+
+    for(int u = 0; u < NumVeic; ++u)
+    {
+        for(int i = 1; i < numClientes; ++i)
+        {
+            if(instancia->matrizDistancias[i][0] != 0)
+                for(int k = 0; k < numPeriodos; ++k)
+                {
+                    linExpr = 0;
+                    linExpr = instancia->vetorPeriodos[k].inicio - variaveis->tao[i][0][k] - instancia->vetorPeriodos[4].fim * (1 - variaveis->x[i][0][k]);
+
+                    modelo->addConstr(instancia->vetorVeiculos[u].fimJanela >= linExpr, "r_0_limita_tempo_chegada_veiculo_"+std::to_string(u)+"_"+std::to_string(i)+"_0_"+std::to_string(k));
+                }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+
+    for(int u = 0; u < NumVeic; ++u)
+    {
+        for(int i = 1; i < numClientes; ++i)
+        {
+            if(instancia->matrizDistancias[i][0] != 0)
+                for(int k = 0; k < numPeriodos; ++k)
+                {
+                    linExpr = 0;
+                    linExpr = variaveis->l[i] - variaveis->tao[i][0][k] - instancia->vetorPeriodos[4].fim * (1 - variaveis->x[i][0][k]);
+
+                    modelo->addConstr(instancia->vetorVeiculos[u].fimJanela >= linExpr, "r_1_limita_tempo_chegada_veiculo_"+std::to_string(u)+"_"+std::to_string(i)+"_0_"+std::to_string(k));
+                }
+        }
+    }
+
+    //*************************************************************************************************************************************************************
+    //Cria a função objetivo
+
+    for(int u = 0; u < NumVeic; ++u)
+    {
+        variaveis->funcaoObjetivo[u] = variaveis->C[u] * instancia->vetorVeiculos[u].cVeiculo;
+    }
+
+    modelo->setObjective(variaveis->funcaoObjetivo[0], GRB_MINIMIZE);
+    tipoVeiculo = false;
+
+
+}
+Modelo::Modelo::~Modelo()
+{
+
+
+    //deleteta variaveis
+
+    //*****************************************************************************************************************************************
+
+    //Deleteta variavel X
+
+    for(int i = 0; i < numClientes; ++i)
+        delete []variaveis->X[i];
+
+    delete []variaveis->X;
+
+
+    //*****************************************************************************************************************************************
+
+    //Deleta variavel x
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+
+        for (int j = 0; j < numClientes; ++j)
+        {
+
+                delete []variaveis->x[i][j];
+        }
+
+    }
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+
+        delete []variaveis->x[i];
+
+    }
+
+    delete []variaveis->x;
+
+
+
+    //*****************************************************************************************************************************************
+
+    //Deletando variavel d
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+        for (int j = 0; j < numClientes; ++j)
+        {
+            delete []variaveis->d[i][j];
+
+        }
+    }
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+            delete []variaveis->d[i];
+
+    }
+
+    delete []variaveis->d;
+
+
+
+    //*****************************************************************************************************************************************
+
+    //Deleta variavel tao
+
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+        for (int j = 0; j < numClientes; ++j)
+        {
+                delete []variaveis->tao[i][j];
+        }
+    }
+
+    for (int i = 0; i < numClientes; ++i)
+    {
+        delete []variaveis->tao[i];
+    }
+
+    delete []variaveis->tao;
+
+
+    //*****************************************************************************************************************************************
+
+    //Deleta variavel a
+
+    delete []variaveis->a;
+
+
+    //*****************************************************************************************************************************************
+
+    //Deleta variavel l
+
+    delete []variaveis->l;
+
+
+    //*****************************************************************************************************************************************
+
+    //Deleta variavel f
+
+    for(int i = 0; i < numClientes; ++i)
+    {
+            delete []variaveis->f[i];
+    }
+
+    delete [] variaveis->f;
+
+    //*****************************************************************************************************************************************
+    //Deleta variavel C
+
+    delete []variaveis->C;
+
+    //*****************************************************************************************************************************************
+    //Deleta variavel T
+
+    delete []variaveis->T;
+
+    //*****************************************************************************************************************************************
+    //Deleta a funçao objetivo
+
+    delete []variaveis->funcaoObjetivo;
+
+    //*****************************************************************************************************************************************
+
+    modelo = NULL;
+    delete variaveis;
+}
+
+bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso, Instancia::Instancia *instancia, long double *poluicao, long double *combustivel)
+{
+
+    if(tipo != this->tipoVeiculo)
+    {
+
+        this->tipoVeiculo = tipo;
+        modelo->setObjective(variaveis->funcaoObjetivo[tipo], GRB_MINIMIZE);
+        if(tipo)
+        {
+            variaveis->T[0].set(GRB_DoubleAttr_LB, 1);
+            variaveis->T[0].set(GRB_DoubleAttr_UB, 1);
+
+            variaveis->T[1].set(GRB_DoubleAttr_LB, 0);
+            variaveis->T[1].set(GRB_DoubleAttr_UB, 0);
+        }
+        else
+        {
+            variaveis->T[0].set(GRB_DoubleAttr_LB, 0);
+            variaveis->T[0].set(GRB_DoubleAttr_UB, 0);
+
+            variaveis->T[1].set(GRB_DoubleAttr_LB, 1);
+            variaveis->T[1].set(GRB_DoubleAttr_UB, 1);
+        }
+
+
+    }
+
+
+    int cliente1, cliente2;
+
+    for(int i = 1; i < tam; ++i)
+    {
+        cliente1 = vetClienteRota[i-1].cliente;
+        cliente2 = vetClienteRota[i].cliente;
+
+        std::cout<<cliente1<<" ";
+
+        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_LB, 1);
+        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_UB, 1);
+
+        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, peso);
+        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_LB, peso);
+
+        peso -= instancia->vetorClientes[cliente2].demanda;
+    }
+    std::cout<<vetClienteRota[tam-1].cliente<<'\n';
+
+    modelo->write("modelo.lp");
+
+    modelo->set(GRB_IntParam_NumericFocus, 2);
+    modelo->set(GRB_IntParam_Presolve, 2);
+    modelo->set(GRB_IntParam_Aggregate, 0);
+
+
+    modelo->set(GRB_IntParam_ScaleFlag, 2);
+    modelo->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+    //modelo->set(GRB_DoubleParam_ObjScale, -0.5);
+    modelo->set(GRB_IntParam_BarHomogeneous, 1);
+    modelo->set(GRB_IntParam_CrossoverBasis, 1);
+    modelo->set(GRB_IntParam_GomoryPasses, 0);
+    modelo->set(GRB_IntParam_Cuts, 1);
+
+
+    modelo->optimize();
+
+    if(modelo->get(GRB_IntAttr_Status) != GRB_OPTIMAL)
+    {
+        std::cout<<"Não existe solucao\n";
+
+        try
+        {
+
+
+            modelo->computeIIS();
+            modelo->write("modelo.ilp");
+        } catch (GRBException e)
+        {
+            std::cout<<"Erro: "<<e.getErrorCode()<<"\n"<<e.getMessage()<<'\n';
+            exit(-1);
+        }
+
+        return false;
+    }
+
+    modelo->write("modelo.sol");
+
+    if(modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
+    {
+
+        // Copia a solução
+
+        *poluicao = modelo->get(GRB_DoubleAttr_ObjVal);
+        *combustivel = variaveis->C[tipo].get(GRB_DoubleAttr_X);
+
+        for(int i = 0; i < tam; ++i)
+        {
+            vetClienteRota[i].tempoChegada = variaveis->a[vetClienteRota[i].cliente].get(GRB_DoubleAttr_X);
+            vetClienteRota[i].tempoSaida = variaveis->l[vetClienteRota[i].cliente].get(GRB_DoubleAttr_X);
+
+            if(i != 0)
+            {
+
+                for (int k = 0; k < numPeriodos; ++k)
+                {
+
+                    vetClienteRota[i].tempoPorPeriodo[k] = variaveis->tao[i-1][i][k].get(GRB_DoubleAttr_X);
+                    vetClienteRota[i].distanciaPorPeriodo[k] = variaveis->d[i-1][i][k].get(GRB_DoubleAttr_X);
+                    vetClienteRota[i].percorrePeriodo[k] = bool(variaveis->x[i-1][i][k].get(GRB_DoubleAttr_X));
+
+                }
+
+            }
+        }
+
+    }
+
+    for(int i = 1; i < tam; ++i)
+    {
+        cliente1 = vetClienteRota[i-1].cliente;
+        cliente2 = vetClienteRota[i].cliente;
+
+        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
+        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
+
+        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
+        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
+    }
+
+    if(modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
+    {
+
+        return true;
+    }
+    else
+    {
+        std::cout<<"Não existe solucao\n";
+
+        try
+        {
+            modelo->computeIIS();
+            modelo->write("modelo.ilp");
+        } catch (GRBException e)
+        {
+            std::cout<<"Erro: "<<e.getErrorCode()<<"\n"<<e.getMessage()<<'\n';
+            exit(-1);
+        }
+
+        return false;
+    }
+
+}

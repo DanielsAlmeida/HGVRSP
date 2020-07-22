@@ -1266,8 +1266,8 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
     if(tempoParaJanela)
         *tempoParaJanela = 0.0;
 
-    double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
-    const double distanciaTotal = distancia;
+    long double distancia = instancia->matrizDistancias[cliente1->cliente][cliente2->cliente];
+    const long double distanciaTotal = distancia;
 
     if(cliente1->cliente == 0)
     {
@@ -1278,9 +1278,9 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
         cliente2->distanciaAteCliente = cliente1->distanciaAteCliente + distanciaTotal;
 
 
-    double horaPartida = cliente1->tempoSaida;
-    double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux = 0.0, poluicao = 0.0, combustivel = 0.0, combustivelAux = 0.0;
-    double tempoEspera;
+    long double horaPartida = cliente1->tempoSaida;
+    long double velocidade, tempoRestantePeriodo, horario, horaChegada, poluicaoAux = 0.0, poluicao = 0.0, combustivel = 0.0, combustivelAux = 0.0;
+    long double tempoEspera;
     int periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
     int periodoChegada;
     static bool percorrePeriodo[5];
@@ -1352,7 +1352,7 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
         percorrePeriodo[periodoSaida] = true;
 
         tempoRestantePeriodo = instancia->vetorPeriodos[periodoSaida].fim - horaPartida;
-        double distanciatemp = distancia - tempoRestantePeriodo * velocidade;
+        long double distanciatemp = distancia - tempoRestantePeriodo * velocidade;
 
         if((periodoChegada!=periodoSaida) && (distanciatemp == 0.0))
             periodoChegada = periodoSaida;
@@ -1374,6 +1374,7 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
             combustivelAux += VerificaSolucao::combustivelRota(instancia, tipoVeiculo, tempoRestantePeriodo * velocidade,cliente1->cliente, cliente2->cliente, periodoSaida );
 
             cliente2->tempoPorPeriodo[periodoSaida] = tempoRestantePeriodo;
+            cliente2->distanciaPorPeriodo[periodoSaida] = tempoRestantePeriodo * velocidade;
 
             periodoSaida += 1;
 
@@ -1395,6 +1396,7 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
             cliente2->poluicao = poluicaoAux;
             cliente2->combustivel = combustivelAux;
             cliente2->tempoPorPeriodo[periodoSaida] = distancia/velocidade;
+            cliente2->distanciaPorPeriodo[periodoSaida] = distancia;
 
 
             distancia = 0;
@@ -1418,7 +1420,7 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
 
             cliente2->tempoSaida = (cliente2)->tempoChegada + instancia->vetorClientes[(cliente2)->cliente].tempoServico;
 
-            if (cliente2->tempoSaida <= instancia->vetorClientes[(cliente2)->cliente].fimJanela)
+            if ((cliente2->tempoChegada <= instancia->vetorClientes[(cliente2)->cliente].fimJanela) || ((cliente2->tempoChegada - instancia->vetorClientes[(cliente2)->cliente].fimJanela) <= 1.0/60))
             {
 
 
@@ -1428,7 +1430,7 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
             else
             {
                 if(tempoParaJanela)
-                    *tempoParaJanela = (cliente2->tempoSaida - instancia->vetorClientes[(cliente2)->cliente].fimJanela) + 0.25;
+                    *tempoParaJanela = (cliente2->tempoChegada - instancia->vetorClientes[(cliente2)->cliente].fimJanela) + 0.25;
 
                 if(erro)
                     *erro += "tempo saida maior que o final da janela de tempo\n";

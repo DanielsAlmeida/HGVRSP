@@ -21,15 +21,16 @@ namespace Solucao
 
         int cliente;                    //id do cliente
         bool percorrePeriodo[5];       //true se percorre periodo de i a j, false caso contrário.
-        double tempoPorPeriodo[5];
-        double tempoChegada;
-        double tempoSaida;
-        double poluicao;                // Poluição somente de i para j.
-        double combustivel;             // Combustível somente de i para j.
-        double combustivelRota;
-        double poluicaoRota;
-        double produtoCarga;
-        double distanciaAteCliente;
+        long double tempoPorPeriodo[5];
+        long double distanciaPorPeriodo[5];
+        long double tempoChegada;
+        long double tempoSaida;
+        long double poluicao;                // Poluição somente de i para j.
+        long double combustivel;             // Combustível somente de i para j.
+        long double combustivelRota;
+        long double poluicaoRota;
+        long double produtoCarga;
+        long double distanciaAteCliente;
 
         ClienteRota(){}
         ClienteRota(const ClienteRota &outro)
@@ -48,6 +49,7 @@ namespace Solucao
             {
                 percorrePeriodo[i] = outro.percorrePeriodo[i];
                 tempoPorPeriodo[i] = outro.tempoPorPeriodo[i];
+                distanciaPorPeriodo[i] = outro.distanciaPorPeriodo[i];
             }
         }
 
@@ -69,6 +71,7 @@ namespace Solucao
             {
                 percorrePeriodo[i] = outro.percorrePeriodo[i];
                 tempoPorPeriodo[i] = outro.tempoPorPeriodo[i];
+                distanciaPorPeriodo[i] = outro.distanciaPorPeriodo[i];
             }
         }
 
@@ -88,6 +91,7 @@ namespace Solucao
             {
                 percorrePeriodo[i] = outro->percorrePeriodo[i];
                 tempoPorPeriodo[i] = outro->tempoPorPeriodo[i];
+                distanciaPorPeriodo[i] = outro->distanciaPorPeriodo[i];
             }
         }
 

@@ -11,11 +11,12 @@
 #include "Vnd.h"
 #include "Movimentos_Paradas.h"
 #include "time.h"
+#include "Modelo.h"
 //  1588722899
 
 //1586725703
-#define Saida false
-#define TesteParametro false
+#define Saida true
+#define Grasp false
 
 //  UK_50x5_6 1593111849
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
@@ -66,10 +67,10 @@
 
 using namespace std;
 
-#if not TesteParametro
+#if Grasp
 int main(int num, char **agrs)
 {
-    //mtrace();
+
 
 
     std::map<int, double> parametroHeur0;
@@ -239,6 +240,35 @@ int main(int num, char **agrs)
         delete []matrixClienteBest[i];
 
     delete []matrixClienteBest;
+
+    [](Solucao::Solucao *solucao)
+    {
+
+        cout<<"Solucao:\n\n";
+
+#if Saida
+        for(auto it = solucao->vetorVeiculos[0]->listaClientes.begin(); it != solucao->vetorVeiculos[0]->listaClientes.end(); ++it)
+        {
+            auto prox = it;
+            ++prox;
+
+            cout<<(*it)->cliente<<" - "<<(*prox)->cliente<<" : ";
+
+            for(int i = 0; i < 5; ++i)
+            {
+                if((*prox)->percorrePeriodo[i])
+                    cout<<"("<<(*prox)->percorrePeriodo[i]<<" "<<(*prox)->distanciaPorPeriodo[i]<<" "<<(*prox)->tempoPorPeriodo[i]<<")  ";
+                else
+                    cout<<"(0 0 0) ";
+
+            }
+            cout<<"\n\n";
+
+            if((*prox)->cliente == 0)
+                break;
+        }
+#endif
+    }(solucao);
 
     strLog<<logAux;
     //strLog<<"\n\nRota:\n";
@@ -447,6 +477,14 @@ int main(int num, char **agrs)
         }
 
         cout<<"\n";
+        int i = 0;
+
+        for(auto veiculo : solucao->vetorVeiculos)
+        {
+            cout<<i<<" P: "<<veiculo->poluicao<<" C: "<<veiculo->combustivel<<'\n';
+
+            ++i;
+        }
 
 
 
@@ -530,13 +568,15 @@ int main(int num, char **agrs)
 
     bool logAtivo = false;
 
-    if(num != 6)
+    if(num != 3)
     {
-        cout<<"Numero incorreto de parametros.\n Num "<<num<<'\n';
+        cout<<"Numero incorreto de parametros.\n";
         exit(-1);
     }
 
+
     strInstancia = agrs[1];
+    saidaCompleta = agrs[2];
 
     ofstream file;
 
@@ -557,8 +597,6 @@ int main(int num, char **agrs)
     }
 
 
-    auto semente  = std::stoul(agrs[3]);
-
 
     string texto;
     std::time_t result = std::time(nullptr);
@@ -568,45 +606,64 @@ int main(int num, char **agrs)
 
     texto += "Nome: " + instanciaNome + "\n\n";
 
-    seed(semente);
-
-    texto += "Semente: " + std::to_string(semente) + "\n\n";
 
     Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
+    Modelo::Modelo *modelo;
 
-    instancia->getClientes();
-
-
-
-    auto vet = instancia->vetorClientes;
-
-    #define numAlfas  18
-    float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
+    try
+    {
 
 
+        GRBEnv env;
+        env.set(GRB_IntParam_OutputFlag, 1);
+        GRBModel grb_modelo = GRBModel(env);
+
+        modelo = new Modelo::Modelo(instancia, &grb_modelo);
 
 
-
-    std::stringstream strLog;
-    string logAux;
-
-    clock_t c_start = clock();
-
-    const double parametro = std::atof(agrs[5]);
-
-     const double vetParametro[7] = {parametro, parametro, parametro, parametro, parametro, parametro, parametro};
-
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, Heuristica_6, vetParametro);
+        // .mps, .rew, .lp, .rlp, or .ilp
 
 
 
-    clock_t c_end = clock();
+
+        Solucao::ClienteRota vetCliente[7];
+
+        vetCliente[0].cliente = 0;
+        vetCliente[1].cliente = 7;
+        vetCliente[2].cliente = 8;
+        vetCliente[3].cliente = 3;
+        vetCliente[4].cliente = 1;
+        vetCliente[5].cliente = 4;
+        vetCliente[6].cliente = 0;
 
 
-    cout<<solucao->numSolucoesInv<<'\n';
+        int peso = 0;
+        for (int i = 1; i < 6; ++i)
+            peso += instancia->vetorClientes[vetCliente[i].cliente].demanda;
 
-    delete solucao;
-    delete instancia;
+        long double combustivel, poluicao;
+
+        if (modelo->criaRota(vetCliente, 7, true, peso, instancia, &poluicao, &combustivel))
+        {
+
+            cout << "Rota gerada!!\n";
+            cout<<"Combustivel: "<<combustivel<<'\n';
+            cout<<"Polucao: "<<poluicao<<'\n';
+
+        }
+
+
+        delete instancia;
+        delete modelo;
+    } catch (GRBException e)
+    {
+        cout<<"Erro code: "<<e.getErrorCode()<<"\nmessage: "<<e.getMessage()<<'\n';
+
+        delete instancia;
+        delete modelo;
+
+        exit(-1);
+    }
 
     return 0;
 }
