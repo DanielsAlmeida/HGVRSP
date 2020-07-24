@@ -626,35 +626,62 @@ int main(int num, char **agrs)
 
 
 
-        Solucao::ClienteRota vetCliente[7];
-
+        Solucao::ClienteRota *vetCliente = new Solucao::ClienteRota[MaxTamVetClientesMatrix];
         vetCliente[0].cliente = 0;
-        vetCliente[1].cliente = 7;
-        vetCliente[2].cliente = 8;
-        vetCliente[3].cliente = 3;
-        vetCliente[4].cliente = 1;
-        vetCliente[5].cliente = 4;
-        vetCliente[6].cliente = 0;
 
-
-        int peso = 0;
-        for (int i = 1; i < 6; ++i)
-            peso += instancia->vetorClientes[vetCliente[i].cliente].demanda;
-
+        int tipo, tam, peso, cliente = 1;
         long double combustivel, poluicao;
 
-        if (modelo->criaRota(vetCliente, 7, true, peso, instancia, &poluicao, &combustivel))
+
+        do
         {
+            cout<<"Tipo: ";
+            cin>>tipo;
 
-            cout << "Rota gerada!!\n";
-            cout<<"Combustivel: "<<combustivel<<'\n';
-            cout<<"Polucao: "<<poluicao<<'\n';
+            if(tipo != -1)
+            {
 
-        }
+                cout<<"Rota: 0 ";
+
+                tam = cliente = 1;
+                peso = 0;
+                combustivel = poluicao = 0.0;
+
+                do
+                {
+
+                    cin>>cliente;
+                    ++tam;
+
+                    vetCliente[tam-1].cliente = cliente;
+                    peso += instancia->vetorClientes[cliente].demanda;
+
+                }while(cliente);
+
+                if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel))
+                {
+
+                    cout << "Rota gerada!!\n";
+                    cout<<"Combustivel: "<<combustivel<<'\n';
+                    cout<<"Polucao: "<<poluicao<<'\n';
+
+                }
+                else
+                {
+                    cout<<"Rota errada!!\n";
+                }
+
+                cout<<"\n\n***********************************************************************\n\n";
+
+            }
+
+        }while (tipo != -1);
+
 
 
         delete instancia;
         delete modelo;
+
     } catch (GRBException e)
     {
         cout<<"Erro code: "<<e.getErrorCode()<<"\nmessage: "<<e.getMessage()<<'\n';

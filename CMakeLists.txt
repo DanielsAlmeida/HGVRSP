@@ -56,7 +56,7 @@ set(    SOURCE_FILES
 add_executable(HGVRSP ${SOURCE_FILES})
         
 target_link_libraries (HGVRSP gurobi_c++)
-#target_link_libraries (HGVRSP gurobi90)
-target_link_libraries (HGVRSP gurobi81)
+target_link_libraries (HGVRSP gurobi90)
+#target_link_libraries (HGVRSP gurobi81)
 
 #target_link_libraries(HGVRSP ${GUROBI_LIBRARY})
