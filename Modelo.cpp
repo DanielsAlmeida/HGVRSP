@@ -233,6 +233,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
 
     GRBLinExpr linExprDist_d = 0;
 
+
+
     for (int i = 0; i < numClientes; ++i)
     {
         for (int j = 0; j < numClientes; ++j)
@@ -258,6 +260,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //Cria restrição 2, Zera a variavel x se (X = 0)
     //ok
     GRBLinExpr linExpr_limitaVar_x_por_X = 0;
+
+
 
     for (int i = 0; i < numClientes; ++i)
     {
@@ -361,13 +365,18 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     {
         for(int i = 0; i < numClientes; ++i)
         {
-            if (i == j)
+            if(instancia->matrizDistancias[i][j] == 0.0)
                 continue;
 
             for (int l = 0; l < numClientes; ++l)
             {
                 if((l == i) || (l == j))
                     continue;
+
+                if(instancia->matrizDistancias[j][l] == 0.0)
+                    continue;
+
+
 
                 for (int k1 = 0; k1 < numPeriodos; ++k1)
                 {

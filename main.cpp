@@ -12,11 +12,18 @@
 #include "Movimentos_Paradas.h"
 #include "time.h"
 #include "Modelo.h"
+#include <string>
+#include <fstream>
 //  1588722899
 
 //1586725703
-#define Saida true
-#define Grasp false
+#define Saida false
+#define Grasp 0
+#define RotaMip 1
+#define VerificaSol 2
+
+#define Opcao VerificaSol
+
 
 //  UK_50x5_6 1593111849
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
@@ -67,7 +74,7 @@
 
 using namespace std;
 
-#if Grasp
+#if Opcao == Grasp
 int main(int num, char **agrs)
 {
 
@@ -235,6 +242,29 @@ int main(int num, char **agrs)
 
     delete []vetCandInteracoes;
 
+/* ******************************************************************************************************************************************************************* */
+/* *************************************************************TESTE FUNC VERIFICACAO MIP**************************************************************************** */
+    string erro;
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+        if(veiculo->tipo != 2)
+        {
+            bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
+
+            for(auto cliente : veiculo->listaClientes)
+                cout<<cliente->cliente<<' ';
+
+            cout<<" : "<<resultado<<'\n';
+
+            if(!resultado)
+                cout<<erro<<"\n\n";
+        }
+    }
+
+/* **********************************************************FIM TESTE FUNC VERIFICACAO MIP*************************************************************************** */
+/* ******************************************************************************************************************************************************************* */
+
     //desaloca matrix
     for(int i = 0; i < instancia->numClientes; ++i)
         delete []matrixClienteBest[i];
@@ -244,9 +274,12 @@ int main(int num, char **agrs)
     [](Solucao::Solucao *solucao)
     {
 
-        cout<<"Solucao:\n\n";
+
 
 #if Saida
+
+        cout<<"Solucao:\n\n";
+
         for(auto it = solucao->vetorVeiculos[0]->listaClientes.begin(); it != solucao->vetorVeiculos[0]->listaClientes.end(); ++it)
         {
             auto prox = it;
@@ -556,7 +589,7 @@ int main(int num, char **agrs)
 }
 
 
-# else
+# elif Opcao == RotaMip
  int main(int num, char **agrs)
 {
 
@@ -695,4 +728,221 @@ int main(int num, char **agrs)
     return 0;
 }
 
+#elif Opcao == VerificaSol
+
+int main(int num, char **args)
+{
+    const string Diretorio = "/home/igor/Documentos/matPlotLib/Testes/08_07_20_Grasp/resultados_07_07_2020_14_45_01/resultados_07_07_2020_14_56_19/resultadosCompletos/";
+    string strInstancia;
+    string instanciaNome;
+
+
+
+
+    if (num < 2)
+    {
+        cout << "Numero incorreto de parametros.\n";
+        exit(-1);
+    }
+
+
+    GRBEnv env;
+    env.set(GRB_IntParam_OutputFlag, 0);
+
+
+    for(int posicao = 1; posicao < num; ++posicao)
+    {
+
+
+        strInstancia = args[posicao];
+
+
+        ofstream file;
+
+        for (int i = 0; i < strInstancia.length(); ++i)
+        {
+            if (strInstancia[i] != '/')
+            {
+
+                if (strInstancia[i] == '.')
+                    break;
+                instanciaNome += strInstancia[i];
+
+            } else
+                instanciaNome = "";
+
+        }
+
+        cout<<instanciaNome<<'\n';
+
+        string texto;
+
+
+        Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
+        Modelo::Modelo *modelo;
+
+        try
+        {
+
+
+
+            GRBModel grb_modelo = GRBModel(env);
+
+            modelo = new Modelo::Modelo(instancia, &grb_modelo);
+
+
+            Solucao::ClienteRota *vetCliente = new Solucao::ClienteRota[MaxTamVetClientesMatrix];
+            vetCliente[0].cliente = 0;
+
+            int tipo, tam, peso, cliente = 1;
+            long double combustivel, poluicao;
+
+            for (int execucao = 0; execucao < 10; ++execucao)
+            {
+                const string execucaoStr = Diretorio + instanciaNome + '_' + std::to_string(execucao) + ".txt";
+                std::ifstream file;
+
+                file.open(execucaoStr, ios_base::out);
+
+                if (!file.is_open())
+                {
+                    cout << "Erro ao abrir arquivo " << execucaoStr << '\n';
+                    exit(-1);
+                }
+
+                string lixo;
+
+                for (int i = 0; i < 6; ++i)
+                    getline(file, lixo);
+
+                int aux;
+
+                file >> aux;
+
+                const int NumRotas = instancia->numVeiculos;
+
+                getline(file, lixo);
+
+
+                for (int rota = 0; rota < NumRotas; ++rota)
+                {
+
+
+
+                    getline(file, lixo);
+                    tipo = rota % 2;
+
+                    file >> vetCliente[0].cliente;
+
+                    tam = cliente = 1;
+
+                    peso = 0;
+                    combustivel = poluicao = 0.0;
+
+                    do
+                    {
+
+                        file >> cliente;
+                        ++tam;
+
+                        vetCliente[tam - 1].cliente = cliente;
+                        peso += instancia->vetorClientes[cliente].demanda;
+
+                    } while (cliente);
+
+                    if(tam <= 2)
+                        continue;
+
+                    if (!modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel))
+                    {
+
+                        cout << "Rota errada!!\n";
+                        exit(-1);
+                    }
+
+                    Solucao::Veiculo veiculo(tipo);
+
+                    veiculo.combustivel = combustivel;
+                    veiculo.poluicao = poluicao;
+                    veiculo.carga = peso;
+
+                    auto it = veiculo.listaClientes.begin();
+                    auto itF = it++;
+
+
+                    delete *it;
+                    veiculo.listaClientes.pop_back();
+
+                    delete *itF;
+                    veiculo.listaClientes.pop_back();
+
+
+                    Solucao::ClienteRota *clienteRota = NULL;
+
+                    for (int j = 0; j < tam; ++j)
+                    {
+                        clienteRota = new Solucao::ClienteRota;
+
+                        clienteRota->cliente = vetCliente[j].cliente;
+
+                        clienteRota->tempoChegada = vetCliente[j].tempoChegada;
+                        clienteRota->tempoSaida = vetCliente[j].tempoSaida;
+
+                        for (int k = 0; k < instancia->numPeriodos; ++k)
+                        {
+
+                            clienteRota->tempoPorPeriodo[k] = vetCliente[j].tempoPorPeriodo[k];
+                            clienteRota->distanciaPorPeriodo[k] = vetCliente[j].distanciaPorPeriodo[k];
+                            clienteRota->percorrePeriodo[k] = vetCliente[j].percorrePeriodo[k];
+
+                        }
+
+                        veiculo.listaClientes.push_back(clienteRota);
+                        clienteRota = NULL;
+
+                    }
+
+                    string erro;
+
+                    if (!VerificaSolucao::verificaVeiculoRotaMip(&veiculo, instancia, NULL, &erro))
+                    {
+                        cout << "ERRO\nInstancia: " << instanciaNome << "\nExecucao: " << execucao << "\n";
+                        cout << "Rota: " << veiculo.getRota() << "\nMotivo: " << erro << "\n\n";
+
+                        delete modelo;
+                        delete[]vetCliente;
+                        delete instancia;
+
+                        exit(-1);
+                    }
+
+
+                }
+
+                file.close();
+            }
+
+            delete instancia;
+            delete modelo;
+            modelo = NULL;
+
+        } catch (GRBException e)
+        {
+            cout<<"Erro Code : "<<e.getErrorCode()<<'\n';
+            cout<<"Mensagem: "<<e.getMessage()<<'\n';
+
+            exit(-1);
+
+        }
+
+
+
+    }
+
+
+    cout<<"Passou em todos os testes!!\n";
+
+    return 0;
+
+}
 #endif

@@ -25,15 +25,20 @@ namespace VerificaSolucao
     double calculaPoluicaoRestrigindoVelocidade(const Instancia::Instancia *const instancia, int no1, int no2, double horaSaida, double distancia);
 
 
-    double poluicaoRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k);
+    long double
+    poluicaoRota(const Instancia::Instancia *const instancia, int tipoVeiculo, long double distanciaParcial, int i, int j, int k);
     double poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
 
-    double combustivelRota(const Instancia::Instancia *const instancia, int tipoVeiculo, double distanciaParcial, int i, int j, int k);
-    double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
+    long double
+    combustivelRota(const Instancia::Instancia *const instancia, int tipoVeiculo, long double distanciaParcial, int i, int j, int k);
+    long double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
 
     bool verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
-    bool verificaCombustivel(const double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
-    bool verificaCombustivel(const double combustivel, const int tipoVeiculo, const Instancia::Instancia *const instancia);
+    bool verificaCombustivel(const long double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
+    bool verificaCombustivel(const long double combustivel, const int tipoVeiculo, const Instancia::Instancia *const instancia);
+
+    bool verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia,
+                                double *distanciaTotal, string *erro);
 
 
 
