@@ -5,6 +5,7 @@
 
 #include "Modelo.h"
 #include <cstdio>
+#include "Construtivo.h"
 
 Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : numClientes(instancia->numClientes), numVeiculos(instancia->numVeiculos), numPeriodos(instancia->numPeriodos), modelo(grbModel)
 {
@@ -850,6 +851,7 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
 
         this->tipoVeiculo = tipo;
         modelo->setObjective(variaveis->funcaoObjetivo[tipo], GRB_MINIMIZE);
+
         if(tipo)
         {
             variaveis->T[0].set(GRB_DoubleAttr_LB, 1);
@@ -873,6 +875,36 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
 
     int cliente1, cliente2;
 
+    long double combustivelAux = 0.0, poluicaoAux = 0.0;
+    bool viavel = true;
+    int pesoAux = peso;
+
+    vetClienteRota[0].tempoSaida = (tipo ?  0.5 : 0.0);
+
+    for(int i = 1; i < tam; ++i)
+    {
+        if(!Construtivo::determinaHorario(&vetClienteRota[i-1], &vetClienteRota[i], instancia, pesoAux, tipoVeiculo, NULL, NULL))
+            return false;
+
+
+        poluicaoAux += vetClienteRota[i].poluicao;
+        combustivelAux += vetClienteRota[i].combustivel;
+
+        if(!VerificaSolucao::verificaCombustivel(combustivelAux, tipoVeiculo, instancia))
+            viavel = false;
+
+        pesoAux -= instancia->vetorClientes[vetClienteRota[i].cliente].demanda;
+
+    }
+
+    if(viavel)
+    {
+        if (vetClienteRota[1].tempoChegada < instancia->vetorClientes[vetClienteRota[1].cliente].inicioJanela)
+        {
+            vetClienteRota[1].tempoChegada = instancia->vetorClientes[vetClienteRota[1].cliente].inicioJanela;
+            vetClienteRota[0].tempoSaida = vetClienteRota[1].tempoChegada - vetClienteRota[1].tempoPorPeriodo[0];
+        }
+    }
 
     for(int i = 1; i < tam; ++i)
     {
@@ -885,8 +917,23 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
         variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, peso);
         variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_LB, peso);
 
+        if(viavel)
+        {
+            variaveis->l[cliente1].set(GRB_DoubleAttr_Start, vetClienteRota[i-1].tempoSaida);
+            variaveis->a[cliente2].set(GRB_DoubleAttr_Start, vetClienteRota[i].tempoChegada);
+
+            for(int k = 0; k < instancia->numPeriodos; ++k)
+            {
+
+                variaveis->x[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, vetClienteRota[i].percorrePeriodo[k]);
+                variaveis->tao[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, vetClienteRota[i].tempoPorPeriodo[k]);
+                variaveis->d[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, vetClienteRota[i].distanciaPorPeriodo[k]);
+            }
+        }
+
         peso -= instancia->vetorClientes[cliente2].demanda;
     }
+
 
     //modelo->update();
     modelo->reset(0);
@@ -944,6 +991,20 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
 
         variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_LB, 0.0);
         variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0.0);
+
+        if(viavel)
+        {
+            variaveis->l[cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+            variaveis->a[cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+
+            for(int k = 0; k < instancia->numPeriodos; ++k)
+            {
+
+                variaveis->x[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                variaveis->tao[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                variaveis->d[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+            }
+        }
     }
 
     modelo->set(GRB_IntParam_SubMIPNodes, GRB_MAXINT);

@@ -22,7 +22,7 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao VerificaSol
+#define Opcao RotaMip
 
 
 //  UK_50x5_6 1593111849

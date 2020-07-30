@@ -1285,10 +1285,13 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
     int periodoChegada;
     static bool percorrePeriodo[5];
 
-    for(int i = 0; i < 5; ++i)
-        percorrePeriodo[i] = false;
+    percorrePeriodo[0] = percorrePeriodo[1] = percorrePeriodo[2] = percorrePeriodo[3] = percorrePeriodo[4] = false;
 
+    cliente2->tempoPorPeriodo[0] = cliente2->tempoPorPeriodo[1] = cliente2->tempoPorPeriodo[2] = cliente2->tempoPorPeriodo[3] =
+            cliente2->tempoPorPeriodo[4] = 0.0;
 
+    cliente2->distanciaPorPeriodo[0] = cliente2->distanciaPorPeriodo[1] = cliente2->distanciaPorPeriodo[2] = cliente2->distanciaPorPeriodo[3] =
+    cliente2->distanciaPorPeriodo[4] = 0.0;
 
     velocidade = instancia->matrizVelocidade[cliente1->cliente][cliente2->cliente][periodoSaida];
 
