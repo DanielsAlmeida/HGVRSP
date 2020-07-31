@@ -1423,7 +1423,7 @@ bool Construtivo::determinaHorario(Solucao::ClienteRota *cliente1, Solucao::Clie
 
             cliente2->tempoSaida = (cliente2)->tempoChegada + instancia->vetorClientes[(cliente2)->cliente].tempoServico;
 
-            if ((cliente2->tempoChegada <= instancia->vetorClientes[(cliente2)->cliente].fimJanela) || ((cliente2->tempoChegada - instancia->vetorClientes[(cliente2)->cliente].fimJanela) <= 1.0/60))
+            if ((cliente2->tempoChegada <= instancia->vetorClientes[(cliente2)->cliente].fimJanela) || ((cliente2->tempoChegada - instancia->vetorClientes[(cliente2)->cliente].fimJanela) <= 5e-3))
             {
 
 

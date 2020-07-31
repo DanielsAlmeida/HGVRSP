@@ -22,7 +22,7 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao RotaMip
+#define Opcao VerificaSol
 
 
 //  UK_50x5_6 1593111849
@@ -813,7 +813,9 @@ int main(int num, char **args)
                 string lixo;
 
                 for (int i = 0; i < 6; ++i)
+                {
                     getline(file, lixo);
+                }
 
                 int aux;
 
@@ -821,17 +823,22 @@ int main(int num, char **args)
 
                 const int NumRotas = instancia->numVeiculos;
 
-                getline(file, lixo);
 
+
+                getline(file, lixo);
+                //cout<<lixo<<"||\n";
 
                 for (int rota = 0; rota < NumRotas; ++rota)
                 {
 
 
-
-                    getline(file, lixo);
+                    //lixo = "";
+                    //getline(file, lixo);
                     tipo = rota % 2;
 
+                    //cout<<lixo<<"||\n";
+
+                    file >> vetCliente[0].cliente;
                     file >> vetCliente[0].cliente;
 
                     tam = cliente = 1;
@@ -843,6 +850,7 @@ int main(int num, char **args)
                     {
 
                         file >> cliente;
+
                         ++tam;
 
                         vetCliente[tam - 1].cliente = cliente;
@@ -852,68 +860,99 @@ int main(int num, char **args)
 
                     if(tam <= 2)
                         continue;
+                    int resultado = modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel);
 
-                    if (!modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel))
+                    if (resultado == 0)
                     {
 
                         cout << "Rota errada!!\n";
+                        cout<<"Execucao: "<<execucao<<'\n';
+
+                        for(int i = 0; i < tam; ++i)
+                            cout<<vetCliente[i].cliente<<' ';
+
+                        cout<<'\n';
+
                         exit(-1);
                     }
 
-                    Solucao::Veiculo veiculo(tipo);
-
-                    veiculo.combustivel = combustivel;
-                    veiculo.poluicao = poluicao;
-                    veiculo.carga = peso;
-
-                    auto it = veiculo.listaClientes.begin();
-                    auto itF = it++;
-
-
-                    delete *it;
-                    veiculo.listaClientes.pop_back();
-
-                    delete *itF;
-                    veiculo.listaClientes.pop_back();
-
-
-                    Solucao::ClienteRota *clienteRota = NULL;
-
-                    for (int j = 0; j < tam; ++j)
+                    if(resultado == 1)
                     {
-                        clienteRota = new Solucao::ClienteRota;
+                        Solucao::Veiculo veiculo(tipo);
 
-                        clienteRota->cliente = vetCliente[j].cliente;
+                        veiculo.combustivel = combustivel;
+                        veiculo.poluicao = poluicao;
+                        veiculo.carga = peso;
 
-                        clienteRota->tempoChegada = vetCliente[j].tempoChegada;
-                        clienteRota->tempoSaida = vetCliente[j].tempoSaida;
+                        auto it = veiculo.listaClientes.begin();
+                        auto itF = it++;
 
-                        for (int k = 0; k < instancia->numPeriodos; ++k)
+
+                        delete *it;
+                        veiculo.listaClientes.pop_back();
+
+                        delete *itF;
+                        veiculo.listaClientes.pop_back();
+
+
+                        Solucao::ClienteRota *clienteRota = NULL;
+
+                        for (int j = 0; j < tam; ++j)
                         {
+                            clienteRota = new Solucao::ClienteRota;
 
-                            clienteRota->tempoPorPeriodo[k] = vetCliente[j].tempoPorPeriodo[k];
-                            clienteRota->distanciaPorPeriodo[k] = vetCliente[j].distanciaPorPeriodo[k];
-                            clienteRota->percorrePeriodo[k] = vetCliente[j].percorrePeriodo[k];
+                            clienteRota->cliente = vetCliente[j].cliente;
+
+                            clienteRota->tempoChegada = vetCliente[j].tempoChegada;
+                            clienteRota->tempoSaida = vetCliente[j].tempoSaida;
+
+                            for (int k = 0; k < instancia->numPeriodos; ++k)
+                            {
+
+                                clienteRota->tempoPorPeriodo[k] = vetCliente[j].tempoPorPeriodo[k];
+                                clienteRota->distanciaPorPeriodo[k] = vetCliente[j].distanciaPorPeriodo[k];
+                                clienteRota->percorrePeriodo[k] = vetCliente[j].percorrePeriodo[k];
+
+                            }
+
+                            veiculo.listaClientes.push_back(clienteRota);
+                            clienteRota = NULL;
 
                         }
 
-                        veiculo.listaClientes.push_back(clienteRota);
-                        clienteRota = NULL;
+                        string erro;
 
-                    }
+                        if (!VerificaSolucao::verificaVeiculoRotaMip(&veiculo, instancia, NULL, &erro))
+                        {
+                            cout << "ERRO\nInstancia: " << instanciaNome << "\nExecucao: " << execucao << "\n";
+                            cout << "Rota: " << veiculo.getRota() << "\n\nMotivo: " << erro << "\n\n";
 
-                    string erro;
+                            cout<<"tempoSaida 0: "<<vetCliente[0].tempoSaida<<'\n';
+                            cout<<"tempoChegada 1: "<<vetCliente[1].tempoChegada<<'\n';
+                            cout<<"tempoSaida 1: "<<vetCliente[1].tempoSaida<<'\n';
+                            cout<<"tempoChegada 0: "<<vetCliente[2].tempoChegada<<'\n';
 
-                    if (!VerificaSolucao::verificaVeiculoRotaMip(&veiculo, instancia, NULL, &erro))
-                    {
-                        cout << "ERRO\nInstancia: " << instanciaNome << "\nExecucao: " << execucao << "\n";
-                        cout << "Rota: " << veiculo.getRota() << "\nMotivo: " << erro << "\n\n";
+                            for(int i = 1; i < tam; ++i)
+                            {
+                                cout<<vetCliente[i-1].cliente<<' '<<vetCliente[i].cliente<<" : ";
 
-                        delete modelo;
-                        delete[]vetCliente;
-                        delete instancia;
+                                for(int k = 0; k < 5; ++k)
+                                {
+                                    if(vetCliente[i].percorrePeriodo[k])
+                                        cout<<k<<' ';
+                                }
+                                cout<<"\n";
+                            }
 
-                        exit(-1);
+                            delete modelo;
+                            delete[]vetCliente;
+                            delete instancia;
+
+                            exit(-1);
+                        }
+
+
+
                     }
 
 

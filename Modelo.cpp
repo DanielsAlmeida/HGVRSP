@@ -17,13 +17,14 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     variaveis = new Variaveis;
 
     modelo->set(GRB_StringAttr_ModelName, "HGVRSP_model");
-    modelo->set(GRB_IntParam_NumericFocus, 3);
+    modelo->set(GRB_IntParam_NumericFocus, 2);
     modelo->set(GRB_IntParam_ScaleFlag, 2);
-    modelo->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+    modelo->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL); //GRB_METHOD_DUAL
     //modelo->set(GRB_DoubleParam_ObjScale, -0.5);
     modelo->set(GRB_IntParam_BarHomogeneous, 1);
     modelo->set(GRB_IntParam_CrossoverBasis, 1);
-    modelo->set(GRB_IntParam_GomoryPasses, 0);
+    modelo->set(GRB_IntParam_GomoryPasses, 4);
+    modelo->set(GRB_IntParam_Cuts, 1);
 
 
     //Cria variaveis
@@ -336,31 +337,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //*************************************************************************************************************************************************************
     //Restriçao 5, sub-ciclo
     //ok
-    /*for (int j = 1; j < numClientes; ++j)
-    {
 
-        for (int k = 0; k < numPeriodos; ++k)
-        {
-
-            linExpr = 0;
-            for(int k_ = 1; k_ < k; ++k_)
-            {
-                for(int l = 0; l < numClientes; ++l)
-                {
-                    if((instancia->matrizDistancias[j][l] != 0.0) && (l != j))
-                        linExpr += variaveis->x[j][l][k_];
-                }
-            }
-
-            for(int i = 0; i < numClientes; ++i)
-            {
-                if((instancia->matrizDistancias[i][j] != 0.0) && (i != j))
-                    linExpr += variaveis->x[i][j][k];
-            }
-
-            modelo->addConstr(linExpr <= 1, "subCiclo_"+std::to_string(j)+"_"+std::to_string(k));
-        }
-    }*/
 
     for (int j = 1; j < numClientes; ++j)
     {
@@ -602,7 +579,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
 
     //-19
 
-    for (int u = inicio; u < NumVeic; ++u)
+    for (int u = inicio; u < 1; ++u)
     {
 
 
@@ -614,12 +591,18 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
                     linExpr = 0;
                     double temp = 0.0;//instancia->vetorPeriodos[4].fim;
                     linExpr = variaveis->tao[0][j][k]  + instancia->vetorPeriodos[4].fim * variaveis->x[0][j][k];
+                    double val = instancia->vetorPeriodos[4].fim - instancia->vetorVeiculos[u].inicioJanela + instancia->vetorPeriodos[k].fim;
 
-                    if(u==1)
+                    /*if(u==1)
                         temp = 0.5;
 
-                    double val = instancia->vetorPeriodos[4].fim - instancia->vetorVeiculos[u].inicioJanela + instancia->vetorPeriodos[k].fim;
+
                     modelo->addConstr(linExpr <= val + temp*variaveis->T[u], "r_0_limita_tempo_saida_veiculo_" + std::to_string(u) + "_0_" + std::to_string(j) + "_" + std::to_string(k));
+                     */
+
+                    temp = -0.5;
+                    modelo->addConstr(linExpr <= val + temp*variaveis->T[0], "r_0_limita_tempo_saida_veiculo_0_e_1_0_" + std::to_string(j) + "_" + std::to_string(k));
+
                 }
         }
     }
@@ -628,7 +611,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //*************************************************************************************************************************************************************
     //-20
     //ok
-    for(int u = inicio; u < NumVeic; ++u)
+    for(int u = inicio; u < 1; ++u)
     {
         for(int j = 1; j < numClientes; ++j)
         {
@@ -640,11 +623,16 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
                     linExpr = -variaveis->a[j] + variaveis->tao[0][j][k] + instancia->vetorPeriodos[4].fim *variaveis->x[0][j][k];
                     double val = instancia->vetorPeriodos[4].fim - instancia->vetorVeiculos[u].inicioJanela;
 
-                    double temp = 0;//instancia->vetorPeriodos[4].fim;
+                    /*double temp = 0;//instancia->vetorPeriodos[4].fim;
                     if(u == 1)
                         temp = 0.5;
 
                     modelo->addConstr(linExpr <= val + temp * variaveis->T[u], "r_1_limita_tempo_saida_veiculo_"+std::to_string(u)+"_0_"+std::to_string(j)+"_"+std::to_string(k));
+                     */
+                    double temp = -0.5;//instancia->vetorPeriodos[4].fim;
+
+
+                    modelo->addConstr(linExpr <= val + temp * variaveis->T[0], "r_1_limita_tempo_saida_veiculo_0_e_1__0_"+std::to_string(j)+"_"+std::to_string(k));
                 }
         }
     }
@@ -843,8 +831,9 @@ Modelo::Modelo::~Modelo()
     delete variaveis;
 }
 
-bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso, Instancia::Instancia *instancia, long double *poluicao, long double *combustivel)
+int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso, Instancia::Instancia *instancia, long double *poluicao, long double *combustivel)
 {
+
 
     if(tipo != this->tipoVeiculo)
     {
@@ -876,7 +865,7 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
     int cliente1, cliente2;
 
     long double combustivelAux = 0.0, poluicaoAux = 0.0;
-    bool viavel = true;
+    bool viavel = false;
     int pesoAux = peso;
 
     vetClienteRota[0].tempoSaida = (tipo ?  0.5 : 0.0);
@@ -884,7 +873,10 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
     for(int i = 1; i < tam; ++i)
     {
         if(!Construtivo::determinaHorario(&vetClienteRota[i-1], &vetClienteRota[i], instancia, pesoAux, tipoVeiculo, NULL, NULL))
-            return false;
+        {
+            cout<<"Janela de tempo\n";
+            return -1;
+        }
 
 
         poluicaoAux += vetClienteRota[i].poluicao;
@@ -899,10 +891,37 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
 
     if(viavel)
     {
-        if (vetClienteRota[1].tempoChegada < instancia->vetorClientes[vetClienteRota[1].cliente].inicioJanela)
+        variaveis->C[tipo].set(GRB_DoubleAttr_Start, combustivelAux);
+
+        for(int i = 1; i < tam - 1; ++i)
         {
-            vetClienteRota[1].tempoChegada = instancia->vetorClientes[vetClienteRota[1].cliente].inicioJanela;
-            vetClienteRota[0].tempoSaida = vetClienteRota[1].tempoChegada - vetClienteRota[1].tempoPorPeriodo[0];
+            if (vetClienteRota[i].tempoChegada < instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela)
+            {
+
+                int ultimoPeriodo = -1;
+
+                for(int k = 4; k >= 0; --k)
+                {
+                    if(vetClienteRota[i].percorrePeriodo[k])
+                    {
+                        ultimoPeriodo = k;
+                        break;
+                    }
+                }
+
+                if(ultimoPeriodo != 0)
+                {
+                    cout<<"\n\nErro, ultimo periodo nao eh 0\n";
+                    cout<<"\nArquivo: Modelo.cpp\n";
+                    cout<<"Funcao: criaRotaMip\n";
+                    cout<<"Linha: "<<__LINE__<<"\n\n";
+                    exit(-1);
+                }
+
+                //vetClienteRota[i].tempoPorPeriodo[ultimoPeriodo] += instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela - vetClienteRota[i].tempoChegada;
+                vetClienteRota[i].tempoChegada = instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela;
+                vetClienteRota[i-1].tempoSaida = vetClienteRota[i-1].tempoSaida + (instancia->vetorClientes[vetClienteRota[i].cliente].inicioJanela - vetClienteRota[i].tempoChegada);
+            }
         }
     }
 
@@ -939,13 +958,13 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
     modelo->reset(0);
 
     //modelo->feasRelax(1, true, false, true);
-    modelo->write("modelo.lp");
+    //modelo->write("modelo.lp");
     modelo->optimize();
 
 
     if(modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
     {
-        modelo->write("modelo.sol");
+        //modelo->write("modelo.sol");
         // Copia a solução
 
         *poluicao = modelo->get(GRB_DoubleAttr_ObjVal);
@@ -962,13 +981,72 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
                 for (int k = 0; k < numPeriodos; ++k)
                 {
 
-                    vetClienteRota[i].tempoPorPeriodo[k] = variaveis->tao[i-1][i][k].get(GRB_DoubleAttr_X);
-                    vetClienteRota[i].distanciaPorPeriodo[k] = variaveis->d[i-1][i][k].get(GRB_DoubleAttr_X);
-                    vetClienteRota[i].percorrePeriodo[k] = bool(variaveis->x[i-1][i][k].get(GRB_DoubleAttr_X));
+                    vetClienteRota[i].tempoPorPeriodo[k] = variaveis->tao[vetClienteRota[i-1].cliente][vetClienteRota[i].cliente][k].get(GRB_DoubleAttr_X);
+                    vetClienteRota[i].distanciaPorPeriodo[k] = variaveis->d[vetClienteRota[i-1].cliente][vetClienteRota[i].cliente][k].get(GRB_DoubleAttr_X);
+                    vetClienteRota[i].percorrePeriodo[k] = bool(variaveis->x[vetClienteRota[i-1].cliente][vetClienteRota[i].cliente][k].get(GRB_DoubleAttr_X));
 
+                    /*if(vetClienteRota[i].tempoPorPeriodo[k] < 1e-5)
+                    {
+                        vetClienteRota[i].percorrePeriodo[k] = false;
+                    }*/
                 }
 
             }
+        }
+
+        if(vetClienteRota[1].tempoChegada < instancia->vetorClientes[vetClienteRota[1].cliente].inicioJanela)
+        {
+            vetClienteRota[1].tempoChegada = instancia->vetorClientes[vetClienteRota[1].cliente].inicioJanela;
+
+
+        }
+
+        int ultimoPeriodo = -1, quant = 0, primeiroPeriodo = 5;
+
+        for(int k = 0; k < numPeriodos; ++k)
+        {
+
+
+            if(vetClienteRota[1].percorrePeriodo[k])
+            {
+
+                ++quant;
+                ultimoPeriodo = k;
+
+                if(k < primeiroPeriodo)
+                    primeiroPeriodo = k;
+            }
+        }
+
+
+        if(quant == 1)
+            vetClienteRota[0].tempoSaida = vetClienteRota[1].tempoChegada - vetClienteRota[1].tempoPorPeriodo[primeiroPeriodo];
+        else
+        {
+            vetClienteRota[0].tempoSaida = instancia->vetorPeriodos[primeiroPeriodo].fim - vetClienteRota[1].tempoPorPeriodo[primeiroPeriodo];
+
+        }
+
+
+        ultimoPeriodo = -1;
+        quant = 0;
+
+        for(int k = 0; k < numPeriodos; ++k)
+        {
+            if(vetClienteRota[tam - 1].percorrePeriodo[k])
+            {
+                ++quant;
+                ultimoPeriodo = k;
+            }
+        }
+
+        if(quant == 1)
+        {
+            vetClienteRota[tam - 1].tempoChegada = vetClienteRota[tam - 2].tempoSaida + vetClienteRota[tam - 1].tempoPorPeriodo[ultimoPeriodo];
+        }
+        else
+        {
+            vetClienteRota[tam - 1].tempoChegada = instancia->vetorPeriodos[ultimoPeriodo].inicio + vetClienteRota[tam - 1].tempoPorPeriodo[ultimoPeriodo];
         }
 
     }
@@ -980,6 +1058,9 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
     }
 
     bool resultado = modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL;
+
+    if(viavel)
+        variaveis->C[tipo].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
 
     for(int i = 1; i < tam; ++i)
     {
@@ -1009,7 +1090,10 @@ bool Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int ta
 
     modelo->set(GRB_IntParam_SubMIPNodes, GRB_MAXINT);
 
-    return resultado;
+    if(resultado)
+        return 1;
+    else
+        return 0;
 
 
 }

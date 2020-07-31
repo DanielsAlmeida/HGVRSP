@@ -49,8 +49,8 @@ namespace Modelo
         const int numPeriodos;
 
         Modelo(Instancia::Instancia *instancia, GRBModel *grbModel);
-        bool criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
-                      Instancia::Instancia *instancia, long double *poluicao, long double *combustivel);
+        int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
+                     Instancia::Instancia *instancia, long double *poluicao, long double *combustivel);
         ~Modelo();
     };
 }
