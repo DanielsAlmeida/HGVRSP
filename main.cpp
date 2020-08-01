@@ -22,9 +22,9 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao VerificaSol
+#define Opcao RotaMip
 
-// UK_50x5_5_0 90.8872    0 24 50 38 0   0.34
+// UK_50x5_5_0 90.8872    0 24 50 38 0   0.09
 //  UK_50x5_6 1593111849
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /* 1585430665
@@ -649,6 +649,8 @@ int main(int num, char **agrs)
 
         GRBEnv env;
         env.set(GRB_IntParam_OutputFlag, 1);
+        env.set(GRB_IntParam_Threads, 8);
+
         GRBModel grb_modelo = GRBModel(env);
 
         modelo = new Modelo::Modelo(instancia, &grb_modelo);

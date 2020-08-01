@@ -19,12 +19,13 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     modelo->set(GRB_StringAttr_ModelName, "HGVRSP_model");
     modelo->set(GRB_IntParam_NumericFocus, 2);
     modelo->set(GRB_IntParam_ScaleFlag, 2);
-    modelo->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL); //GRB_METHOD_DUAL
+    modelo->set(GRB_IntParam_Method, GRB_METHOD_BARRIER); //GRB_METHOD_DUAL
     //modelo->set(GRB_DoubleParam_ObjScale, -0.5);
     modelo->set(GRB_IntParam_BarHomogeneous, 1);
     modelo->set(GRB_IntParam_CrossoverBasis, 1);
     modelo->set(GRB_IntParam_GomoryPasses, 4);
     modelo->set(GRB_IntParam_Cuts, 1);
+    modelo->set(GRB_IntParam_Presolve, 2);
 
 
     //Cria variaveis
@@ -291,7 +292,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //ok
     GRBLinExpr linExpr = 0;
 
-    for (int i = 0; i < numClientes; ++i)
+    /*for (int i = 0; i < numClientes; ++i)
     {
         for (int j = 0; j < numClientes; ++j)
         {
@@ -307,7 +308,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
                 modelo->addConstr(linExpr <= 0, "restringe_soma_x_k_por_X_" + std::to_string(i) + "_" + std::to_string(j));
             }
         }
-    }
+    }*/
 
     //*************************************************************************************************************************************************************
     //Restrição 4 limita o somatorio da distância parcial à distância total
@@ -340,10 +341,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
 
     for (int j = 1; j < numClientes; ++j)
     {
-        for(int i = 0; i < numClientes; ++i)
-        {
-            if(instancia->matrizDistancias[i][j] == 0.0)
-                continue;
+
 
             for (int k2 = 1; k2 < numPeriodos; ++k2)
             {
@@ -352,7 +350,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
                     linExpr = 0;
                     for (int l = 0; l < numClientes; ++l)
                     {
-                        if ((l == i) || (l == j))
+                        if (l == j)
                             continue;
 
                         if (instancia->matrizDistancias[j][l] == 0.0)
@@ -363,14 +361,17 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
 
                     }
 
-                    linExpr += variaveis->x[i][j][k2];
+                    for(int i = 0; i < numClientes; ++i)
+                    {
+                        if(instancia->matrizDistancias[i][j] != 0.0)
+                            linExpr += variaveis->x[i][j][k2];
+                    }
 
-                    modelo->addConstr(linExpr <= 1, "subCiclo_(" + std::to_string(i) + "_" + std::to_string(j) + ")_" +
-                                                    std::to_string(k2));
+                    modelo->addConstr(linExpr <= 1, "subCiclo_"+std::to_string(j) + "_k1_" + std::to_string(k1) + "_k2_" + std::to_string(k2));
                 }
             }
 
-        }
+
 
 
     }
@@ -902,7 +903,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     int cliente1, cliente2;
 
     long double combustivelAux = 0.0, poluicaoAux = 0.0;
-    bool viavel = false;
+    bool viavel = true;
     int pesoAux = peso;
 
     vetClienteRota[0].tempoSaida = (tipo ?  0.5 : 0.0);
@@ -995,7 +996,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     modelo->reset(0);
 
     //modelo->feasRelax(1, true, false, true);
-    modelo->write("modelo.lp");
+    //modelo->write("modelo.lp");
     modelo->optimize();
 
 
