@@ -338,8 +338,45 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //Restriçao 5, sub-ciclo
     //ok
 
-
     for (int j = 1; j < numClientes; ++j)
+    {
+        for(int i = 0; i < numClientes; ++i)
+        {
+            if(instancia->matrizDistancias[i][j] == 0.0)
+                continue;
+
+            for (int k2 = 1; k2 < numPeriodos; ++k2)
+            {
+                for (int k1 = 0; k1 < k2; ++k1)
+                {
+                    linExpr = 0;
+                    for (int l = 0; l < numClientes; ++l)
+                    {
+                        if ((l == i) || (l == j))
+                            continue;
+
+                        if (instancia->matrizDistancias[j][l] == 0.0)
+                            continue;
+
+                        linExpr += variaveis->x[j][l][k1];
+
+
+                    }
+
+                    linExpr += variaveis->x[i][j][k2];
+
+                    modelo->addConstr(linExpr <= 1, "subCiclo_(" + std::to_string(i) + "_" + std::to_string(j) + ")_" +
+                                                    std::to_string(k2));
+                }
+            }
+
+        }
+
+
+    }
+
+
+    /*for (int j = 1; j < numClientes; ++j)
     {
         for(int i = 0; i < numClientes; ++i)
         {
@@ -375,7 +412,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
         }
 
 
-    }
+    }*/
 
     //*************************************************************************************************************************************************************
     //Calcula o tempo gasto ao percorrer o arco i,j no periodo k
@@ -958,7 +995,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     modelo->reset(0);
 
     //modelo->feasRelax(1, true, false, true);
-    //modelo->write("modelo.lp");
+    modelo->write("modelo.lp");
     modelo->optimize();
 
 

@@ -24,7 +24,7 @@
 
 #define Opcao VerificaSol
 
-
+// UK_50x5_5_0 90.8872    0 24 50 38 0   0.34
 //  UK_50x5_6 1593111849
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /* 1585430665
