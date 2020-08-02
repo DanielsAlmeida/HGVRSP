@@ -15,16 +15,16 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //Cria o modelo
     tipoVeiculo = false;
     variaveis = new Variaveis;
-
+    //24 50 38 0
     modelo->set(GRB_StringAttr_ModelName, "HGVRSP_model");
-    modelo->set(GRB_IntParam_NumericFocus, 2);
-    modelo->set(GRB_IntParam_ScaleFlag, 2);
-    modelo->set(GRB_IntParam_Method, GRB_METHOD_BARRIER); //GRB_METHOD_DUAL
-    //modelo->set(GRB_DoubleParam_ObjScale, -0.5);
+    modelo->set(GRB_IntParam_NumericFocus, 1);
+    modelo->set(GRB_IntParam_ScaleFlag, -1);
+    modelo->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL); //GRB_METHOD_DUAL
+    modelo->set(GRB_DoubleParam_ObjScale, -0.5);
     modelo->set(GRB_IntParam_BarHomogeneous, 1);
     modelo->set(GRB_IntParam_CrossoverBasis, 1);
-    modelo->set(GRB_IntParam_GomoryPasses, 4);
-    modelo->set(GRB_IntParam_Cuts, 1);
+    modelo->set(GRB_IntParam_GomoryPasses, 3);
+    modelo->set(GRB_IntParam_Cuts, 3);
     modelo->set(GRB_IntParam_Presolve, 2);
 
 
@@ -339,39 +339,37 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //Restriçao 5, sub-ciclo
     //ok
 
-    //Para todo j !=0 em clientes
     for (int j = 1; j < numClientes; ++j)
     {
 
-            //Para todo k2 != 0 em periodo
-            for (int k2 = 1; k2 < numPeriodos; ++k2)
+
+        for (int k2 = 1; k2 < numPeriodos; ++k2)
+        {
+            for (int k1 = 0; k1 < k2; ++k1)
             {
-                //Para todo k1 < k2 em periodo
-                for (int k1 = 0; k1 < k2; ++k1)
+                linExpr = 0;
+                for (int l = 0; l < numClientes; ++l)
                 {
-                    linExpr = 0;
-                    for (int l = 0; l < numClientes; ++l)
-                    {
-                        if (l == j)
-                            continue;
+                    if (l == j)
+                        continue;
 
-                        if (instancia->matrizDistancias[j][l] == 0.0)
-                            continue;
+                    if (instancia->matrizDistancias[j][l] == 0.0)
+                        continue;
 
-                        linExpr += variaveis->x[j][l][k1];
+                    linExpr += variaveis->x[j][l][k1];
 
 
-                    }
-
-                    for(int i = 0; i < numClientes; ++i)
-                    {
-                        if(instancia->matrizDistancias[i][j] != 0.0)
-                            linExpr += variaveis->x[i][j][k2];
-                    }
-
-                    modelo->addConstr(linExpr <= 1, "subCiclo_"+std::to_string(j) + "_k1_" + std::to_string(k1) + "_k2_" + std::to_string(k2));
                 }
+
+                for(int i = 0; i < numClientes; ++i)
+                {
+                    if(instancia->matrizDistancias[i][j] != 0.0)
+                        linExpr += variaveis->x[i][j][k2];
+                }
+
+                modelo->addConstr(linExpr <= 1, "subCiclo_"+std::to_string(j) + "_k1_" + std::to_string(k1) + "_k2_" + std::to_string(k2));
             }
+        }
 
 
 
@@ -467,20 +465,20 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     {
         for(int j = 0; j < numClientes; ++j)
         {
-           if(instancia->matrizDistancias[i][j] != 0)
-           {
-               for (int k = 0; k < instancia->numPeriodos; ++k)
-               {
+            if(instancia->matrizDistancias[i][j] != 0)
+            {
+                for (int k = 0; k < instancia->numPeriodos; ++k)
+                {
 
-                   linExpr = 0;
-                   linExpr = variaveis->l[i] + variaveis->tao[i][j][k];
-                   linExpr +=  instancia->vetorPeriodos[4].fim *variaveis->x[i][j][k];
+                    linExpr = 0;
+                    linExpr = variaveis->l[i] + variaveis->tao[i][j][k];
+                    linExpr +=  instancia->vetorPeriodos[4].fim *variaveis->x[i][j][k];
 
-                   double val = instancia->vetorPeriodos[4].fim + instancia->vetorPeriodos[k].fim;
-                   modelo->addConstr(linExpr <= val, "tempoSaida_cliente_"+std::to_string(i)+"_("+std::to_string(i)+"_"+std::to_string(j)+")_P_"+std::to_string(k));
+                    double val = instancia->vetorPeriodos[4].fim + instancia->vetorPeriodos[k].fim;
+                    modelo->addConstr(linExpr <= val, "tempoSaida_cliente_"+std::to_string(i)+"_("+std::to_string(i)+"_"+std::to_string(j)+")_P_"+std::to_string(k));
 
-               }
-           }
+                }
+            }
         }
     }
 
@@ -623,28 +621,27 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     {
 
 
-        for (int j = 1; j < numClientes; ++j)
-        {
-            if(instancia->matrizDistancias[0][j] != 0)
+
                 for (int k = 0; k < numPeriodos; ++k)
                 {
                     linExpr = 0;
                     double temp = 0.0;//instancia->vetorPeriodos[4].fim;
-                    linExpr = variaveis->tao[0][j][k]  + instancia->vetorPeriodos[4].fim * variaveis->x[0][j][k];
+
+                    for (int j = 1; j < numClientes; ++j)
+                    {
+                        if (instancia->matrizDistancias[0][j] != 0)
+                            linExpr += variaveis->tao[0][j][k] + instancia->vetorPeriodos[4].fim * variaveis->x[0][j][k];
+                    }
+
                     double val = instancia->vetorPeriodos[4].fim - instancia->vetorVeiculos[u].inicioJanela + instancia->vetorPeriodos[k].fim;
 
-                    /*if(u==1)
-                        temp = 0.5;
 
-
-                    modelo->addConstr(linExpr <= val + temp*variaveis->T[u], "r_0_limita_tempo_saida_veiculo_" + std::to_string(u) + "_0_" + std::to_string(j) + "_" + std::to_string(k));
-                     */
 
                     temp = -0.5;
-                    modelo->addConstr(linExpr <= val + temp*variaveis->T[0], "r_0_limita_tempo_saida_veiculo_0_e_1_0_" + std::to_string(j) + "_" + std::to_string(k));
+                    modelo->addConstr(linExpr <= val + temp*variaveis->T[0], "r_0_limita_tempo_saida_veiculo_0_e_1_0_Periodo_" + std::to_string(k));
 
                 }
-        }
+
     }
 
 
@@ -682,19 +679,20 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //-21
     for(int u = inicio; u < 1; ++u)
     {
-        for(int i = 1; i < numClientes; ++i)
-        {
-            if(instancia->matrizDistancias[i][0] != 0)
+
                 for(int k = 0; k < numPeriodos; ++k)
                 {
                     linExpr = 0;
-                    linExpr =  - variaveis->tao[i][0][k]  - instancia->vetorPeriodos[4].fim *variaveis->x[i][0][k];
-
+                    for(int i = 1; i < numClientes; ++i)
+                    {
+                        if (instancia->matrizDistancias[i][0] != 0)
+                            linExpr += -variaveis->tao[i][0][k] - instancia->vetorPeriodos[4].fim * variaveis->x[i][0][k];
+                    }
                     double val = -instancia->vetorPeriodos[4].fim - instancia->vetorVeiculos[u].fimJanela + instancia->vetorPeriodos[k].inicio;
 
-                    modelo->addConstr(linExpr >= val, "r_2_limita_tempo_chegada_veiculo_"+std::to_string(u)+"_"+std::to_string(i)+"_0_"+std::to_string(k));
+                    modelo->addConstr(linExpr >= val, "r_2_limita_tempo_chegada_veiculo_"+std::to_string(u)+"_Periodo_"+std::to_string(k));
                 }
-        }
+
     }
 
     //*************************************************************************************************************************************************************
@@ -765,7 +763,7 @@ Modelo::Modelo::~Modelo()
         for (int j = 0; j < numClientes; ++j)
         {
 
-                delete []variaveis->x[i][j];
+            delete []variaveis->x[i][j];
         }
 
     }
@@ -796,7 +794,7 @@ Modelo::Modelo::~Modelo()
 
     for (int i = 0; i < numClientes; ++i)
     {
-            delete []variaveis->d[i];
+        delete []variaveis->d[i];
 
     }
 
@@ -813,7 +811,7 @@ Modelo::Modelo::~Modelo()
     {
         for (int j = 0; j < numClientes; ++j)
         {
-                delete []variaveis->tao[i][j];
+            delete []variaveis->tao[i][j];
         }
     }
 
@@ -845,7 +843,7 @@ Modelo::Modelo::~Modelo()
 
     for(int i = 0; i < numClientes; ++i)
     {
-            delete []variaveis->f[i];
+        delete []variaveis->f[i];
     }
 
     delete [] variaveis->f;
@@ -905,7 +903,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     int cliente1, cliente2;
 
     long double combustivelAux = 0.0, poluicaoAux = 0.0;
-    bool viavel = true;
+    bool viavel = false;
     int pesoAux = peso;
 
     vetClienteRota[0].tempoSaida = (tipo ?  0.5 : 0.0);
