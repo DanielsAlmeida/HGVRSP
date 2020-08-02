@@ -339,12 +339,14 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : nu
     //Restriçao 5, sub-ciclo
     //ok
 
+    //Para todo j !=0 em clientes
     for (int j = 1; j < numClientes; ++j)
     {
 
-
+            //Para todo k2 != 0 em periodo
             for (int k2 = 1; k2 < numPeriodos; ++k2)
             {
+                //Para todo k1 < k2 em periodo
                 for (int k1 = 0; k1 < k2; ++k1)
                 {
                     linExpr = 0;
