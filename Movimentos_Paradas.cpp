@@ -739,7 +739,7 @@ int Movimentos_Paradas::dijkstra(std::unordered_map<int, No *> *hashNo, std::map
                 //cout << "Atualizando coluna +1 : " << coluna + 1 << "Linha: " << linha << " tempoSaida: " << noAux->tempoSaida << " poluicao: " << noProx->poluicao << " Aresta poluica: " << aresta.poluicao << '\n';
 
                 //Atualiza Heap
-                heap.decrease((noProx->handle), {(*noProx->handle).id, no->poluicao + aresta.poluicao});
+                heap.decrease((noProx->handle), {(*noProx->handle).id, double(no->poluicao + aresta.poluicao)});
 
 
             }

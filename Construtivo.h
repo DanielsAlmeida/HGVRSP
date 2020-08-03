@@ -9,6 +9,7 @@
 #include "boost/tuple/tuple.hpp"
 #include "Vnd.h"
 #include "Movimentos_Paradas.h"
+#include "Modelo.h"
 
 #ifndef HGVRSP_CONSTRUTIVO_H
 #define HGVRSP_CONSTRUTIVO_H
@@ -61,7 +62,7 @@ namespace Construtivo
           const int tamVetHeuristica, const double *const vetorParametros,
           Vnd::EstatisticaMv *vetEstatisticaMv, Solucao::ClienteRota **matrixClienteBest,
           Movimentos_Paradas::TempoCriaRota *tempoCriaRota, GuardaCandInteracoes *vetCandInteracoes,
-          double *vetLimiteTempo);
+          double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     Solucao::Solucao *
     geraSolucao(const Instancia::Instancia *const instancia, float alfa,

@@ -18,11 +18,11 @@ set(GUROBI_LIB_DIRECTORY $ENV{LD_LIBRARY_PATH})
 link_directories(${GUROBI_LIB_DIRECTORY})
 
 set (CMAKE_CXX_FLAGS " -std=c++2a")
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS " -m64")
 
-set(CMAKE_CXX_FLAGS "-fsanitize=address")
-set(CMAKE_CXX_FLAGS "-g")
+#set(CMAKE_CXX_FLAGS "-fsanitize=address")
+#set(CMAKE_CXX_FLAGS "-g")
 
 set (CMAKE_CXX_FLAGS "-I $HOME/Documentos/Programas/boost_1_72_0")
 

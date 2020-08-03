@@ -7,7 +7,9 @@
 #include <cstdio>
 #include "Construtivo.h"
 
-Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel) : numClientes(instancia->numClientes), numVeiculos(instancia->numVeiculos), numPeriodos(instancia->numPeriodos), modelo(grbModel)
+Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_)
+        : numClientes(instancia->numClientes), numVeiculos(instancia->numVeiculos), numPeriodos(instancia->numPeriodos),
+                      modelo(grbModel), usaModeloVnd(usaModeloVnd_)
 {
 
     const int NumVeic = 2;
@@ -869,7 +871,7 @@ Modelo::Modelo::~Modelo()
     delete variaveis;
 }
 
-int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso, Instancia::Instancia *instancia, long double *poluicao, long double *combustivel)
+int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso, const Instancia::Instancia *instancia, double *poluicao, double *combustivel)
 {
 
 
@@ -912,8 +914,8 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     {
         if(!Construtivo::determinaHorario(&vetClienteRota[i-1], &vetClienteRota[i], instancia, pesoAux, tipoVeiculo, NULL, NULL))
         {
-            cout<<"Janela de tempo\n";
-            return -1;
+            //cout<<"Janela de tempo\n";
+            return 0;
         }
 
 

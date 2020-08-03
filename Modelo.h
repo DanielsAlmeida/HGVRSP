@@ -48,9 +48,11 @@ namespace Modelo
         const int numVeiculos;
         const int numPeriodos;
 
-        Modelo(Instancia::Instancia *instancia, GRBModel *grbModel);
+        const bool usaModeloVnd;
+
+        Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_);
         int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
-                     Instancia::Instancia *instancia, long double *poluicao, long double *combustivel);
+                     const Instancia::Instancia *instancia, double *poluicao, double *combustivel);
         ~Modelo();
     };
 }

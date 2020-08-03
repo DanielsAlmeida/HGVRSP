@@ -974,7 +974,8 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
                 if(fabs(aux - (*clienteJ)->tempoPorPeriodo[i]) > 1e-5)
                 {
                     if(erro)
-                       *erro = "erro, Diferenca de tempo gasto no arco (" + std::to_string((*clienteI)->cliente) + " , " + std::to_string((*clienteJ)->cliente) + ") k = " + std::to_string(i) + '\n';
+                       *erro = "erro, Diferenca de tempo gasto no arco (" + std::to_string((*clienteI)->cliente) + " , " + std::to_string((*clienteJ)->cliente) + ") k = " + std::to_string(i) + '\n'+
+                               "Diferenca: " + std::to_string(fabs(aux - (*clienteJ)->tempoPorPeriodo[i]) )+ '\n';
 
                     return false;
                 }

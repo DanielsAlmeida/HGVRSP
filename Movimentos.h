@@ -1,13 +1,17 @@
 //
 // Created by igor on 10/02/2020.
 //
-
+/*
+ * Movimentos com modelo: 0,1,2
+ */
 #ifndef HGVRSP_MOVIMENTOS_H
 #define HGVRSP_MOVIMENTOS_H
 
 #include "Instancia.h"
 #include "Solucao.h"
 #include <string>
+#include "Modelo.h"
+
 //#include "Exception.h"
 typedef std::list<Solucao::ClienteRota*>::iterator ItClienteRota;
 
@@ -29,51 +33,50 @@ namespace Movimentos
     };
 
     ResultadosRota mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                    Solucao::ClienteRota *vetClienteRotaBest,
-                                    Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
-                                    const bool percorreClientes, const bool pertubacao, double *vetLimiteTempo);
+                                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
+                                    const bool percorreVeiculos, const bool percorreClientes, const bool pertubacao,
+                                    double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     ResultadosRota mvIntraRotaSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                   Solucao::ClienteRota *vetClienteRotaBest,
-                                   Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
-                                   const bool percorreClientes, bool pertubacao, double *vetLimiteTempo);
+                                   Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
+                                   const bool percorreVeiculos, const bool percorreClientes, bool pertubacao,
+                                   double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     ResultadosRota mvInterRotasShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                     Solucao::ClienteRota *vetClienteRotaBest,
-                                     Solucao::ClienteRota *vetClienteRotaAux,
-                                     Solucao::ClienteRota *vetClienteRotaSecundBest,
-                                     const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo);
+                                     Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
+                                     Solucao::ClienteRota *vetClienteRotaSecundBest, const bool percorreVeiculos,
+                                     bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     ResultadosRota mvInterRotasSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                    Solucao::ClienteRota *vetClienteRotaBest,
-                                    Solucao::ClienteRota *vetClienteRotaAux,
+                                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
                                     Solucao::ClienteRota *vetClienteRotaSecundBest,
                                     Solucao::ClienteRota *vetClienteRotaSecundAux, const bool percorreVeiculos,
-                                    bool pertubacao, double *vetLimiteTempo);
+                                    bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     ResultadosRota mv_2optSwapIntraRota(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                         Solucao::ClienteRota *vetClienteRotaBest,
-                                        Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
-                                        bool pertubacao, double *vetLimiteTempo);
+                                        Solucao::ClienteRota *vetClienteRotaAux,
+                                        const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo,
+                                        Modelo::Modelo *modelo);
 
     ResultadosRota mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                          Solucao::ClienteRota *vetClienteRotaBest,
                                          Solucao::ClienteRota *vetClienteRotaAux,
                                          Solucao::ClienteRota *vetClienteRotaSecundBest,
-                                         Solucao::ClienteRota *vetClienteRotaSecundAux,
-                                         const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo);
+                                         Solucao::ClienteRota *vetClienteRotaSecundAux, const bool percorreVeiculos,
+                                         bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     Movimentos::ResultadosRota
     mvIntraRotaInverteRota(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                            Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
-                           bool pertubacao, double *vetLimiteTempo);
+                           bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     Movimentos::ResultadosRota mvTrocarVeiculos(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                                 Solucao::ClienteRota *vetClienteRotaBest,
                                                 Solucao::ClienteRota *vetClienteRotaAux,
                                                 Solucao::ClienteRota *vetClienteRotaSecundBest,
                                                 Solucao::ClienteRota *vetClienteRotaSecundAux, bool pertubacao,
-                                                double *vetLimiteTempo);
+                                                double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     //Peso de ResultadosRota é o peso restante do veiculo
     ResultadosRota inverteRota(ItClienteRota itInicio, ItClienteRota itFim, Solucao::ClienteRota *vetClienteRotaAux, int posicao, int peso, double poluicao,
@@ -98,11 +101,10 @@ namespace Movimentos
 
     void copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest, double *combustivelBest, ResultadosRota resultado, int *posicao);
 
-    Movimentos::ResultadosRota
-    aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
-                    bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
-                    Solucao::ClienteRota *vetClienteRotaSecundAux, double *vetLimiteTempo);
+    Movimentos::ResultadosRota aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
+                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
+                    Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
+                    double *vetLimiteTempo, Modelo::Modelo *modelo);
 
     void atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao,
                          Solucao::ClienteRota *vetClienteRotaBest,

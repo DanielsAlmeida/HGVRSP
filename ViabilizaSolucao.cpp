@@ -716,7 +716,7 @@ ViabilizaSolucao::viabilizaSolucao(Solucao::Solucao *solucao, const Instancia::I
                 //cout<<"Antes\n";
                 resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[j], instancia, solucao, vetorClienteBest,
                                                              vetorClienteAux, true, vetClienteRotaSecundBest,
-                                                             vetClienteSecondAux, vetLimiteTempo);
+                                                             vetClienteSecondAux, vetLimiteTempo, NULL);
                 //cout<<"Depois\n";
 
                 if(resultadosRota.viavel)

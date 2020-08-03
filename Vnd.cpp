@@ -11,7 +11,7 @@ using namespace Vnd;
 void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
               Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
               Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
-              int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo)
+              int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo, Modelo::Modelo *modelo)
 {
 
 
@@ -51,16 +51,21 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
     Movimentos::ResultadosRota resultadosRota;
 
+
+
     int posicao = 0;
+
 
     while(posicao < Num)
     {
+
             auto c_start = std::chrono::high_resolution_clock::now();
 
 
 
-            resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, false, vetClienteRotaSecundBest,
-                                                         vetClienteRotaSecundAux, vetLimiteTempo);
+            resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest,
+                                                         vetClienteRotaAux, false, vetClienteRotaSecundBest,
+                                                         vetClienteRotaSecundAux, vetLimiteTempo, modelo);
 
 
             auto c_end = std::chrono::high_resolution_clock::now();

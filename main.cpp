@@ -22,7 +22,7 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao VerificaSol
+#define Opcao Grasp
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
@@ -231,10 +231,16 @@ int main(int num, char **agrs)
     Construtivo::GuardaCandInteracoes *vetCandInteracoes = new Construtivo::GuardaCandInteracoes[instancia->numClientes+2];
     double vetLimiteTempo[20];
 
+    GRBEnv env;
+    env.set(GRB_IntParam_OutputFlag, 0);
+    GRBModel grb_modelo = GRBModel(env);
+
+    Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, true);
+
     auto c_start = std::chrono::high_resolution_clock::now();
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 100, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
-                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
+                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo);
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
@@ -366,10 +372,24 @@ int main(int num, char **agrs)
 
     double distanciaTotal;
 
-    bool Veificacao = false;
+    bool Veificacao = true;
+
+    /*if(!solucao->veiculoFicticil)
+        Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);*/
 
     if(!solucao->veiculoFicticil)
-        Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);
+    {
+        for(auto veiculo : solucao->vetorVeiculos)
+        {
+            Veificacao = Veificacao * VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
+
+            if(!Veificacao)
+            {
+                cout<<"Erro, rota: "<<veiculo->getRota()<<"\nTipo: "<<veiculo->tipo<<"\n\nMotivo: "<<erro<<"\n\n";
+                break;
+            }
+        }
+    }
 
     texto += '\n';
 
@@ -582,6 +602,7 @@ int main(int num, char **agrs)
 
     delete solucao;
     delete instancia;
+    delete modelo;
 
     //muntrace();
 
@@ -653,7 +674,7 @@ int main(int num, char **agrs)
 
         GRBModel grb_modelo = GRBModel(env);
 
-        modelo = new Modelo::Modelo(instancia, &grb_modelo);
+        modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
 
 
         // .mps, .rew, .lp, .rlp, or .ilp
@@ -665,7 +686,7 @@ int main(int num, char **agrs)
         vetCliente[0].cliente = 0;
 
         int tipo, tam, peso, cliente = 1;
-        long double combustivel, poluicao;
+        double combustivel, poluicao;
 
 
         do
@@ -752,6 +773,7 @@ int main(int num, char **args)
     env.set(GRB_IntParam_OutputFlag, 0);
 
 
+
     for(int posicao = 1; posicao < num; ++posicao)
     {
 
@@ -790,7 +812,7 @@ int main(int num, char **args)
 
             GRBModel grb_modelo = GRBModel(env);
 
-            modelo = new Modelo::Modelo(instancia, &grb_modelo);
+            modelo = new Modelo::Modelo(instancia, &grb_modelo, true);
 
 
             Solucao::ClienteRota *vetCliente = new Solucao::ClienteRota[MaxTamVetClientesMatrix];
