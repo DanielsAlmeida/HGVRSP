@@ -55,6 +55,9 @@ namespace Modelo
                      const Instancia::Instancia *instancia, double *poluicao, double *combustivel);
         ~Modelo();
     };
+
+    void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota,
+                         Instancia::Instancia *instancia);
 }
 
 

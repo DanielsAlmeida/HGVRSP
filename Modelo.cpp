@@ -6,6 +6,9 @@
 #include "Modelo.h"
 #include <cstdio>
 #include "Construtivo.h"
+#include "Exception.h"
+
+ExceptioViabilidadeMip exceptionViabilidadeMip;
 
 Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_)
         : numClientes(instancia->numClientes), numVeiculos(instancia->numVeiculos), numPeriodos(instancia->numPeriodos),
@@ -17,7 +20,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     //Cria o modelo
     tipoVeiculo = false;
     variaveis = new Variaveis;
-    //24 50 38 0
+
+    //Parametros do modelo
     modelo->set(GRB_StringAttr_ModelName, "HGVRSP_model");
     modelo->set(GRB_IntParam_NumericFocus, 1);
     modelo->set(GRB_IntParam_ScaleFlag, -1);
@@ -998,13 +1002,13 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     modelo->reset(0);
 
     //modelo->feasRelax(1, true, false, true);
-    //modelo->write("modelo.lp");
+    modelo->write("modelo.lp");
     modelo->optimize();
 
 
     if(modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
     {
-        //modelo->write("modelo.sol");
+        modelo->write("modelo.sol");
         // Copia a solução
 
         *poluicao = modelo->get(GRB_DoubleAttr_ObjVal);
@@ -1135,5 +1139,50 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     else
         return 0;
 
+
+}
+
+void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, Instancia::Instancia *instancia)
+{
+
+    if(solucao->veiculoFicticil)
+        return;
+
+    double poluicao, combustivel;
+    int resultado;
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+        //Copia clientes para vetor
+        auto itCliente = veiculo->listaClientes.begin();
+
+        for(int i = 0; i < veiculo->listaClientes.size(); ++i, ++itCliente)
+            vetClienteRota[i].swap(*itCliente);
+
+        //Cria rota
+        resultado = modelo->criaRota(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga, instancia, &poluicao, &combustivel);
+
+        if(resultado != 1)
+            throw exceptionViabilidadeMip;
+
+        if(poluicao < veiculo->poluicao)
+        {
+            //Atualiza solucao
+            auto it = veiculo->listaClientes.begin();
+
+            for(int i = 0; i < veiculo->listaClientes.size(); ++i, ++it)
+                (*it)->swap(&vetClienteRota[i]);
+
+            //Retira poluicao do veiculo e adiciona a nova poluicao
+            solucao->poluicao -= veiculo->poluicao;
+            solucao->poluicao += poluicao;
+
+            //Atualiza poluicao e combustivel do veiculo
+            veiculo->poluicao = poluicao;
+            veiculo->combustivel = combustivel;
+        }
+        else
+            cout<<"rota mip eh maior. Mip: "<<poluicao<<",  original: "<<veiculo->poluicao<<'\n';
+    }
 
 }

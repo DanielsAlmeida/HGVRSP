@@ -22,9 +22,9 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao Grasp
+#define Opcao RotaMip
 
-// UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, Poluicao: 90.88, Combustivel: 34.12
+// UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
 // /home/igor/Documentos/HGVRSP/instanciasUK/UK_10x5_2.dat /home/igor/Documentos/HGVRSP/saidaCompleta.txt /home/igor/Documentos/HGVRSP/saidaParcial.txt
 /* 1585430665
@@ -235,7 +235,7 @@ int main(int num, char **agrs)
     env.set(GRB_IntParam_OutputFlag, 0);
     GRBModel grb_modelo = GRBModel(env);
 
-    Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, true);
+    Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
 
     auto c_start = std::chrono::high_resolution_clock::now();
 

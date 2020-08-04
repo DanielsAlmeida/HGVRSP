@@ -30,8 +30,17 @@ class ExceptionEscolhido: public std::exception
     }
 };
 
+class ExceptioViabilidadeMip: public std::exception
+{
+    virtual const char* what() const throw()
+    {
+        return "Erro, fuc: Modelo::geraRotasOtimas. \nMotivo: resultado do modelo deveria ser viavel.\n";
+    }
+};
+
 extern ExceptionVeiculo exceptionVeiculo;
 extern ExceptionPeso exceptionPeso;
 extern ExceptionEscolhido exceptionEscolhido;
+extern ExceptioViabilidadeMip exceptionViabilidadeMip;
 
 #endif //HGVRSP_EXCEPTION_H
