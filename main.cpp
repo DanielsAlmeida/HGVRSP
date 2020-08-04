@@ -22,7 +22,7 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao RotaMip
+#define Opcao Grasp
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
@@ -248,28 +248,6 @@ int main(int num, char **agrs)
 
     delete []vetCandInteracoes;
 
-/* ******************************************************************************************************************************************************************* */
-/* *************************************************************TESTE FUNC VERIFICACAO MIP**************************************************************************** */
-    string erro;
-
-    for(auto veiculo : solucao->vetorVeiculos)
-    {
-        if(veiculo->tipo != 2)
-        {
-            bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
-
-            for(auto cliente : veiculo->listaClientes)
-                cout<<cliente->cliente<<' ';
-
-            cout<<" : "<<resultado<<'\n';
-
-            if(!resultado)
-                cout<<erro<<"\n\n";
-        }
-    }
-
-/* **********************************************************FIM TESTE FUNC VERIFICACAO MIP*************************************************************************** */
-/* ******************************************************************************************************************************************************************* */
 
     //desaloca matrix
     for(int i = 0; i < instancia->numClientes; ++i)
@@ -284,7 +262,10 @@ int main(int num, char **agrs)
 
 #if Saida
 
-        cout<<"Solucao:\n\n";
+        if(solucao->rotasMip)
+            cout<<"Rotas geradas pelo resolvedor\n";
+
+        /*cout<<"Solucao:\n\n";
 
         for(auto it = solucao->vetorVeiculos[0]->listaClientes.begin(); it != solucao->vetorVeiculos[0]->listaClientes.end(); ++it)
         {
@@ -305,7 +286,7 @@ int main(int num, char **agrs)
 
             if((*prox)->cliente == 0)
                 break;
-        }
+        }*/
 #endif
     }(solucao);
 
@@ -379,6 +360,76 @@ int main(int num, char **agrs)
 
     if(!solucao->veiculoFicticil)
     {
+        for (auto veiculo : solucao->vetorVeiculos)
+        {
+            if(veiculo->listaClientes.size() == 2)
+                continue;
+
+            auto cliente2 = veiculo->listaClientes.begin();
+
+            int peso = veiculo->carga;
+
+            for(auto cliente1 = veiculo->listaClientes.begin(); ;++cliente1)
+            {
+                cliente2 = cliente1;
+                ++cliente2;
+
+                texto += std::to_string((*cliente1)->cliente) + ' ' + std::to_string((*cliente2)->cliente) + ' ';
+
+                int quant = 0, ultimo = -1;
+
+                for (int i = 0; i < 5; ++i)
+                {
+                    if ((*cliente2)->percorrePeriodo[i])
+                    {
+                        ++quant;
+
+                        ultimo = i;
+                    }
+                }
+
+                for (int i = 0; i < ultimo; ++i)
+                {
+                    if ((*cliente2)->percorrePeriodo[i])
+                    {
+                        double poluicao = VerificaSolucao::poluicaoRota(instancia, veiculo->tipo,
+                                                                        (*cliente2)->distanciaPorPeriodo[i],
+                                                                        (*cliente1)->cliente, (*cliente2)->cliente, i);
+
+                        texto += std::to_string(i) + "," + std::to_string((*cliente2)->tempoPorPeriodo[i]) + "," +
+                                 std::to_string((*cliente2)->distanciaPorPeriodo[i]) + ", " + to_string(poluicao) +
+                                 "," +
+                                 to_string(instancia->matrizVelocidade[(*cliente1)->cliente][(*cliente2)->cliente][i]) +
+                                 ",0 ";
+                    }
+                }
+
+                {
+                    double poluicao = VerificaSolucao::poluicaoRota(instancia, veiculo->tipo,
+                                                                    (*cliente2)->distanciaPorPeriodo[ultimo],
+                                                                    (*cliente1)->cliente, (*cliente2)->cliente, ultimo);
+                    poluicao += VerificaSolucao::poluicaoCarga(instancia, veiculo->tipo, peso,
+                                                               instancia->matrizDistancias[(*cliente1)->cliente][(*cliente2)->cliente]);
+
+                    texto +=
+                            std::to_string(ultimo) + "," + std::to_string((*cliente2)->tempoPorPeriodo[ultimo]) + "," +
+                            std::to_string((*cliente2)->distanciaPorPeriodo[ultimo]) + "," + to_string(poluicao) +
+                            "," + to_string(instancia->matrizVelocidade[(*cliente1)->cliente][(*cliente2)->cliente][ultimo]) + ",0"+
+                            '\n';
+
+                }
+
+                peso -= instancia->vetorClientes[(*cliente2)->cliente].demanda;
+
+                if ((*cliente2)->cliente == 0)
+                    break;
+            }
+        }
+    }
+    string erro;
+
+    if(!solucao->veiculoFicticil)
+    {
         for(auto veiculo : solucao->vetorVeiculos)
         {
             Veificacao = Veificacao * VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
@@ -386,7 +437,7 @@ int main(int num, char **agrs)
             if(!Veificacao)
             {
                 cout<<"Erro, rota: "<<veiculo->getRota()<<"\nTipo: "<<veiculo->tipo<<"\n\nMotivo: "<<erro<<"\n\n";
-                break;
+
             }
         }
     }

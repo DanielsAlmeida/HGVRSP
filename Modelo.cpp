@@ -914,7 +914,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
     vetClienteRota[0].tempoSaida = (tipo ?  0.5 : 0.0);
 
-    for(int i = 1; i < tam; ++i)
+    /*for(int i = 1; i < tam; ++i)
     {
         if(!Construtivo::determinaHorario(&vetClienteRota[i-1], &vetClienteRota[i], instancia, pesoAux, tipoVeiculo, NULL, NULL))
         {
@@ -931,7 +931,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
         pesoAux -= instancia->vetorClientes[vetClienteRota[i].cliente].demanda;
 
-    }
+    }*/
 
     if(viavel)
     {
@@ -1002,13 +1002,13 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     modelo->reset(0);
 
     //modelo->feasRelax(1, true, false, true);
-    modelo->write("modelo.lp");
+    //modelo->write("modelo.lp");
     modelo->optimize();
 
 
     if(modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
     {
-        modelo->write("modelo.sol");
+        //modelo->write("modelo.sol");
         // Copia a solução
 
         *poluicao = modelo->get(GRB_DoubleAttr_ObjVal);
@@ -1142,7 +1142,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
 }
 
-void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, Instancia::Instancia *instancia)
+void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia  *const instancia)
 {
 
     if(solucao->veiculoFicticil)
@@ -1153,6 +1153,17 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
+        if(veiculo->tipo == 2)
+        {
+            cout<<"Erro, veiculo ficticio em uma solucao viavel\n";
+            cout<<veiculo->getRota()<<'\n';
+            delete modelo;
+            exit(-1);
+        }
+
+        if(veiculo->listaClientes.size() == 2)
+            continue;
+
         //Copia clientes para vetor
         auto itCliente = veiculo->listaClientes.begin();
 
@@ -1160,7 +1171,19 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             vetClienteRota[i].swap(*itCliente);
 
         //Cria rota
-        resultado = modelo->criaRota(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga, instancia, &poluicao, &combustivel);
+        try
+        {
+
+
+            resultado = modelo->criaRota(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga, instancia, &poluicao, &combustivel);
+        } catch (GRBException e)
+        {
+            cout<<"Erro MIP, tipo: "<<veiculo->tipo<<"\nRota: "<<veiculo->getRota()<<'\n';
+            cout<<"Erro code: "<<e.getErrorCode();
+            cout<<"Mensagem: "<<e.getMessage()<<'\n';
+            delete modelo;
+            exit(-1);
+        }
 
         if(resultado != 1)
             throw exceptionViabilidadeMip;
@@ -1181,8 +1204,10 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             veiculo->poluicao = poluicao;
             veiculo->combustivel = combustivel;
         }
-        else
-            cout<<"rota mip eh maior. Mip: "<<poluicao<<",  original: "<<veiculo->poluicao<<'\n';
+/*        else
+            cout<<"rota mip eh maior. Mip: "<<poluicao<<",  original: "<<veiculo->poluicao<<'\n';*/
     }
+
+    solucao->rotasMip = true;
 
 }

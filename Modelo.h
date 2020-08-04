@@ -56,8 +56,7 @@ namespace Modelo
         ~Modelo();
     };
 
-    void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota,
-                         Instancia::Instancia *instancia);
+    void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia  *const instancia);
 }
 
 

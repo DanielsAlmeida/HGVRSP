@@ -13,6 +13,8 @@ Solucao::Solucao::Solucao(int numVeiculos)
     poluicaoPenalidades = 0.0;
     ultimaAtualizacao = 0;
     numSolucoesInv = 0;
+    rotasMip = false;
+
     Veiculo *veiculo;
 
     for(int i = 0; i < numVeiculos; ++i)

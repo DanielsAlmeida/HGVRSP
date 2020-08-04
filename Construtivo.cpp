@@ -166,7 +166,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             break;
         }
 
-        /*if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
+/*        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
             cout<<"Interacao "<<i<<'\n';*/
 
         //Atualiza probabilidade
@@ -281,6 +281,17 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
             tempoCpu = c_end - c_start;
             tempoVnd  += tempoCpu.count();
+
+            if(!solucaoAux->veiculoFicticil)
+            {
+
+                if(best->veiculoFicticil)
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia);
+
+                if((solucaoAux->poluicao - best->poluicao)/best->poluicao < 0.09)
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia);
+
+            }
 
 
         }

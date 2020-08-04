@@ -232,6 +232,8 @@ namespace Solucao
         double tempoConstrutivo;
         double tempoVnd;
         double tempoViabilizador;
+        bool rotasMip;
+
         Solucao(int numVeiculos);
 
         double getPoluicaoTotal()
