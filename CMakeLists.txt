@@ -23,6 +23,8 @@ set(CMAKE_CXX_FLAGS " -m64")
 #set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 #set(CMAKE_CXX_FLAGS "-g")
 
+#cmake .. -DCMAKE_BUILD_TYPE=asan
+
 set(CMAKE_CXX_FLAGS_TSAN  "-fsanitize=thread -g -O1" CACHE STRING "Flags used by the C++ compiler during ThreadSanitizer builds." FORCE)
 
 set(CMAKE_CXX_FLAGS_ASAN "-fsanitize=address -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fno-omit-frame-pointer -g -O1" CACHE STRING "Flags used by the C++ compiler during AddressSanitizer builds." FORCE)
