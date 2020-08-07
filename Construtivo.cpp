@@ -164,10 +164,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     for(int i = 0; i < numInteracoes; ++i)
     {
 
-        if((i - ultimaAtualizacao) >= 300)
+        /*if((i - ultimaAtualizacao) >= 300)
         {
             break;
-        }
+        }*/
 
 /*        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
             cout<<"Interacao "<<i<<'\n';*/
@@ -278,7 +278,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             c_start = std::chrono::high_resolution_clock::now();
 
             Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
-                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL);
+                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, &hashRotas);
 
             c_end = std::chrono::high_resolution_clock::now();
 

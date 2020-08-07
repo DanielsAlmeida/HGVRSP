@@ -817,6 +817,8 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
 
     // Verifica viabilidade da janela de tempo e a menor folga
     vetClienteRota[0].tempoSaida = (tipoVeiculo == 0 ? 0.0 : 0.5);
+    vetClienteRota[0].rotaMip = vetClienteRotaAux[0].rotaMip = false;
+    
     vetClienteRotaAux[0] = vetClienteRota[0];
 
     double menor = HUGE_VAL;

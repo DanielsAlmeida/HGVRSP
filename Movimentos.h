@@ -11,6 +11,7 @@
 #include "Solucao.h"
 #include <string>
 #include "Modelo.h"
+#include "HashRotas.h"
 
 //#include "Exception.h"
 typedef std::list<Solucao::ClienteRota*>::iterator ItClienteRota;
@@ -35,7 +36,7 @@ namespace Movimentos
     ResultadosRota mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                     Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
                                     const bool percorreVeiculos, const bool percorreClientes, const bool pertubacao,
-                                    double *vetLimiteTempo, Modelo::Modelo *modelo);
+                                    double *vetLimiteTempo, Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas);
 
     ResultadosRota mvIntraRotaSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
@@ -101,10 +102,11 @@ namespace Movimentos
 
     void copiaSolucao(Solucao::ClienteRota *bestPtr, Solucao::ClienteRota *auxPtr, double *poluicaoBest, double *combustivelBest, ResultadosRota resultado, int *posicao);
 
-    Movimentos::ResultadosRota aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
+    Movimentos::ResultadosRota
+    aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                     Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
                     Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
-                    double *vetLimiteTempo, Modelo::Modelo *modelo);
+                    double *vetLimiteTempo, Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas);
 
     void atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *solucao,
                          Solucao::ClienteRota *vetClienteRotaBest,

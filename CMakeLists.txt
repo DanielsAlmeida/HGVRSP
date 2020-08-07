@@ -18,11 +18,21 @@ set(GUROBI_LIB_DIRECTORY $ENV{LD_LIBRARY_PATH})
 link_directories(${GUROBI_LIB_DIRECTORY})
 
 set (CMAKE_CXX_FLAGS " -std=c++2a")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS " -m64")
 
-#set(CMAKE_CXX_FLAGS "-fsanitize=address")
+#set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 #set(CMAKE_CXX_FLAGS "-g")
+
+set(CMAKE_CXX_FLAGS_TSAN  "-fsanitize=thread -g -O1" CACHE STRING "Flags used by the C++ compiler during ThreadSanitizer builds." FORCE)
+
+set(CMAKE_CXX_FLAGS_ASAN "-fsanitize=address -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fno-omit-frame-pointer -g -O1" CACHE STRING "Flags used by the C++ compiler during AddressSanitizer builds." FORCE)
+
+set(CMAKE_CXX_FLAGS_LSAN "-fsanitize=leak -fno-omit-frame-pointer -g -O1" CACHE STRING "Flags used by the C++ compiler during LeakSanitizer builds." FORCE)
+
+set(CMAKE_CXX_FLAGS_MSAN "-fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -g -O2" CACHE STRING "Flags used by the C++ compiler during MemorySanitizer builds." FORCE)
+
+set(CMAKE_CXX_FLAGS_UBSAN "-fsanitize=undefined" CACHE STRING "Flags used by the C++ compiler during UndefinedBehaviourSanitizer builds." FORCE)
+
 
 set (CMAKE_CXX_FLAGS "-I $HOME/Documentos/Programas/boost_1_72_0")
 

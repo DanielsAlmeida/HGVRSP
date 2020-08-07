@@ -27,8 +27,11 @@ using namespace Movimentos;
 
 ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                             Solucao::ClienteRota *vetClienteRotaBest,
-                                            Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
-                                            const bool percorreClientes, const bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                            Solucao::ClienteRota *vetClienteRotaAux,
+                                            const bool percorreVeiculos, const bool percorreClientes,
+                                            const bool pertubacao,
+                                            double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                            HashRotas::HashRotas *hashRotas)
 {
     string mvStr = "intraRotaShift";
 
@@ -160,8 +163,15 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
                 }
 
+                if((posicao + 1) > (instancia->numClientes+2))
+                {
+                    cout << "Posicao + 1 passou vetor\n";
+                    exit(-1);
+                }
+                cout<<"posicao + 1: "<<posicao + 1<<'\n';
 
-                vetClienteRotaBest[posicao + 1].cliente = (*clienteEscolhido)->cliente;
+                int clienteAux =  (*clienteEscolhido)->cliente;
+                vetClienteRotaBest[posicao + 1].cliente = clienteAux;
 
                 auto prox = clienteIt;
                 prox++;
@@ -171,6 +181,13 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
                 for(;prox != veiculo->listaClientes.end(); )
                 {
+                    if(k > (instancia->numClientes + 2))
+                    {
+                        cout<<"k maior vetor\n";
+                        exit(-1);
+                    }
+
+
                     if((*prox)->cliente != (*clienteEscolhido)->cliente)
                     {   vetClienteRotaBest[k] = **prox;
                         ++k;
@@ -184,26 +201,82 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                 double combustivel, poluicao;
                 bool resultado;
 
-                if(modelo)
+
+
+                HashRotas::HashNo *hashNo = hashRotas->getVeiculo(vetClienteRotaBest, k, veiculo->tipo);
+
+
+
+                if(hashNo)
                 {
-                    if(modelo->usaModeloVnd)
+                    cout<<"Veiculo: ";
+
+                    for(int l = 0; l < hashNo->tam; ++l)
+                        cout<<hashNo->veiculo[l].cliente<<' ';
+                    cout<<"\n\n";
+
+                    if(k != hashNo->tam)
                     {
-
-                        resultado = modelo->criaRota(vetClienteRotaBest, k, veiculo->tipo, peso, instancia, &poluicao, &combustivel);
-
+                        cout<<"hashNotam eh diferente de k\n";
+                        exit(-1);
                     }
-                    else
+
+                    resultado = true;
+                    combustivel = hashNo->combustivel;
+                    poluicao = hashNo->poluicao;
+
+                    auto vetCliente = vetClienteRotaBest;
+                    auto vetClienteBest = hashNo->veiculo;
+
+                    if(veiculo->tipo != hashNo->tipo)
+                        cout<<"Tipos errados\n";
+
+                    for(int i = 0; i < hashNo->tam; ++i)
                     {
-                        resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, k, peso, veiculo->tipo, &combustivel,
-                                                                 &poluicao, NULL, NULL, vetLimiteTempo, vetClienteRotaAux);
+                        if(i > (instancia->numClientes + 2))
+                        {
+                            cout<<"k maior vetor\n";
+                            exit(-1);
+                        }
+
+                        if(vetCliente->cliente != vetClienteRotaBest->cliente)
+                            cout<<"Vetores diferentes\n";
+
+                        vetCliente->swap(vetClienteRotaBest);
+
+                        ++vetCliente;
+                        ++vetClienteRotaBest;
                     }
                 }
                 else
                 {
 
-                    resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, k, peso, veiculo->tipo, &combustivel,
-                                                              &poluicao, NULL, NULL, vetLimiteTempo, vetClienteRotaAux);
+                    if (modelo)
+                    {
+                        if (modelo->usaModeloVnd)
+                        {
+
+                            resultado = modelo->criaRota(vetClienteRotaBest, k, veiculo->tipo, peso, instancia,
+                                                         &poluicao, &combustivel);
+
+                        } else
+                        {
+                            resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, k, peso,
+                                                                     veiculo->tipo, &combustivel,
+                                                                     &poluicao, NULL, NULL, vetLimiteTempo,
+                                                                     vetClienteRotaAux);
+                        }
+                    } else
+                    {
+
+                        resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, k, peso, veiculo->tipo,
+                                                                 &combustivel,
+                                                                 &poluicao, NULL, NULL, vetLimiteTempo,
+                                                                 vetClienteRotaAux);
+                    }
                 }
+
+
                 if (resultado)
                 {
                     //Verifica se é melhor do que a melhor solucao
@@ -2689,8 +2762,10 @@ ResultadosRota Movimentos::calculaFimRota_2OptInter(const Instancia::Instancia *
 Movimentos::ResultadosRota
 Movimentos::aplicaMovimento(int movimento, const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                             Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
-                            bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
-                            Solucao::ClienteRota *vetClienteRotaSecundAux, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                            bool pertubacao,
+                            Solucao::ClienteRota *vetClienteRotaSecundBest,
+                            Solucao::ClienteRota *vetClienteRotaSecundAux,
+                            double *vetLimiteTempo, Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas)
 {
 
 
@@ -2712,8 +2787,8 @@ Movimentos::aplicaMovimento(int movimento, const Instancia::Instancia *const ins
     switch (movimento)
     {
         case 0:
-            resultado = Movimentos::mvIntraRotaShift(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, true, true,
-                                                pertubacao, vetLimiteTempo, modelo);
+            resultado = Movimentos::mvIntraRotaShift(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, true,
+                                                     true, pertubacao, vetLimiteTempo, modelo, hashRotas);
             break;
 
         case 1:

@@ -167,6 +167,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *client
 
     u_int32_t hash = getHash(clienteRota, tam, tipo);
 
+
     hash = hash % tamTabela;
 
     std::list<HashNo*> *lista = &tabelaHash[hash];
@@ -198,7 +199,10 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *client
             }
 
             if(encontrou)
+            {
+
                 return hashNo;
+            }
 
         }
     }
@@ -275,6 +279,8 @@ void HashRotas::HashRotas::estatisticasHash(float *tamanhoMedio_, int *maior_)
 
 HashRotas::HashRotas::~HashRotas()
 {
+
+
     std::list<HashNo*> *list;
 
     //deleta HashNo
@@ -286,11 +292,16 @@ HashRotas::HashRotas::~HashRotas()
         {
 
             for(auto hashNo : *list)
+            {
+                delete []hashNo->veiculo;
                 delete hashNo;
+            }
         }
     }
 
     delete []tabelaHash;
+
+
 
 }
 

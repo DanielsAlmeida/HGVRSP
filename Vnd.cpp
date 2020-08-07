@@ -9,9 +9,10 @@ using namespace Vnd;
 
 
 void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-              Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
-              Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
-              int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo, Modelo::Modelo *modelo)
+              Solucao::ClienteRota *vetClienteRotaBest,
+              Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
+              Solucao::ClienteRota *vetClienteRotaSecundAux, int interacao, EstatisticaMv *vetEstatisticaMv,
+              double *vetLimiteTempo, Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas)
 {
 
 
@@ -65,7 +66,7 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
             resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest,
                                                          vetClienteRotaAux, false, vetClienteRotaSecundBest,
-                                                         vetClienteRotaSecundAux, vetLimiteTempo, modelo);
+                                                         vetClienteRotaSecundAux, vetLimiteTempo, modelo, hashRotas);
 
 
             auto c_end = std::chrono::high_resolution_clock::now();

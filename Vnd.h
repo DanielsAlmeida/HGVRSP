@@ -10,6 +10,7 @@
 #include "Instancia.h"
 #include "Movimentos.h"
 #include "Modelo.h"
+#include "HashRotas.h"
 
 namespace Vnd
 {
@@ -34,9 +35,10 @@ namespace Vnd
     };
 
     void vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-             Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
-             Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
-             int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo, Modelo::Modelo *modelo);
+             Solucao::ClienteRota *vetClienteRotaBest,
+             Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
+             Solucao::ClienteRota *vetClienteRotaSecundAux, int interacao, EstatisticaMv *vetEstatisticaMv,
+             double *vetLimiteTempo, Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas);
 
     bool avaliaSolucao(Solucao::Solucao *solucao, Movimentos::ResultadosRota resultadosRota);
 

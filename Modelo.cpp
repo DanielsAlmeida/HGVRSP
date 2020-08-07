@@ -1162,7 +1162,9 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             exit(-1);
         }
 
-        if(veiculo->listaClientes.size() == 2)
+        auto vetAux = *veiculo->listaClientes.begin();
+
+        if((veiculo->listaClientes.size() == 2) || vetAux->rotaMip)
             continue;
 
         //Copia clientes para vetor
@@ -1213,6 +1215,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
 
         if(poluicao < veiculo->poluicao)
         {
+            vetClienteRota[0].rotaMip = true;
             //Atualiza solucao
             auto it = veiculo->listaClientes.begin();
 
