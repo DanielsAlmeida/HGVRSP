@@ -53,10 +53,12 @@ u_int32_t HashRotas::HashRotas::getHash(Solucao::Veiculo *veiculo)
             hash = ((hash << 5) + hash) + cliente->cliente;
     }
 
+    hash = ((hash << 5) + hash) + veiculo->tipo;
+
     return hash;
 }
 
-u_int32_t HashRotas::HashRotas::getHash(Solucao::ClienteRota *clienteRota, const int tam)
+u_int32_t HashRotas::HashRotas::getHash(Solucao::ClienteRota *clienteRota, const int tam, const int tipo)
 {
 
     u_int32_t hash = 5381;
@@ -66,6 +68,8 @@ u_int32_t HashRotas::HashRotas::getHash(Solucao::ClienteRota *clienteRota, const
     {
         hash = ((hash << 5) + hash) + cliente->cliente;
     }
+
+    hash = ((hash << 5) + hash) + tipo;
 
     return hash;
 
@@ -93,7 +97,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
         {
 
 
-            if(hashNo->tam == veiculo->listaClientes.size())
+            if((hashNo->tam == veiculo->listaClientes.size()) && (hashNo->tipo == veiculo->tipo))
             {
 
 
@@ -154,14 +158,14 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
 
 }
 
-HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const int tam)
+HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo)
 {
 
     //Verifica veiculo vazio
     if(tam <= 2)
         return NULL;
 
-    u_int32_t hash = getHash(clienteRota, tam);
+    u_int32_t hash = getHash(clienteRota, tam, tipo);
 
     hash = hash % tamTabela;
 
@@ -172,7 +176,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *client
 
     for(auto hashNo : *lista)
     {
-        if(hashNo->tam == tam)
+        if((hashNo->tam == tam) && (hashNo->tipo == tipo))
         {
             bool encontrou = true;
 
@@ -221,7 +225,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::Veiculo *veiculo)
 
     for(auto hashNo : *lista)
     {
-        if(hashNo->tam == veiculo->listaClientes.size())
+        if((hashNo->tam == veiculo->listaClientes.size()) && (hashNo->tipo == veiculo->tipo))
         {
             bool encontrou = true;
 

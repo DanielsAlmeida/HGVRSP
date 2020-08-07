@@ -45,7 +45,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     auto *vetClienteBestSecund = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetClienteRotaSecundAux = new Solucao::ClienteRota[instancia->numClientes+2];
 
-    //HashRotas::HashRotas hashRotas(instancia->numClientes);
+    HashRotas::HashRotas hashRotas(instancia->numClientes);
 
     //Vetores para o reativo
     double *vetorProbabilidade = new double[tamAlfa];
@@ -278,24 +278,26 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             c_start = std::chrono::high_resolution_clock::now();
 
             Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
-                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, modelo);
+                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL);
 
             c_end = std::chrono::high_resolution_clock::now();
 
             tempoCpu = c_end - c_start;
             tempoVnd  += tempoCpu.count();
 
-            /*
+
             if(!solucaoAux->veiculoFicticil)
             {
 
                 if(best->veiculoFicticil)
                     Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
+                else
+                {
+                    if ((solucaoAux->poluicao - best->poluicao) / best->poluicao < 0.09)
+                        Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
+                }
 
-                if((solucaoAux->poluicao - best->poluicao)/best->poluicao < 0.09)
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
-
-            }*/
+            }
 
 
         }
@@ -401,6 +403,12 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     }
 
     //std::cout<<"Numero de solucoes inviaveis: "<<numSolInviaveis<<'\n';
+
+    float tamanhoMedio;
+    int maior;
+
+    //hashRotas.estatisticasHash(&tamanhoMedio, &maior);
+    //cout<<"Estatisticas hash: \nTamnho medio: "<<tamanhoMedio<<"\nMaior: "<<maior<<'\n';
 
     //Libera memória
     delete []vetorClienteBest;

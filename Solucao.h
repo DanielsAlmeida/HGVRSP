@@ -31,6 +31,7 @@ namespace Solucao
         long double poluicaoRota;
         long double produtoCarga;
         long double distanciaAteCliente;
+        bool rotaMip;
 
         ClienteRota(){}
         ClienteRota(const ClienteRota &outro)
@@ -44,6 +45,7 @@ namespace Solucao
             produtoCarga = outro.produtoCarga;
             combustivelRota = outro.combustivelRota;
             distanciaAteCliente = outro.distanciaAteCliente;
+            rotaMip = outro.rotaMip;
 
             for(int i = 0; i < 5; ++i)
             {
@@ -66,6 +68,7 @@ namespace Solucao
             produtoCarga = outro.produtoCarga;
             combustivelRota = outro.combustivelRota;
             distanciaAteCliente = outro.distanciaAteCliente;
+            rotaMip = outro.rotaMip;
 
             for(int i = 0; i < 5; ++i)
             {
@@ -86,6 +89,7 @@ namespace Solucao
             produtoCarga = outro->produtoCarga;
             combustivelRota = outro->combustivelRota;
             distanciaAteCliente = outro->distanciaAteCliente;
+            rotaMip = outro->rotaMip;
 
             for(int i = 0; i < 5; ++i)
             {

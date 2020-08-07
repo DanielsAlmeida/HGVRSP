@@ -30,9 +30,9 @@ namespace HashRotas
         HashRotas(int numClientes);
         ~HashRotas();
         u_int32_t getHash(Solucao::Veiculo *veiculo);
-        u_int32_t getHash(Solucao::ClienteRota *clienteRota, const int tam);
+        u_int32_t getHash(Solucao::ClienteRota *clienteRota, const int tam, const int tipo);
 
-        HashNo* getVeiculo(Solucao::ClienteRota *clienteRota, const int tam);
+        HashNo* getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo);
         HashNo* getVeiculo(Solucao::Veiculo *veiculo);
 
         bool insereVeiculo(Solucao::Veiculo *veiculo);

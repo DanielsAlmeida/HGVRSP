@@ -1171,23 +1171,45 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
         for(int i = 0; i < veiculo->listaClientes.size(); ++i, ++itCliente)
             vetClienteRota[i].swap(*itCliente);
 
-        //Cria rota
-        try
-        {
+        HashRotas::HashNo *hashNo = hashRotas->getVeiculo(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo);
 
-
-            resultado = modelo->criaRota(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga, instancia, &poluicao, &combustivel);
-        } catch (GRBException e)
+        if(hashNo)
         {
-            cout<<"Erro MIP, tipo: "<<veiculo->tipo<<"\nRota: "<<veiculo->getRota()<<'\n';
-            cout<<"Erro code: "<<e.getErrorCode();
-            cout<<"Mensagem: "<<e.getMessage()<<'\n';
-            delete modelo;
-            exit(-1);
+            auto veiculo_h = hashNo->veiculo;
+            auto veiculo_ = vetClienteRota;
+
+            for(int i = 0; i < hashNo->tam; ++i)
+            {
+                veiculo_->swap(veiculo_h);
+
+                ++veiculo_;
+                ++veiculo_h;
+            }
+
+            combustivel = hashNo->combustivel;
+            poluicao = hashNo->poluicao;
+
         }
+        else
+        {
 
-        if(resultado != 1)
-            throw exceptionViabilidadeMip;
+            //Cria rota
+            try
+            {
+
+
+                resultado = modelo->criaRota(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo,
+                                             veiculo->carga, instancia, &poluicao, &combustivel);
+            } catch (GRBException e)
+            {
+                cout << "Erro MIP, tipo: " << veiculo->tipo << "\nRota: " << veiculo->getRota() << '\n';
+                cout << "Erro code: " << e.getErrorCode();
+                cout << "Mensagem: " << e.getMessage() << '\n';
+                delete modelo;
+                exit(-1);
+            }
+
+        }
 
         if(poluicao < veiculo->poluicao)
         {
@@ -1204,6 +1226,18 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             //Atualiza poluicao e combustivel do veiculo
             veiculo->poluicao = poluicao;
             veiculo->combustivel = combustivel;
+
+            if(hashNo == NULL)
+            {
+                if(!hashRotas->insereVeiculo(veiculo))
+                {
+                    cout<<"Erro, nao foi possivel inserir a rota: "<<veiculo->getRota()<<'\n'<<"Tipo: "<<veiculo->tipo<<'\n';
+                    delete modelo;
+                    exit(-1);
+                }
+                //else
+                  //  cout<<"Inseriu veiculo do tipo: "<<veiculo->tipo<<" rota: "<<veiculo->getRota()<<"\n\n";
+            }
         }
 /*        else
             cout<<"rota mip eh maior. Mip: "<<poluicao<<",  original: "<<veiculo->poluicao<<'\n';*/
