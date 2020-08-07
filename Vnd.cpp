@@ -65,7 +65,7 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
             resultadosRota = Movimentos::aplicaMovimento(vetMovimentos[posicao], instancia, solucao, vetClienteRotaBest,
                                                          vetClienteRotaAux, false, vetClienteRotaSecundBest,
-                                                         vetClienteRotaSecundAux, vetLimiteTempo, NULL);
+                                                         vetClienteRotaSecundAux, vetLimiteTempo, modelo);
 
 
             auto c_end = std::chrono::high_resolution_clock::now();

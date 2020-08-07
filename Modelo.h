@@ -3,6 +3,7 @@
 //
 #include "gurobi_c++.h"
 #include "Instancia.h"
+#include "HashRotas.h"
 
 #ifndef HGVRSP_MODELO_H
 #define HGVRSP_MODELO_H
@@ -56,7 +57,8 @@ namespace Modelo
         ~Modelo();
     };
 
-    void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia  *const instancia);
+    void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota,
+                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas);
 }
 
 

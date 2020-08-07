@@ -7,6 +7,7 @@
 #include <cstdio>
 #include "Construtivo.h"
 #include "Exception.h"
+#include "HashRotas.h"
 
 ExceptioViabilidadeMip exceptionViabilidadeMip;
 
@@ -1142,7 +1143,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
 }
 
-void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia  *const instancia)
+void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas)
 {
 
     if(solucao->veiculoFicticil)

@@ -53,8 +53,8 @@ set(    SOURCE_FILES
         Constantes.h
         Modelo.cpp
         Modelo.h
-
-)
+        HashRotas.cpp
+        HashRotas.h)
 
 add_executable(HGVRSP ${SOURCE_FILES})
         

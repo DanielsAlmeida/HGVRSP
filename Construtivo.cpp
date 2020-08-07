@@ -8,6 +8,7 @@
 #include "ViabilizaSolucao.h"
 #include "Movimentos_Paradas.h"
 #include "Constantes.h"
+#include "HashRotas.h"
 
 using namespace Construtivo;
 using namespace std;
@@ -43,6 +44,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetClienteBestSecund = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetClienteRotaSecundAux = new Solucao::ClienteRota[instancia->numClientes+2];
+
+    //HashRotas::HashRotas hashRotas(instancia->numClientes);
 
     //Vetores para o reativo
     double *vetorProbabilidade = new double[tamAlfa];
@@ -282,16 +285,17 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             tempoCpu = c_end - c_start;
             tempoVnd  += tempoCpu.count();
 
+            /*
             if(!solucaoAux->veiculoFicticil)
             {
 
                 if(best->veiculoFicticil)
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia);
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
 
                 if((solucaoAux->poluicao - best->poluicao)/best->poluicao < 0.09)
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia);
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
 
-            }
+            }*/
 
 
         }

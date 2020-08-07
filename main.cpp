@@ -14,6 +14,7 @@
 #include "Modelo.h"
 #include <string>
 #include <fstream>
+#include "HashRotas.h"
 //  1588722899
 
 //1586725703
@@ -235,16 +236,52 @@ int main(int num, char **agrs)
     env.set(GRB_IntParam_OutputFlag, 0);
     GRBModel grb_modelo = GRBModel(env);
 
-    Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
+    Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, true);
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 100, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
                                        matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo);
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
+    /*
+    if(!solucao->veiculoFicticil)
+    {
+        HashRotas::HashRotas hashRotas(instancia->numClientes);
 
+
+        for(auto veiculo : solucao->vetorVeiculos)
+        {
+            if(!hashRotas.insereVeiculo(veiculo) && veiculo->listaClientes.size() > 2)
+                cout<<"Nao inseriu veiculo\n";
+            else
+                cout<<"Inseriu veiculo\n";
+
+            HashRotas::HashNo *hashNo = hashRotas.getVeiculo(veiculo);
+
+            if(hashNo == NULL)
+                cout<<"hash igual a NULL\n";
+            else
+            {
+                cout << veiculo->getRota() << "  ";
+
+                Solucao::ClienteRota *clienteRota = hashNo->veiculo;
+
+                for (int i = 0; i < hashNo->tam; ++i, ++clienteRota)
+                    cout << clienteRota->cliente << ' ';
+
+                cout<<'\n';
+            }
+        }
+
+        float media;
+        int maior;
+
+        hashRotas.estatisticasHash(&media, &maior);
+
+        cout<<"media: "<<media<<"\nmaior: "<<maior<<'\n';
+    }*/
 
     delete []vetCandInteracoes;
 
@@ -353,7 +390,7 @@ int main(int num, char **agrs)
 
     double distanciaTotal;
 
-    bool Veificacao = true;
+    bool Veificacao = false;
 
     /*if(!solucao->veiculoFicticil)
         Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);*/
@@ -430,6 +467,8 @@ int main(int num, char **agrs)
 
     if(!solucao->veiculoFicticil)
     {
+        Veificacao = true;
+
         for(auto veiculo : solucao->vetorVeiculos)
         {
             Veificacao = Veificacao * VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
