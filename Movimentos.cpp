@@ -163,15 +163,9 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
                 }
 
-                if((posicao + 1) > (instancia->numClientes+2))
-                {
-                    cout << "Posicao + 1 passou vetor\n";
-                    exit(-1);
-                }
-                cout<<"posicao + 1: "<<posicao + 1<<'\n';
 
-                int clienteAux =  (*clienteEscolhido)->cliente;
-                vetClienteRotaBest[posicao + 1].cliente = clienteAux;
+                vetClienteRotaBest[posicao + 1].cliente = (*clienteEscolhido)->cliente; //Aqui
+
 
                 auto prox = clienteIt;
                 prox++;
@@ -181,12 +175,6 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
                 for(;prox != veiculo->listaClientes.end(); )
                 {
-                    if(k > (instancia->numClientes + 2))
-                    {
-                        cout<<"k maior vetor\n";
-                        exit(-1);
-                    }
-
 
                     if((*prox)->cliente != (*clienteEscolhido)->cliente)
                     {   vetClienteRotaBest[k] = **prox;
@@ -209,11 +197,6 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
                 if(hashNo)
                 {
-                    cout<<"Veiculo: ";
-
-                    for(int l = 0; l < hashNo->tam; ++l)
-                        cout<<hashNo->veiculo[l].cliente<<' ';
-                    cout<<"\n\n";
 
                     if(k != hashNo->tam)
                     {
@@ -226,26 +209,15 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                     poluicao = hashNo->poluicao;
 
                     auto vetCliente = vetClienteRotaBest;
-                    auto vetClienteBest = hashNo->veiculo;
+                    auto vetCliente_ = hashNo->veiculo;
 
-                    if(veiculo->tipo != hashNo->tipo)
-                        cout<<"Tipos errados\n";
 
                     for(int i = 0; i < hashNo->tam; ++i)
                     {
-                        if(i > (instancia->numClientes + 2))
-                        {
-                            cout<<"k maior vetor\n";
-                            exit(-1);
-                        }
-
-                        if(vetCliente->cliente != vetClienteRotaBest->cliente)
-                            cout<<"Vetores diferentes\n";
-
-                        vetCliente->swap(vetClienteRotaBest);
+                        vetCliente->swap(vetCliente_);
 
                         ++vetCliente;
-                        ++vetClienteRotaBest;
+                        ++vetCliente_;
                     }
                 }
                 else
