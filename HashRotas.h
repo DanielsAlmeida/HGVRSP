@@ -32,7 +32,7 @@ namespace HashRotas
         u_int32_t getHash(Solucao::Veiculo *veiculo);
         u_int32_t getHash(Solucao::ClienteRota *clienteRota, const int tam, const int tipo);
 
-        HashNo* getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo);
+        bool getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo, double *poluicao, double *combustivel);
         HashNo* getVeiculo(Solucao::Veiculo *veiculo);
 
         bool insereVeiculo(Solucao::Veiculo *veiculo);

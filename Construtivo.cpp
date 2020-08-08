@@ -164,10 +164,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     for(int i = 0; i < numInteracoes; ++i)
     {
 
-        /*if((i - ultimaAtualizacao) >= 300)
+        if(((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
         {
             break;
-        }*/
+        }
 
 /*        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
             cout<<"Interacao "<<i<<'\n';*/
@@ -404,11 +404,11 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     //std::cout<<"Numero de solucoes inviaveis: "<<numSolInviaveis<<'\n';
 
-    float tamanhoMedio;
+    /*float tamanhoMedio;
     int maior;
 
-    //hashRotas.estatisticasHash(&tamanhoMedio, &maior);
-    //cout<<"Estatisticas hash: \nTamnho medio: "<<tamanhoMedio<<"\nMaior: "<<maior<<'\n';
+    hashRotas.estatisticasHash(&tamanhoMedio, &maior);
+    cout<<"Estatisticas hash: \nTamnho medio: "<<tamanhoMedio<<"\nMaior: "<<maior<<'\n';*/
 
     //Libera memória
     delete []vetorClienteBest;

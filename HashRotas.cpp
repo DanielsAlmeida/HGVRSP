@@ -158,7 +158,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
 
 }
 
-HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo)
+bool HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo, double *poluicao, double *combustivel)
 {
 
     //Verifica veiculo vazio
@@ -173,7 +173,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *client
     std::list<HashNo*> *lista = &tabelaHash[hash];
 
     if(lista->empty())
-        return NULL;
+        return false;
 
     for(auto hashNo : *lista)
     {
@@ -200,6 +200,19 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *client
 
             if(encontrou)
             {
+                veiculo_p = hashNo->veiculo;
+                cliente = clienteRota;
+
+                for(int i = 0; i < tam; ++i)
+                {
+                    cliente->swap(veiculo_p);
+
+                    ++cliente;
+                    ++veiculo_p;
+                }
+
+                *combustivel = hashNo->combustivel;
+                *poluicao = hashNo->poluicao;
 
                 return hashNo;
             }
@@ -208,7 +221,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *client
     }
 
     //Percorreu todos os veiculos e nao encontrou
-    return NULL;
+    return false;
 
 }
 

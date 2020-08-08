@@ -1173,26 +1173,10 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
         for(int i = 0; i < veiculo->listaClientes.size(); ++i, ++itCliente)
             vetClienteRota[i].swap(*itCliente);
 
-        HashRotas::HashNo *hashNo = hashRotas->getVeiculo(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo);
 
-        if(hashNo)
-        {
-            auto veiculo_h = hashNo->veiculo;
-            auto veiculo_ = vetClienteRota;
+        bool rotaEncontrada = hashRotas->getVeiculo(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, &poluicao, &combustivel);
 
-            for(int i = 0; i < hashNo->tam; ++i)
-            {
-                veiculo_->swap(veiculo_h);
-
-                ++veiculo_;
-                ++veiculo_h;
-            }
-
-            combustivel = hashNo->combustivel;
-            poluicao = hashNo->poluicao;
-
-        }
-        else
+        if(!rotaEncontrada)
         {
 
             //Cria rota
@@ -1230,7 +1214,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             veiculo->poluicao = poluicao;
             veiculo->combustivel = combustivel;
 
-            if(hashNo == NULL)
+            if(!rotaEncontrada)
             {
                 if(!hashRotas->insereVeiculo(veiculo))
                 {

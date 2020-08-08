@@ -187,40 +187,15 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
 
                 double combustivel, poluicao;
-                bool resultado;
+                bool resultado = false;
+
+
+                if(hashRotas)
+                    resultado = hashRotas->getVeiculo(vetClienteRotaBest, k, veiculo->tipo, &poluicao, &combustivel);
 
 
 
-                HashRotas::HashNo *hashNo = hashRotas->getVeiculo(vetClienteRotaBest, k, veiculo->tipo);
-
-
-
-                if(hashNo)
-                {
-
-                    if(k != hashNo->tam)
-                    {
-                        cout<<"hashNotam eh diferente de k\n";
-                        exit(-1);
-                    }
-
-                    resultado = true;
-                    combustivel = hashNo->combustivel;
-                    poluicao = hashNo->poluicao;
-
-                    auto vetCliente = vetClienteRotaBest;
-                    auto vetCliente_ = hashNo->veiculo;
-
-
-                    for(int i = 0; i < hashNo->tam; ++i)
-                    {
-                        vetCliente->swap(vetCliente_);
-
-                        ++vetCliente;
-                        ++vetCliente_;
-                    }
-                }
-                else
+                if(!resultado)
                 {
 
                     if (modelo)
@@ -336,8 +311,10 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 *********************************************************************************************************************************************************************************************** */
 ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                            Solucao::ClienteRota *vetClienteRotaBest,
-                                           Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
-                                           const bool percorreClientes, bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                           Solucao::ClienteRota *vetClienteRotaAux,
+                                           const bool percorreVeiculos, const bool percorreClientes, bool pertubacao,
+                                           double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                           HashRotas::HashRotas *hashRotas)
 {
 
     //Escolhe um veiculo
@@ -505,39 +482,47 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
                     //Calcular rota a partir de next e substituir candidato por clienteIt
 
                     double poluicao, combustivel;
-                    bool resultado;
+                    bool resultado = false;
 
-                    if(modelo)
+                    if(hashRotas)
+                        resultado = hashRotas->getVeiculo(vetClienteRotaBest, posicaoAux, veiculo->tipo, &poluicao, &combustivel);
+
+                    if(!resultado)
                     {
 
-                        if(modelo->usaModeloVnd)
+                        if (modelo)
                         {
-                            /*cout<<"Rota: ";
-                            for(int i = 0; i < posicaoAux; ++i)
-                                cout<<vetClienteRotaBest[i].cliente<<' ';
 
-                            cout<<'\n';*/
-                            resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso, instancia, &poluicao, &combustivel);
+                            if (modelo->usaModeloVnd)
+                            {
+                                /*cout<<"Rota: ";
+                                for(int i = 0; i < posicaoAux; ++i)
+                                    cout<<vetClienteRotaBest[i].cliente<<' ';
 
-                            /*cout<<"D Rota: ";
-                            for(int i = 0; i < posicaoAux; ++i)
-                                cout<<vetClienteRotaBest[i].cliente<<' ';
+                                cout<<'\n';*/
+                                resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso,
+                                                             instancia, &poluicao, &combustivel);
 
-                            cout<<'\n';*/
+                                /*cout<<"D Rota: ";
+                                for(int i = 0; i < posicaoAux; ++i)
+                                    cout<<vetClienteRotaBest[i].cliente<<' ';
 
-                        }
-                        else
+                                cout<<'\n';*/
+
+                            } else
+                            {
+                                resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
+                                                                         peso,
+                                                                         veiculo->tipo, &combustivel, &poluicao, NULL,
+                                                                         NULL, vetLimiteTempo, vetClienteRotaAux);
+                            }
+
+                        } else
                         {
                             resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux, peso,
                                                                      veiculo->tipo, &combustivel, &poluicao, NULL,
                                                                      NULL, vetLimiteTempo, vetClienteRotaAux);
                         }
-
-                    }else
-                    {
-                        resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux, peso,
-                                                                 veiculo->tipo, &combustivel, &poluicao, NULL,
-                                                                 NULL, vetLimiteTempo, vetClienteRotaAux);
                     }
                     if (resultado)
                     {
@@ -583,38 +568,44 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
 
                     double poluicao, combustivel;
 
-                    bool resultado;
+                    bool resultado = false;
 
-                    if(modelo)
+                    if(hashRotas)
+                        resultado = hashRotas->getVeiculo(vetClienteRotaBest, posicaoAux, veiculo->tipo, &poluicao, &combustivel);
+
+                    if(!resultado)
                     {
-                        if(modelo->usaModeloVnd)
+                        if (modelo)
                         {
-                            /*cout<<"Rota: ";
-                            for(int i = 0; i < posicaoAux; ++i)
-                                cout<<vetClienteRotaBest[i].cliente<<' ';
+                            if (modelo->usaModeloVnd)
+                            {
+                                /*cout<<"Rota: ";
+                                for(int i = 0; i < posicaoAux; ++i)
+                                    cout<<vetClienteRotaBest[i].cliente<<' ';
 
-                            cout<<'\n';*/
-                            resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso, instancia, &poluicao, &combustivel);
+                                cout<<'\n';*/
+                                resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso,
+                                                             instancia, &poluicao, &combustivel);
 
-                            /*cout<<"D Rota: ";
-                            for(int i = 0; i < posicaoAux; ++i)
-                                cout<<vetClienteRotaBest[i].cliente<<' ';
+                                /*cout<<"D Rota: ";
+                                for(int i = 0; i < posicaoAux; ++i)
+                                    cout<<vetClienteRotaBest[i].cliente<<' ';
 
-                            cout<<'\n';*/
+                                cout<<'\n';*/
 
-                        }
-                        else
+                            } else
+                            {
+                                resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
+                                                                         peso,
+                                                                         veiculo->tipo, &combustivel, &poluicao, NULL,
+                                                                         NULL, vetLimiteTempo, vetClienteRotaAux);
+                            }
+                        } else
                         {
                             resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux, peso,
                                                                      veiculo->tipo, &combustivel, &poluicao, NULL,
                                                                      NULL, vetLimiteTempo, vetClienteRotaAux);
                         }
-                    }
-                    else
-                    {
-                        resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux, peso,
-                                                                 veiculo->tipo, &combustivel, &poluicao, NULL,
-                                                                 NULL, vetLimiteTempo, vetClienteRotaAux);
                     }
 
 
@@ -684,7 +675,9 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                                              Solucao::ClienteRota *vetClienteRotaBest,
                                              Solucao::ClienteRota *vetClienteRotaAux,
                                              Solucao::ClienteRota *vetClienteRotaSecundBest,
-                                             const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                             const bool percorreVeiculos,
+                                             bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                             HashRotas::HashRotas *hashRotas)
 {
 
     string mvStr = "mvInterRotasShift";
@@ -905,32 +898,36 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                 ++posicaoAux;
             }
 
-            bool resultado = true;
+            bool resultado = false;
 
             if(posicaoAux > 2)
             {
+                if(hashRotas)
+                    resultado = hashRotas->getVeiculo(vetClienteRotaBest, posicaoAux, veiculo1->tipo, &poluicaoAuxVeic1, &combustivelAuxVeic1);
 
-                if(modelo)
+                if(!resultado)
                 {
-                    if(modelo->usaModeloVnd)
+                    if (modelo)
                     {
-                        resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo1->tipo, PesoVeiculo1, instancia, &poluicaoAuxVeic1, &combustivelAuxVeic1);
-                    }
-                    else
+                        if (modelo->usaModeloVnd)
+                        {
+                            resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo1->tipo, PesoVeiculo1,
+                                                         instancia, &poluicaoAuxVeic1, &combustivelAuxVeic1);
+                        } else
+                        {
+                            resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
+                                                                     PesoVeiculo1, veiculo1->tipo, &combustivelAuxVeic1,
+                                                                     &poluicaoAuxVeic1, NULL, NULL, vetLimiteTempo,
+                                                                     vetClienteRotaAux);
+                        }
+
+                    } else
                     {
                         resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
                                                                  PesoVeiculo1, veiculo1->tipo, &combustivelAuxVeic1,
                                                                  &poluicaoAuxVeic1, NULL, NULL, vetLimiteTempo,
                                                                  vetClienteRotaAux);
                     }
-
-                }
-                else
-                {
-                    resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
-                                                             PesoVeiculo1, veiculo1->tipo, &combustivelAuxVeic1,
-                                                             &poluicaoAuxVeic1, NULL, NULL, vetLimiteTempo,
-                                                             vetClienteRotaAux);
                 }
             }
             else
@@ -988,31 +985,43 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                             if(posicaoAux > 2)
                             {
 
-                                if(modelo)
+                                if(hashRotas)
+                                    resultado = hashRotas->getVeiculo(vetClienteRotaSecundBest, posicaoAux, veiculo2->tipo, &poluicaoRotaVeic2, &combustivelRotaVeic2);
+
+                                if(!resultado)
                                 {
-                                    if(modelo->usaModeloVnd)
+
+                                    if (modelo)
                                     {
-                                        resultadoVeic2 = modelo->criaRota(vetClienteRotaSecundBest, posicaoAux, veiculo2->tipo, PesoVeiculo2,
-                                                                          instancia, &poluicaoRotaVeic2, &combustivelRotaVeic2);
-                                    }
-                                    else
+                                        if (modelo->usaModeloVnd)
+                                        {
+                                            resultadoVeic2 = modelo->criaRota(vetClienteRotaSecundBest, posicaoAux,
+                                                                              veiculo2->tipo, PesoVeiculo2,
+                                                                              instancia, &poluicaoRotaVeic2,
+                                                                              &combustivelRotaVeic2);
+                                        } else
+                                        {
+                                            resultadoVeic2 = Movimentos_Paradas::criaRota(instancia,
+                                                                                          vetClienteRotaSecundBest,
+                                                                                          posicaoAux, PesoVeiculo2,
+                                                                                          veiculo2->tipo,
+                                                                                          &combustivelRotaVeic2,
+                                                                                          &poluicaoRotaVeic2, NULL,
+                                                                                          NULL,
+                                                                                          vetLimiteTempo,
+                                                                                          vetClienteRotaAux);
+                                        }
+                                    } else
                                     {
-                                        resultadoVeic2 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaSecundBest,
+                                        resultadoVeic2 = Movimentos_Paradas::criaRota(instancia,
+                                                                                      vetClienteRotaSecundBest,
                                                                                       posicaoAux, PesoVeiculo2,
                                                                                       veiculo2->tipo,
                                                                                       &combustivelRotaVeic2,
                                                                                       &poluicaoRotaVeic2, NULL, NULL,
-                                                                                      vetLimiteTempo, vetClienteRotaAux);
+                                                                                      vetLimiteTempo,
+                                                                                      vetClienteRotaAux);
                                     }
-                                }
-                                else
-                                {
-                                    resultadoVeic2 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaSecundBest,
-                                                                                  posicaoAux, PesoVeiculo2,
-                                                                                  veiculo2->tipo,
-                                                                                  &combustivelRotaVeic2,
-                                                                                  &poluicaoRotaVeic2, NULL, NULL,
-                                                                                  vetLimiteTempo, vetClienteRotaAux);
                                 }
 
                             }
@@ -1116,7 +1125,8 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
                                             Solucao::ClienteRota *vetClienteRotaAux,
                                             Solucao::ClienteRota *vetClienteRotaSecundBest,
                                             Solucao::ClienteRota *vetClienteRotaSecundAux, const bool percorreVeiculos,
-                                            bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                            bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                            HashRotas::HashRotas *hashRotas)
 {
 
     int veiculoEscolhido1;
@@ -1283,15 +1293,18 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
                             ++posicaoAuxVeic1;
                         }
 
+                        if(hashRotas)
+                            resultadosRotaVeic1 = hashRotas->getVeiculo(vetClienteRotaBest, posicaoAuxVeic1, veiculo1->tipo, &poluicaoAuxVeic1, &combustivelAuxVeic1);
 
-
-                        resultadosRotaVeic1 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest,
-                                                                           posicaoAuxVeic1,
-                                                                           PesoVeic1T, veiculo1->tipo,
-                                                                           &combustivelAuxVeic1,
-                                                                           &poluicaoAuxVeic1, NULL, NULL,
-                                                                           vetLimiteTempo, vetClienteRotaAux);
-
+                        if(!resultadosRotaVeic1)
+                        {
+                            resultadosRotaVeic1 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest,
+                                                                               posicaoAuxVeic1,
+                                                                               PesoVeic1T, veiculo1->tipo,
+                                                                               &combustivelAuxVeic1,
+                                                                               &poluicaoAuxVeic1, NULL, NULL,
+                                                                               vetLimiteTempo, vetClienteRotaAux);
+                        }
 
                         if (resultadosRotaVeic1)
                         {
@@ -1326,14 +1339,20 @@ ResultadosRota Movimentos::mvInterRotasSwap(const Instancia::Instancia *const in
                             if (veiculo2->tipo != 2)
                             {
 
+                                if(hashRotas)
+                                    resultadosRotaVeic2 = hashRotas->getVeiculo(vetClienteRotaSecundBest, posicaoAuxVeic2, veiculo2->tipo, &poluicaoAuxVeic2, &combustivelAuxVeic2);
 
-                                resultadosRotaVeic2 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaSecundBest,
-                                                                                   posicaoAuxVeic2, PesoVeic2T,
-                                                                                   veiculo2->tipo, &combustivelAuxVeic2,
-                                                                                   &poluicaoAuxVeic2, NULL, NULL,
-                                                                                   vetLimiteTempo,
-                                                                                   vetClienteRotaSecundAux);
-
+                                if(!resultadosRotaVeic2)
+                                {
+                                    resultadosRotaVeic2 = Movimentos_Paradas::criaRota(instancia,
+                                                                                       vetClienteRotaSecundBest,
+                                                                                       posicaoAuxVeic2, PesoVeic2T,
+                                                                                       veiculo2->tipo,
+                                                                                       &combustivelAuxVeic2,
+                                                                                       &poluicaoAuxVeic2, NULL, NULL,
+                                                                                       vetLimiteTempo,
+                                                                                       vetClienteRotaSecundAux);
+                                }
                             }
                             else
                             {
@@ -1771,8 +1790,9 @@ Movimentos::inverteRota(ItClienteRota itInicio, ItClienteRota itFim, Solucao::Cl
  */
 ResultadosRota Movimentos::mv_2optSwapIntraRota(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                                 Solucao::ClienteRota *vetClienteRotaBest,
-                                                Solucao::ClienteRota *vetClienteRotaAux, const bool percorreVeiculos,
-                                                bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                                Solucao::ClienteRota *vetClienteRotaAux,
+                                                const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo,
+                                                Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas)
 {
 
     int veiculoEscolhido;      //guarda o veiculo
@@ -1922,10 +1942,19 @@ ResultadosRota Movimentos::mv_2optSwapIntraRota(const Instancia::Instancia *cons
 
             cout<<"\n\n***************************************************************\n\n";*/
 
-                bool resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
-                                                                   PesoVeiculo,
-                                                                   veiculo->tipo, &combustivelAux, &poluicaoAux, NULL,
-                                                                   NULL, vetLimiteTempo, vetClienteRotaAux);
+                bool resultadosRota = false;
+
+                if(hashRotas)
+                    resultadosRota = hashRotas->getVeiculo(vetClienteRotaBest, posicaoAux, veiculo->tipo, &poluicaoAux, &combustivelAux);
+
+                if(!resultadosRota)
+                {
+
+                    resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
+                                                                  PesoVeiculo,
+                                                                  veiculo->tipo, &combustivelAux, &poluicaoAux, NULL,
+                                                                  NULL, vetLimiteTempo, vetClienteRotaAux);
+                }
 
                 if (resultadosRota)
                 {
@@ -1992,11 +2021,11 @@ ResultadosRota Movimentos::mv_2optSwapIntraRota(const Instancia::Instancia *cons
  */
 ResultadosRota
 Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                                  Solucao::ClienteRota *vetClienteRotaBest,
-                                  Solucao::ClienteRota *vetClienteRotaAux,
+                                  Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
                                   Solucao::ClienteRota *vetClienteRotaSecundBest,
-                                  Solucao::ClienteRota *vetClienteRotaSecundAux,
-                                  const bool percorreVeiculos, bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                  Solucao::ClienteRota *vetClienteRotaSecundAux, const bool percorreVeiculos,
+                                  bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                  HashRotas::HashRotas *hashRotas)
 {
 
 
@@ -2243,12 +2272,21 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
                         bool resultadosRotaVeic1 = false;
 
                         if (posicaoAuxVeic1 > 2)
-                            resultadosRotaVeic1 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest,
-                                                                               posicaoAuxVeic1, PesoNovoVeiculo1,
-                                                                               veiculo1->tipo, &combustivelVei1,
-                                                                               &poluicaoVeic1,
-                                                                               NULL, NULL, vetLimiteTempo,
-                                                                               vetClienteRotaAux);
+                        {
+
+                            if(hashRotas)
+                                resultadosRotaVeic1 = hashRotas->getVeiculo(vetClienteRotaBest, posicaoAuxVeic1, veiculo1->tipo, &poluicaoVeic1, &combustivelVei1);
+
+                            if(!resultadosRotaVeic1)
+                            {
+                                resultadosRotaVeic1 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest,
+                                                                                   posicaoAuxVeic1, PesoNovoVeiculo1,
+                                                                                   veiculo1->tipo, &combustivelVei1,
+                                                                                   &poluicaoVeic1,
+                                                                                   NULL, NULL, vetLimiteTempo,
+                                                                                   vetClienteRotaAux);
+                            }
+                        }
                         else
                         {
                             poluicaoVeic1 = combustivelVei1 = 0.0;
@@ -2262,18 +2300,27 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
 
 
                             //Calcula fim da rota adicionando clientes do veiculo1
-                            bool resultadosRotaVeic2;
+                            bool resultadosRotaVeic2 = false;
 
                             if (posicaoAuxVeic2 > 2)
-                                resultadosRotaVeic2 = Movimentos_Paradas::criaRota(instancia,
-                                                                                   vetClienteRotaSecundBest,
-                                                                                   posicaoAuxVeic2,
-                                                                                   PesoNovoVeiculo2,
-                                                                                   veiculo2->tipo,
-                                                                                   &combustivelVeic2,
-                                                                                   &poluicaoVeic2, NULL, NULL,
-                                                                                   vetLimiteTempo,
-                                                                                   vetClienteRotaSecundAux);
+                            {
+
+                                if(hashRotas)
+                                    resultadosRotaVeic2 = hashRotas->getVeiculo(vetClienteRotaSecundBest, posicaoAuxVeic2, veiculo2->tipo, &poluicaoVeic2, &combustivelVeic2);
+
+                                if(!resultadosRotaVeic2)
+                                {
+                                    resultadosRotaVeic2 = Movimentos_Paradas::criaRota(instancia,
+                                                                                       vetClienteRotaSecundBest,
+                                                                                       posicaoAuxVeic2,
+                                                                                       PesoNovoVeiculo2,
+                                                                                       veiculo2->tipo,
+                                                                                       &combustivelVeic2,
+                                                                                       &poluicaoVeic2, NULL, NULL,
+                                                                                       vetLimiteTempo,
+                                                                                       vetClienteRotaSecundAux);
+                                }
+                            }
                             else
                             {
 
@@ -2360,7 +2407,8 @@ Movimentos::mv_2optSwapInterRotas(const Instancia::Instancia *const instancia, S
 Movimentos::ResultadosRota
 Movimentos::mvIntraRotaInverteRota(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
                                    Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
-                                   bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                   bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                   HashRotas::HashRotas *hashRotas)
 {
     string mvStr = "inverteRota";
 
@@ -2406,9 +2454,14 @@ Movimentos::mvIntraRotaInverteRota(const Instancia::Instancia *const instancia, 
                 break;
         }
 
-        bool resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicao, veiculo->carga,
-                                                           veiculo->tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo,
-                                                           vetClienteRotaAux);
+        bool resultadosRota = false;
+
+        if(hashRotas)
+            resultadosRota = hashRotas->getVeiculo(vetClienteRotaBest, posicao, veiculo->tipo, &poluicao, &combustivel);
+
+        if(!resultadosRota)
+            resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicao, veiculo->carga, veiculo->tipo, &combustivel, &poluicao,
+                                                          NULL, NULL, vetLimiteTempo, vetClienteRotaAux);
 
         if (resultadosRota)
         {
@@ -2443,9 +2496,12 @@ Movimentos::mvIntraRotaInverteRota(const Instancia::Instancia *const instancia, 
 
 Movimentos::ResultadosRota
 Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-                             Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux,
+                             Solucao::ClienteRota *vetClienteRotaBest,
+                             Solucao::ClienteRota *vetClienteRotaAux,
                              Solucao::ClienteRota *vetClienteRotaSecundBest,
-                             Solucao::ClienteRota *vetClienteRotaSecundAux, bool pertubacao, double *vetLimiteTempo, Modelo::Modelo *modelo)
+                             Solucao::ClienteRota *vetClienteRotaSecundAux, bool pertubacao,
+                             double *vetLimiteTempo, Modelo::Modelo *modelo,
+                             HashRotas::HashRotas *hashRotas)
 {
     string mvStr = "trocaVeiculo";
 
@@ -2503,10 +2559,11 @@ Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Soluca
                     ++posicaoVeic1;
                 }
 
+                if(hashRotas)
+                    resultadosRota = hashRotas->getVeiculo(vetClienteRotaBest, posicaoVeic1, novoTipo, &poluicaoVeic1, &combustivelVeic1);
 
-
-                resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoVeic1,
-                                                              veiculo1->carga, novoTipo, &combustivelVeic1,
+                if(!resultadosRota)
+                    resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoVeic1, veiculo1->carga, novoTipo, &combustivelVeic1,
                                                               &poluicaoVeic1, NULL, NULL, vetLimiteTempo, vetClienteRotaAux);
             }
         }
@@ -2558,7 +2615,7 @@ Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Soluca
         auto it = veiculo2->listaClientes.begin(); //0
         it++; //primeiro cliente
 
-        bool resultadosRota2;
+        bool resultadosRota2 = false;
 
         if(veiculo2->listaClientes.size() > 2)
         {
@@ -2570,9 +2627,12 @@ Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Soluca
                 ++posicaoVeic2;
             }
 
-            resultadosRota2 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaSecundBest, posicaoVeic2,
-                                                           veiculo2->carga, novoTipoVeic2, &combustivelVeic2,
-                                                           &poluicaoVeic2, NULL, NULL, vetLimiteTempo, vetClienteRotaSecundAux);
+            if(hashRotas)
+                resultadosRota2 = hashRotas->getVeiculo(vetClienteRotaSecundBest, posicaoVeic2, novoTipoVeic2, &poluicaoVeic2, &combustivelVeic2);
+
+            if(!resultadosRota2)
+                resultadosRota2 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaSecundBest, posicaoVeic2, veiculo2->carga, novoTipoVeic2, &combustivelVeic2,
+                                                                &poluicaoVeic2, NULL, NULL, vetLimiteTempo, vetClienteRotaSecundAux);
         }
         else
         {
@@ -2764,39 +2824,44 @@ Movimentos::aplicaMovimento(int movimento, const Instancia::Instancia *const ins
             break;
 
         case 1:
-            resultado = Movimentos::mvIntraRotaSwap(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, true, true,
-                                               pertubacao, vetLimiteTempo, modelo);
+            resultado = Movimentos::mvIntraRotaSwap(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, true,
+                                                    true,
+                                                    pertubacao, vetLimiteTempo, modelo, hashRotas);
             break;
 
         case 2:
             resultado = Movimentos::mvInterRotasShift(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux,
-                                                 vetClienteRotaSecundBest, true, pertubacao, vetLimiteTempo, modelo);
+                                                      vetClienteRotaSecundBest, true, pertubacao, vetLimiteTempo,
+                                                      modelo, hashRotas);
             break;
         case 3:
             resultado = Movimentos::mvInterRotasSwap(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux,
-                                                vetClienteRotaSecundBest, vetClienteRotaSecundAux, true, pertubacao,
-                                                vetLimiteTempo, modelo);
+                                                     vetClienteRotaSecundBest, vetClienteRotaSecundAux, true,
+                                                     pertubacao,
+                                                     vetLimiteTempo, modelo, hashRotas);
             break;
 
         case 4:
-            resultado = Movimentos::mv_2optSwapIntraRota(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux, true,
-                                                    pertubacao, vetLimiteTempo, modelo);
+            resultado = Movimentos::mv_2optSwapIntraRota(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux,
+                                                         true,
+                                                         pertubacao, vetLimiteTempo, modelo, hashRotas);
             break;
 
         case 5:
             resultado = Movimentos::mv_2optSwapInterRotas(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux,
-                                                     vetClienteRotaSecundBest, vetClienteRotaSecundAux, true,
-                                                     pertubacao, vetLimiteTempo, modelo);
+                                                          vetClienteRotaSecundBest, vetClienteRotaSecundAux, true,
+                                                          pertubacao, vetLimiteTempo, modelo, hashRotas);
             break;
 
         case 6:
             resultado = Movimentos::mvIntraRotaInverteRota(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux,
-                                                      pertubacao, vetLimiteTempo, modelo);
+                                                           pertubacao, vetLimiteTempo, modelo, hashRotas);
             break;
 
         case 7:
             resultado = Movimentos::mvTrocarVeiculos(instancia, solucao, vetClienteRotaBest, vetClienteRotaAux,
-                                                vetClienteRotaSecundBest, vetClienteRotaSecundAux, pertubacao, vetLimiteTempo, modelo);
+                                                     vetClienteRotaSecundBest, vetClienteRotaSecundAux, pertubacao,
+                                                     vetLimiteTempo, modelo, hashRotas);
             break;
     }
 
