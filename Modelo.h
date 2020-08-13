@@ -28,7 +28,8 @@ namespace Modelo
         GRBLinExpr *funcaoObjetivo;
         GRBConstr restricaoTrocaClientes;
         GRBConstr *restricaoPeso;
-        GRBConstr *restricaoUmArco;
+        GRBConstr *restricaoUmArcoJ;
+        GRBConstr *restricaoUmArcoI;
 
         Variaveis(){}
         ~Variaveis(){}
@@ -53,7 +54,8 @@ namespace Modelo
 
         Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_);
         int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
-                     const Instancia::Instancia *instancia, double *poluicao, double *combustivel);
+                     const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
+                     const int numClientesTrocados);
         ~Modelo();
     };
 

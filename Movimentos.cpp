@@ -204,7 +204,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                         {
 
                             resultado = modelo->criaRota(vetClienteRotaBest, k, veiculo->tipo, peso, instancia,
-                                                         &poluicao, &combustivel);
+                                                         &poluicao, &combustivel, 0);
 
                         } else
                         {
@@ -501,7 +501,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
 
                                 cout<<'\n';*/
                                 resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso,
-                                                             instancia, &poluicao, &combustivel);
+                                                             instancia, &poluicao, &combustivel, 0);
 
                                 /*cout<<"D Rota: ";
                                 for(int i = 0; i < posicaoAux; ++i)
@@ -585,7 +585,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
 
                                 cout<<'\n';*/
                                 resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso,
-                                                             instancia, &poluicao, &combustivel);
+                                                             instancia, &poluicao, &combustivel, 0);
 
                                 /*cout<<"D Rota: ";
                                 for(int i = 0; i < posicaoAux; ++i)
@@ -912,7 +912,7 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                         if (modelo->usaModeloVnd)
                         {
                             resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo1->tipo, PesoVeiculo1,
-                                                         instancia, &poluicaoAuxVeic1, &combustivelAuxVeic1);
+                                                         instancia, &poluicaoAuxVeic1, &combustivelAuxVeic1, 0);
                         } else
                         {
                             resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
@@ -998,7 +998,7 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                                             resultadoVeic2 = modelo->criaRota(vetClienteRotaSecundBest, posicaoAux,
                                                                               veiculo2->tipo, PesoVeiculo2,
                                                                               instancia, &poluicaoRotaVeic2,
-                                                                              &combustivelRotaVeic2);
+                                                                              &combustivelRotaVeic2, 0);
                                         } else
                                         {
                                             resultadoVeic2 = Movimentos_Paradas::criaRota(instancia,

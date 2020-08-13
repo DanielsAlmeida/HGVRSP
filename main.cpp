@@ -18,12 +18,12 @@
 //  1588722899
 
 //1586725703
-#define Saida false
+#define Saida true
 #define Grasp 0
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao Grasp
+#define Opcao RotaMip
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
@@ -241,7 +241,7 @@ int main(int num, char **agrs)
     auto c_start = std::chrono::high_resolution_clock::now();
 
     auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
-                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo);
+                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, NULL);
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
@@ -777,7 +777,7 @@ int main(int num, char **agrs)
 
         int tipo, tam, peso, cliente = 1;
         double combustivel, poluicao;
-
+        int clientesTrocados;
 
         do
         {
@@ -786,6 +786,11 @@ int main(int num, char **agrs)
 
             if(tipo != -1)
             {
+                cout<<"clientes trocados: ";
+                cin>>clientesTrocados;
+
+                if(clientesTrocados < 0)
+                    break;
 
                 cout<<"Rota: 0 ";
 
@@ -804,10 +809,18 @@ int main(int num, char **agrs)
 
                 }while(cliente);
 
-                if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel))
+                if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados))
                 {
 
                     cout << "Rota gerada!!\n";
+
+                    cout<<"Rota: ";
+
+                    for(int i = 0; i < tam; ++i)
+                        cout<<vetCliente[i].cliente<<' ';
+
+                    cout<<'\n';
+
                     cout<<"Combustivel: "<<combustivel<<'\n';
                     cout<<"Polucao: "<<poluicao<<'\n';
 

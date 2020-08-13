@@ -286,16 +286,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             tempoVnd  += tempoCpu.count();
 
 
-            if(!solucaoAux->veiculoFicticil)
+            if((!solucaoAux->veiculoFicticil) && (modelo))
             {
 
-                if(best->veiculoFicticil)
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
-                else
-                {
-                    if ((solucaoAux->poluicao - best->poluicao) / best->poluicao < 0.09)
-                        Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
-                }
+                Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
 
             }
 
