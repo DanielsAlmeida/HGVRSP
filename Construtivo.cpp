@@ -404,7 +404,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     //std::cout<<"Numero de solucoes inviaveis: "<<numSolInviaveis<<'\n';
 
-    /*float tamanhoMedio;
+/*    float tamanhoMedio;
     int maior;
 
     hashRotas.estatisticasHash(&tamanhoMedio, &maior);

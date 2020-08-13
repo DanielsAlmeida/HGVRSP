@@ -87,7 +87,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
                 for (int k = 0; k < instancia->numPeriodos; ++k)
                 {
 
-                    variaveis->x[i][j][k] = modelo->addVar(0, 1, 0, GRB_BINARY, "x_" + std::to_string(i) + '_' +
+                    variaveis->x[i][j][k] = modelo->addVar(0, 0, 0, GRB_BINARY, "x_" + std::to_string(i) + '_' +
                                                                                 std::to_string(j) + '_' +
                                                                                 std::to_string(k));
 
@@ -217,7 +217,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
         for (int j = 0; j < instancia->numClientes; ++j)
         {
             if (instancia->matrizDistancias[i][j] != 0.0)
-                variaveis->f[i][j] = modelo->addVar(0, 0, 0, GRB_CONTINUOUS,
+                variaveis->f[i][j] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS,
                                                     "f_" + std::to_string(i) + '_' + std::to_string(j));
         }
     }
@@ -720,6 +720,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
 
 
                     modelo->addConstr(linExpr >= val, "r_3_limita_tempo_chegada_veiculo_"+std::to_string(u)+"_"+std::to_string(i)+"_0_"+std::to_string(k));
+
+
                 }
         }
     }
@@ -742,6 +744,81 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->setObjective(variaveis->funcaoObjetivo[0], GRB_MINIMIZE);
     tipoVeiculo = false;
 
+    //*************************************************************************************************************************************************************
+    //Cria restricao que permite reqlizar x trocas de clientes em uma rota
+
+    linExpr = 0;
+
+    for(int i = 0; i < instancia->numClientes; ++i)
+    {
+        for(int j = 1; j < instancia->numClientes; ++j)
+        {
+
+            if(instancia->matrizDistancias[i][j])
+                linExpr += 0*variaveis->X[i][j];
+        }
+    }
+
+    variaveis->restricaoTrocaClientes = modelo->addConstr(linExpr <= 0, "restricaoTrocaClientes");
+
+    //*************************************************************************************************************************************************************
+    //Cria restricao de peso
+
+    variaveis->restricaoPeso = new GRBConstr[instancia->numClientes];
+
+    for(int j = 1; j < instancia->numClientes; ++j)
+    {
+        linExpr = 0;
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            if(instancia->matrizDistancias[i][j] != 0.0)
+            {
+                linExpr += variaveis->f[i][j];
+            }
+        }
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+
+            if(instancia->matrizDistancias[j][i] != 0.0)
+            {
+                linExpr += -variaveis->f[j][i];
+            }
+        }
+
+        variaveis->restricaoPeso[j] = modelo->addConstr(linExpr == 0, "restricaoPeso_cliente_"+std::to_string(j));
+    }
+
+    //*************************************************************************************************************************************************************
+    //Restrige somatorio de arcos
+
+    variaveis->restricaoUmArco = new GRBConstr[instancia->numClientes+1];
+
+    for(int j = 0; j < numClientes; ++j)
+    {
+        linExpr =  0;
+
+        for(int i = 0; i < numClientes; ++i)
+        {
+            if(instancia->matrizDistancias[i][j] != 0.0)
+            {
+                linExpr += variaveis->X[i][j];
+            }
+        }
+
+        variaveis->restricaoUmArco[j] = modelo->addConstr(linExpr == 0, "restricao_sum_arco_cliente_"+std::to_string(j));
+    }
+
+    linExpr = 0;
+    for(int j = 1; j < numClientes; ++j)
+    {
+        if(instancia->matrizDistancias[0][j] != 0.0)
+            linExpr += variaveis->X[0][j];
+    }
+
+    variaveis->restricaoUmArco[numClientes] = modelo->addConstr(linExpr == 1, "restricao_sum_arco_cliente_0-");
+    variaveis->restricaoUmArco[0].set(GRB_DoubleAttr_RHS, 1);
 
 }
 Modelo::Modelo::~Modelo()
@@ -872,6 +949,10 @@ Modelo::Modelo::~Modelo()
 
     //*****************************************************************************************************************************************
 
+    delete []variaveis->restricaoPeso;
+
+    delete []variaveis->restricaoUmArco;
+
     modelo = NULL;
     delete variaveis;
 }
@@ -970,18 +1051,43 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
         }
     }
 
+    for(int i = 0; i < tam-1; ++i)
+    {
+        cliente1 = vetClienteRota[i].cliente;
+
+        for(int j = i+1; j < tam; ++j)
+        {
+            cliente2 = vetClienteRota[j].cliente;
+
+            if(instancia->matrizDistancias[cliente1][cliente2] != 0.0)
+            {
+                variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
+                variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_UB, 1);
+                variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+            }
+
+            if(instancia->matrizDistancias[cliente2][cliente1] != 0.0)
+            {
+                variaveis->X[cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
+                variaveis->X[cliente2][cliente1].set(GRB_DoubleAttr_UB, 1);
+                variaveis->f[cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
+            }
+        }
+    }
+
     for(int i = 1; i < tam; ++i)
     {
         cliente1 = vetClienteRota[i-1].cliente;
         cliente2 = vetClienteRota[i].cliente;
 
-        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_LB, 1);
-        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_UB, 1);
 
-        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, peso);
-        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_LB, peso);
+        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_Start, 1);
+        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_Start, peso);
 
-        if(viavel)
+        modelo->chgCoeff(variaveis->restricaoTrocaClientes, variaveis->X[cliente1][cliente2], 0.0);
+
+
+        /*   if(viavel)
         {
             variaveis->l[cliente1].set(GRB_DoubleAttr_Start, vetClienteRota[i-1].tempoSaida);
             variaveis->a[cliente2].set(GRB_DoubleAttr_Start, vetClienteRota[i].tempoChegada);
@@ -993,9 +1099,13 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
                 variaveis->tao[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, vetClienteRota[i].tempoPorPeriodo[k]);
                 variaveis->d[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, vetClienteRota[i].distanciaPorPeriodo[k]);
             }
-        }
+        }*/
 
         peso -= instancia->vetorClientes[cliente2].demanda;
+
+        if(cliente2 != 0)
+            variaveis->restricaoPeso[cliente2].set(GRB_DoubleAttr_RHS, instancia->vetorClientes[cliente2].demanda);
+
     }
 
 
@@ -1005,6 +1115,43 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     //modelo->feasRelax(1, true, false, true);
     //modelo->write("modelo.lp");
     modelo->optimize();
+
+    for(int i = 0; i < tam-1; ++i)
+    {
+        cliente1 = vetClienteRota[i].cliente;
+
+        for(int j = i+1; j < tam; ++j)
+        {
+            cliente2 = vetClienteRota[j].cliente;
+
+            if(instancia->matrizDistancias[cliente1][cliente2] != 0.0)
+            {
+                variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
+                variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
+                variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+            }
+
+            if(instancia->matrizDistancias[cliente2][cliente1] != 0.0)
+            {
+                variaveis->X[cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
+                variaveis->X[cliente2][cliente1].set(GRB_DoubleAttr_UB, 0);
+                variaveis->X[cliente2][cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                variaveis->f[cliente2][cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+            }
+        }
+    }
+
+    for(int i = 0; i < tam - 1; ++i)
+    {
+        cliente1 = vetClienteRota[i].cliente;
+        cliente2 = vetClienteRota[i+1].cliente;
+
+        modelo->chgCoeff(variaveis->restricaoTrocaClientes, variaveis->X[cliente1][cliente2], 1.0);
+
+        if(cliente2 != 0)
+            variaveis->restricaoPeso[cliente2].set(GRB_DoubleAttr_RHS, 0);
+    }
 
 
     if(modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
@@ -1107,18 +1254,9 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     if(viavel)
         variaveis->C[tipo].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
 
-    for(int i = 1; i < tam; ++i)
-    {
-        cliente1 = vetClienteRota[i-1].cliente;
-        cliente2 = vetClienteRota[i].cliente;
 
-        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
-        variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
 
-        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_LB, 0.0);
-        variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0.0);
-
-        if(viavel)
+        /*if(viavel)
         {
             variaveis->l[cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
             variaveis->a[cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
@@ -1130,8 +1268,10 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
                 variaveis->tao[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
                 variaveis->d[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
             }
-        }
-    }
+        }*/
+
+
+
 
     modelo->set(GRB_IntParam_SubMIPNodes, GRB_MAXINT);
 
@@ -1174,7 +1314,10 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             vetClienteRota[i].swap(*itCliente);
 
 
-        bool rotaEncontrada = hashRotas->getVeiculo(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, &poluicao, &combustivel);
+        bool rotaEncontrada = false;
+
+        if(hashRotas)
+            rotaEncontrada = hashRotas->getVeiculo(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, &poluicao, &combustivel);
 
         if(!rotaEncontrada)
         {
@@ -1214,7 +1357,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             veiculo->poluicao = poluicao;
             veiculo->combustivel = combustivel;
 
-            if(!rotaEncontrada)
+            if(!rotaEncontrada && hashRotas)
             {
                 if(!hashRotas->insereVeiculo(veiculo))
                 {

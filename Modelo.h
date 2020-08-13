@@ -26,12 +26,12 @@ namespace Modelo
         GRBVar *C;          //Variavel continua. Guarda o combustível do veiculo de tipo T.
 
         GRBLinExpr *funcaoObjetivo;
+        GRBConstr restricaoTrocaClientes;
+        GRBConstr *restricaoPeso;
+        GRBConstr *restricaoUmArco;
 
         Variaveis(){}
-        ~Variaveis()
-        {
-
-        }
+        ~Variaveis(){}
 
 
     };
