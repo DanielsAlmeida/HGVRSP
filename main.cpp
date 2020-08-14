@@ -23,7 +23,7 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao RotaMip
+#define Opcao Grasp
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
@@ -241,7 +241,7 @@ int main(int num, char **agrs)
     auto c_start = std::chrono::high_resolution_clock::now();
 
     auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
-                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, NULL);
+                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo);
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
@@ -624,7 +624,8 @@ int main(int num, char **agrs)
 
         for(auto veiculo : solucao->vetorVeiculos)
         {
-            cout<<i<<" P: "<<veiculo->poluicao<<" C: "<<veiculo->combustivel<<'\n';
+            auto cliente = veiculo->listaClientes.begin();
+            cout<<i<<" P: "<<veiculo->poluicao<<" C: "<<veiculo->combustivel<<" MIP: "<<(*cliente)->rotaMip<<" Rota: "<<veiculo->getRota()<<'\n';
 
             ++i;
         }
