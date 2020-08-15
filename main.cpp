@@ -18,7 +18,7 @@
 //  1588722899
 
 //1586725703
-#define Saida true
+#define Saida false
 #define Grasp 0
 #define RotaMip 1
 #define VerificaSol 2
@@ -774,6 +774,8 @@ int main(int num, char **agrs)
 
 
         Solucao::ClienteRota *vetCliente = new Solucao::ClienteRota[MaxTamVetClientesMatrix];
+        Solucao::ClienteRota *vetClienteAux = new Solucao::ClienteRota[MaxTamVetClientesMatrix];
+        double *vetLimiteTempo = new double [MaxTamVetClientesMatrix];
         vetCliente[0].cliente = 0;
 
         int tipo, tam, peso, cliente = 1;
@@ -810,26 +812,32 @@ int main(int num, char **agrs)
 
                 }while(cliente);
 
-                if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados))
+                bool viavel = Movimentos_Paradas::criaRota(instancia, vetCliente, tam, peso, tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo, vetClienteAux);
+
+                if(viavel)
                 {
+                    if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados))
+                    {
 
-                    cout << "Rota gerada!!\n";
+                        cout << "Rota gerada!!\n";
 
-                    cout<<"Rota: ";
+                        cout << "Rota: ";
 
-                    for(int i = 0; i < tam; ++i)
-                        cout<<vetCliente[i].cliente<<' ';
+                        for (int i = 0; i < tam; ++i)
+                            cout << vetCliente[i].cliente << ' ';
 
-                    cout<<'\n';
+                        cout << '\n';
 
-                    cout<<"Combustivel: "<<combustivel<<'\n';
-                    cout<<"Polucao: "<<poluicao<<'\n';
+                        cout << "Combustivel: " << combustivel << '\n';
+                        cout << "Polucao: " << poluicao << '\n';
 
+                    } else
+                    {
+                        cout << "Rota errada!!\n";
+                    }
                 }
                 else
-                {
-                    cout<<"Rota errada!!\n";
-                }
+                    cout<<"Rota heuristica eh inviavel";
 
                 cout<<"\n\n***********************************************************************\n\n";
 
@@ -841,6 +849,10 @@ int main(int num, char **agrs)
 
         delete instancia;
         delete modelo;
+        delete []vetCliente;
+        delete []vetClienteAux;
+        delete []vetLimiteTempo;
+
 
     } catch (GRBException e)
     {

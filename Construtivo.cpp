@@ -169,8 +169,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             break;
         }
 
-/*        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
-            cout<<"Interacao "<<i<<'\n';*/
+        /*
+        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
+            cout<<"Interacao "<<i<<'\n';
+        */
 
         //Atualiza probabilidade
         if((i%numIntAtualizarProb) == 0)
