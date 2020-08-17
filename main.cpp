@@ -15,9 +15,14 @@
 #include <string>
 #include <fstream>
 #include "HashRotas.h"
-//  1588722899
 
-//1586725703
+//UK_10x5_5
+//Tempo total cpu: 90.45 S
+//Poluicao: 520.58
+
+//Tempo total cpu: 356.13
+//Poluicao: 517.11
+
 #define Saida false
 #define Grasp 0
 #define RotaMip 1

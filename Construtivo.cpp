@@ -161,6 +161,13 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     auto c_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tempoCpu;
 
+    double poluicaoBestHeuristica;
+
+    if(!best->veiculoFicticil)
+    {
+        poluicaoBestHeuristica = best->poluicao;
+    }
+
     for(int i = 0; i < numInteracoes; ++i)
     {
 
@@ -270,7 +277,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         if(solucaoAux->veiculoFicticil)
             inviavel = true;
 
-
+        double poluicaoHeuriAux;
         instancia->atualizaPoluicaoSolucao(solucaoAux);
 
 /*        if(solucaoAux->veiculoFicticil)
@@ -280,7 +287,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             c_start = std::chrono::high_resolution_clock::now();
 
             Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
-                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, &hashRotas);
+                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, NULL);
 
             c_end = std::chrono::high_resolution_clock::now();
 
@@ -288,10 +295,18 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             tempoVnd  += tempoCpu.count();
 
 
+            poluicaoHeuriAux = solucaoAux->poluicao;
+
+
             if((!solucaoAux->veiculoFicticil) && (modelo))
             {
 
-                Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
+
+                if((poluicaoHeuriAux < poluicaoBestHeuristica) || (best->veiculoFicticil))
+                {
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
+
+                }
 
             }
 
@@ -342,7 +357,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                 solucaoAux = NULL;
                 ultimaAtualizacao = i;
                 poluicaoUltima = best->poluicao;
-
+                poluicaoBestHeuristica = poluicaoHeuriAux;
 
 
             }
@@ -353,6 +368,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                     delete best;
                     best = solucaoAux;
                     solucaoAux = NULL;
+                    poluicaoBestHeuristica = poluicaoHeuriAux;
 
                 }
                 else
@@ -382,7 +398,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                     poluicaoUltima = best->poluicao;
 
                     ultimaAtualizacaoHeuristica = i;
-
+                    poluicaoBestHeuristica = poluicaoHeuriAux;
 
 
 

@@ -75,20 +75,129 @@ u_int32_t HashRotas::HashRotas::getHash(Solucao::ClienteRota *clienteRota, const
 
 }
 
-bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
+bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOriginal, Solucao::ClienteRota *clienteBest,
+                                         double poluicaoBest, double combustivelBest, const int tam, const bool tipo,
+                                         const int carga)
 {
 
     //Verifica veiculo vazio
-    if(veiculo->listaClientes.size() == 2)
+    if(tam == 2)
         return false;
 
 
-    u_int32_t hash = getHash(veiculo);
-    hash = hash % tamTabela;
+    u_int32_t hashRotaOriginal = getHash(clienteRotaOriginal, tam, tipo);
+    hashRotaOriginal = hashRotaOriginal % tamTabela;
+
+    bool iguais = true;
 
 
-    std::list<HashNo*> *lista = &tabelaHash[hash];
+    for(int i = 0; i < tam; ++i)
+    {
+        if(clienteRotaOriginal[i].cliente != clienteBest[i].cliente)
+        {
+            iguais = false;
+            break;
+        }
+    }
 
+    u_int32_t hashRotaBest;
+    HashNo *hashNoBest = NULL;
+
+
+
+    hashRotaBest = getHash(clienteBest, tam, tipo);
+    hashRotaBest = hashRotaBest % tamTabela;
+
+    std::list<HashNo*> *lista = &tabelaHash[hashRotaBest];
+
+
+        if(!lista->empty())
+        {
+            //Percorre a lista
+            for(auto hashNo : *lista)
+            {
+
+
+                if((hashNo->tam == tam) && (hashNo->tipo == tipo) && (hashNo->carga == carga))
+                {
+
+
+                    bool encontrou = true;
+
+                    //Percorre os clientes
+
+                    Solucao::ClienteRota *veiculo_p = hashNo->veiculo;
+
+                    for(int i = 0; i < tam; ++i)
+                    {
+
+
+                        if(veiculo_p->cliente != clienteBest[i].cliente)
+                        {
+                            encontrou = false;
+                            break;
+                        }
+
+
+                        ++veiculo_p;
+                    }
+
+                    if(encontrou)
+                    {
+                        if(iguais)
+                            return false;
+
+                        hashNoBest = hashNo;
+                        break;
+
+
+                    }
+
+                }
+
+            }
+        }
+
+    if(!hashNoBest)
+    {
+        hashNoBest = new HashNo;
+        hashNoBest->tam = tam;
+        hashNoBest->veiculo = new Solucao::ClienteRota[hashNoBest->tam];
+        hashNoBest->carga = carga;
+        hashNoBest->tipo = tipo;
+        hashNoBest->best = NULL;
+
+
+        hashNoBest->poluicao = poluicaoBest;
+        hashNoBest->combustivel = combustivelBest;
+
+        Solucao::ClienteRota *veiculo_p = hashNoBest->veiculo;
+        Solucao::ClienteRota *veiculo_V = clienteBest;
+        for (int i = 0; i < tam; ++i)
+        {
+            veiculo_p->swap(veiculo_V);
+
+            ++veiculo_p;
+            ++veiculo_V;
+        }
+
+        lista->push_back(hashNoBest);
+
+        if(iguais)
+            return true;
+    }
+    else
+    {
+        if(iguais)
+            return false;
+    }
+
+    //Encontrou best
+
+
+
+    lista = &tabelaHash[hashRotaOriginal];
+    HashNo *hashNoVeic = NULL;
 
     if(!lista->empty())
     {
@@ -97,7 +206,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
         {
 
 
-            if((hashNo->tam == veiculo->listaClientes.size()) && (hashNo->tipo == veiculo->tipo))
+            if((hashNo->tam == tam) && (hashNo->tipo == tipo) && (hashNo->carga == carga))
             {
 
 
@@ -106,12 +215,13 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
                 //Percorre os clientes
 
                 Solucao::ClienteRota *veiculo_p = hashNo->veiculo;
+                Solucao::ClienteRota *ptr_veiculoOrig = clienteRotaOriginal;
 
-                for(auto cliente : veiculo->listaClientes)
+                for(int i = 0; i < tam; ++i)
                 {
 
 
-                    if(veiculo_p->cliente != cliente->cliente)
+                    if(veiculo_p->cliente != ptr_veiculoOrig->cliente)
                     {
                         encontrou = false;
                         break;
@@ -119,40 +229,68 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::Veiculo *veiculo)
 
 
                     ++veiculo_p;
+                    ++ptr_veiculoOrig;
                 }
 
                 if(encontrou)
-                    return false;
+                {
+
+                    hashNoVeic = hashNo;
+                    break;
+
+
+                }
+
 
             }
 
         }
+
+
     }
 
-    //Veiculo não foi encontrado na lista
 
-    //Insere o veiculo
-
-
-    //Cria um novo no
-    HashNo *hashNo = new HashNo;
-
-    hashNo->tam = veiculo->listaClientes.size();
-    hashNo->veiculo = new Solucao::ClienteRota[hashNo->tam];
-    hashNo->carga = veiculo->carga;
-    hashNo->tipo = veiculo->tipo;
-    hashNo->poluicao = veiculo->poluicao;
-    hashNo->combustivel = veiculo->combustivel;
-
-    Solucao::ClienteRota *veiculo_p = hashNo->veiculo;
-
-    for(auto cliente : veiculo->listaClientes)
+    if(!hashNoVeic)
     {
-        veiculo_p->swap(cliente);
-        ++veiculo_p;
+        hashNoVeic = new HashNo;
+        hashNoVeic->tipo = tipo;
+        hashNoVeic->carga = carga;
+        hashNoVeic->tam = tam;
+        hashNoVeic->veiculo = new Solucao::ClienteRota[hashNoVeic->tam];
+
+        Solucao::ClienteRota *veiculo_p = hashNoVeic->veiculo;
+        Solucao::ClienteRota *ptr_veiculoOrig = clienteRotaOriginal;
+
+        for(int i = 0; i < tam; ++i)
+        {
+
+            veiculo_p->cliente = ptr_veiculoOrig->cliente;
+
+            ++veiculo_p;
+            ++ptr_veiculoOrig;
+        }
+
+
+        lista->push_back(hashNoVeic);
     }
 
-    lista->push_back(hashNo);
+    if(hashNoVeic && hashNoBest)
+    {
+        hashNoVeic->best = hashNoBest;
+        return true;
+    }
+    else
+    {
+        std::cout<<"Erro, condicao impossivel.\nArquivo: HashRotas.cpp\nFuncao: insereVeiculo\nLinha: "<<__LINE__<<'\n';
+
+        if(!hashNoVeic)
+            std::cout<<"hashNoVeic eh NULL\n";
+
+        if(!hashNoBest)
+            std::cout<<"hashNoBest eh NULL\n";
+
+        exit(-1);
+    }
 
     return true;
 
@@ -200,6 +338,10 @@ bool HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const i
 
             if(encontrou)
             {
+
+                while(hashNo->best)
+                    hashNo = hashNo->best;
+
                 veiculo_p = hashNo->veiculo;
                 cliente = clienteRota;
 
@@ -264,7 +406,12 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::Veiculo *veiculo)
             }
 
             if(encontrou)
+            {
+                while(hashNo->best)
+                    hashNo = hashNo->best;
+
                 return hashNo;
+            }
 
         }
     }

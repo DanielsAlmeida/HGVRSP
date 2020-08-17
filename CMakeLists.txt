@@ -20,7 +20,7 @@ link_directories(${GUROBI_LIB_DIRECTORY})
 set (CMAKE_CXX_FLAGS " -std=c++2a")
 set(CMAKE_CXX_FLAGS " -m64")
 
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 #set(CMAKE_CXX_FLAGS "-g")
 
 #cmake .. -DCMAKE_BUILD_TYPE=asan

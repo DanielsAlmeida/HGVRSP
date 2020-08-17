@@ -9,7 +9,7 @@
 #include "Exception.h"
 #include "HashRotas.h"
 
-#define NumTrocas 2
+#define NumTrocas 3
 
 ExceptioViabilidadeMip exceptionViabilidadeMip;
 
@@ -1084,7 +1084,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
     double ultimaPoluicao = *poluicao;
 
-    for(int p = 0; p < 1; ++p)
+    for(int p = 0; p < 3; ++p)
     {
 
         pesoAux = peso;
@@ -1511,6 +1511,8 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas)
 {
 
+    Solucao::ClienteRota veiClienteRotaAux[25];
+
     if(solucao->veiculoFicticil)
         return;
 
@@ -1550,6 +1552,15 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
         if(!rotaEncontrada)
         {
 
+            auto ptrVeicAux = veiClienteRotaAux;
+
+            for(auto cliente : veiculo->listaClientes)
+            {
+                ptrVeicAux->swap(cliente);
+
+                ++ptrVeicAux;
+            }
+
             //Cria rota
             try
             {
@@ -1560,7 +1571,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
                                              veiculo->carga, instancia, &poluicao, &combustivel, NumTrocas);
             } catch (GRBException e)
             {
-                cout << "Erro MIP, tipo: " << veiculo->tipo << "\nRota: " << veiculo->getRota() << '\n';
+                cout << "Erro MIP. \nVeiculo tipo: " << veiculo->tipo << "\nRota: " << veiculo->getRota() << '\n';
                 cout << "Erro code: " << e.getErrorCode();
                 cout << "Mensagem: " << e.getMessage() << '\n';
                 delete modelo;
@@ -1595,7 +1606,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
 
             if(!rotaEncontrada && hashRotas)
             {
-                hashRotas->insereVeiculo(veiculo);
+                hashRotas->insereVeiculo(veiClienteRotaAux, vetClienteRota, poluicao, combustivel, veiculo->listaClientes.size(), veiculo->tipo, veiculo->tipo);
 
                 //else
                   //  cout<<"Inseriu veiculo do tipo: "<<veiculo->tipo<<" rota: "<<veiculo->getRota()<<"\n\n";

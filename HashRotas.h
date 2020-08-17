@@ -18,6 +18,8 @@ namespace HashRotas
         double combustivel;
         int carga;
         int tipo;
+
+        HashNo *best;
     };
 
     class HashRotas
@@ -35,7 +37,9 @@ namespace HashRotas
         bool getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo, double *poluicao, double *combustivel);
         HashNo* getVeiculo(Solucao::Veiculo *veiculo);
 
-        bool insereVeiculo(Solucao::Veiculo *veiculo);
+        bool insereVeiculo(Solucao::ClienteRota *clienteRotaOriginal, Solucao::ClienteRota *clienteBest,
+                           double poluicaoBest, double combustivelBest, const int tam, const bool tipo,
+                           const int carga);
 
         void estatisticasHash(float *tamanhoMedio_, int *maior_);
 
