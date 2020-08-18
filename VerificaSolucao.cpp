@@ -383,11 +383,11 @@ long double VerificaSolucao::poluicaoRota(const Instancia::Instancia *const inst
 
 }
 
-double VerificaSolucao::poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal)
+long double VerificaSolucao::poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, int carga, double distanciaTotal)
 {
 
-    double c = instancia->vetorVeiculos[tipoVeiculo].cVeiculo;
-    double p = instancia->vetorVeiculos[tipoVeiculo].pVeiculo;
+    long double c = instancia->vetorVeiculos[tipoVeiculo].cVeiculo;
+    long double p = instancia->vetorVeiculos[tipoVeiculo].pVeiculo;
 
     return c * p * carga * distanciaTotal;
 
@@ -399,7 +399,7 @@ long double VerificaSolucao::combustivelRota(const Instancia::Instancia *const i
     return instancia->matrizCo2[i][j][k][tipoVeiculo] * distanciaParcial;
 }
 
-long double VerificaSolucao::combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal)
+long double VerificaSolucao::combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, int carga, double distanciaTotal)
 {
 
     long double p = instancia->vetorVeiculos[tipoVeiculo].pVeiculo;
@@ -1051,7 +1051,7 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
 
 
-        if (((*clienteJ)->tempoChegada >= instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela)) //Chegou após o inicio da janela
+        if ((((*clienteJ)->tempoChegada + 1e-6) >= instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela)) //Chegou após o inicio da janela
         {
 
             // Verificar se tempoChegada + tempo de atendimento <= fim janela e tempo saida é igua a igual a tempoChegada + tempo de atendimento
@@ -1134,11 +1134,13 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
             }
 
+            *erro += "-------ERRO-------\n";
         }
+        cout<<"Poluicao "<<poluicao<<'\n';
         return false;
     }
 
-
+    cout<<"Poluicao "<<poluicao<<'\n';
     return true;
 
 

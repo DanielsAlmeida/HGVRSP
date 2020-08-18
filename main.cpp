@@ -23,12 +23,12 @@
 //Tempo total cpu: 356.13
 //Poluicao: 517.11
 
-#define Saida false
+#define Saida true
 #define Grasp 0
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao Grasp
+#define Opcao RotaMip
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
@@ -476,13 +476,16 @@ int main(int num, char **agrs)
 
         for(auto veiculo : solucao->vetorVeiculos)
         {
-            Veificacao = Veificacao * VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
+            bool v = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
 
-            if(!Veificacao)
+            if(!v)
             {
                 cout<<"Erro, rota: "<<veiculo->getRota()<<"\nTipo: "<<veiculo->tipo<<"\n\nMotivo: "<<erro<<"\n\n";
-
+                cout<<"Combustivel veiculo: "<<veiculo->combustivel<<'\n';
+                erro = "";
             }
+
+            Veificacao = Veificacao * v;
         }
     }
 
@@ -823,6 +826,61 @@ int main(int num, char **agrs)
                 {
                     if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados))
                     {
+                        Solucao::Veiculo *veiculo = new Solucao::Veiculo(tipo);
+
+                        for(auto cliente : veiculo->listaClientes)
+                        {
+                            delete cliente;
+                        }
+
+
+                        for(int i = 0; i < 2; ++i)
+                            veiculo->listaClientes.pop_front();
+
+                        for(int i = 0; i < tam; ++i)
+                        {
+                            Solucao::ClienteRota *clienteRota = new Solucao::ClienteRota;
+                            clienteRota->swap(&vetCliente[i]);
+
+                            veiculo->listaClientes.push_back(clienteRota);
+                        }
+
+                        veiculo->carga = peso;
+                        veiculo->combustivel = combustivel;
+                        veiculo->poluicao = poluicao;
+
+                        string erro = "";
+
+                        cout<<"\n\n\n\n";
+
+                        bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
+                        if(resultado)
+                            cout<<"Veiculo correto\n";
+                        else
+                        {
+                            cout << "Erro. verificao falhou\nErro: " << erro << '\n';
+
+
+
+                        }
+
+                        for(int i = 1; i < tam; ++i)
+                        {
+                            cout<<vetCliente[i-1].cliente<<' '<<vetCliente[i].cliente<<" ";
+
+                            for(int k = 0; k < 5; ++k)
+                            {
+                                if(vetCliente[i].percorrePeriodo[k])
+                                {
+                                    cout<<"P: "<<k<<"  D: "<<vetCliente[i].distanciaPorPeriodo[k]<<"  T: "<<vetCliente[i].tempoPorPeriodo[k]<<"  ";
+                                }
+                            }
+
+                            cout<<"\n";
+
+                        }
+
+                        delete veiculo;
 
                         cout << "Rota gerada!!\n";
 

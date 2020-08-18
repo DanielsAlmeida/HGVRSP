@@ -304,7 +304,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                 if((poluicaoHeuriAux < poluicaoBestHeuristica) || (best->veiculoFicticil))
                 {
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, NULL);
 
                 }
 

@@ -34,6 +34,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->set(GRB_IntParam_GomoryPasses, 3);
     modelo->set(GRB_IntParam_Cuts, 3);
     modelo->set(GRB_IntParam_Presolve, 2);
+    modelo->set(GRB_DoubleParam_IntFeasTol, 1e-7);
 
 
     //Cria variaveis
@@ -136,7 +137,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
                 for (int k = 0; k < instancia->numPeriodos; ++k)
                 {
 
-                    variaveis->d[i][j][k] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS,
+                    variaveis->d[i][j][k] = modelo->addVar(1e-10, GRB_INFINITY, 0, GRB_SEMICONT,
                                                            "d_" + std::to_string(i) + '_' +
                                                            std::to_string(j) + '_' + std::to_string(k));
 
@@ -1367,13 +1368,20 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
                             {
                                 double l = variaveis->X[cliente1][j].get(GRB_DoubleAttr_X);
 
+
+
                                 if(l < 0.1)
+                                {
+                                    if(l > 0.0)
+                                        std::cout<<cliente1<<" - "<<j<<" : "<<l<<'\n';
                                     continue;
+                                }
 
                                 bool r = bool(l);
 
                                 if (r)
                                 {
+                                    std::cout<<cliente1<<" - "<<j<<" : "<<l<<'\n';
                                     cliente2 = j;
                                     break;
                                 }
@@ -1398,14 +1406,23 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
                         for (int k = 0; k < numPeriodos; ++k)
                         {
-                            //o
+
 
                             vetClienteRota[i + 1].tempoPorPeriodo[k] = variaveis->tao[cliente1][cliente2][k].get(GRB_DoubleAttr_X);
                             vetClienteRota[i + 1].distanciaPorPeriodo[k] = variaveis->d[cliente1][cliente2][k].get(GRB_DoubleAttr_X);
-                            vetClienteRota[i + 1].percorrePeriodo[k] = bool(variaveis->x[cliente1][cliente2][k].get(GRB_DoubleAttr_X));
+                            double l = variaveis->x[cliente1][cliente2][k].get(GRB_DoubleAttr_X);
+                            cout<<cliente1<<" "<<cliente2<<" k "<<k<<", x : "<<l;
+
+                            cout<<'\n';
+
+                            bool x = bool(variaveis->x[cliente1][cliente2][k].get(GRB_DoubleAttr_X));
+
+                            vetClienteRota[i + 1].percorrePeriodo[k] = x;
+
+
 
                         }
-
+                        cout<<"\n\n";
                         cliente1 = cliente2;
 
 
@@ -1456,16 +1473,14 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
 
                 if (quant == 1)
-                    vetClienteRota[0].tempoSaida =
-                            vetClienteRota[1].tempoChegada - vetClienteRota[1].tempoPorPeriodo[primeiroPeriodo];
+                    vetClienteRota[0].tempoSaida = vetClienteRota[1].tempoChegada - vetClienteRota[1].tempoPorPeriodo[primeiroPeriodo];
                 else
                 {
-                    vetClienteRota[0].tempoSaida = instancia->vetorPeriodos[primeiroPeriodo].fim -
-                                                   vetClienteRota[1].tempoPorPeriodo[primeiroPeriodo];
+                    vetClienteRota[0].tempoSaida = instancia->vetorPeriodos[primeiroPeriodo].fim - vetClienteRota[1].tempoPorPeriodo[primeiroPeriodo];
 
                 }
 
-
+                cout<<"Tempo saida: "<<vetClienteRota[0].tempoSaida<<'\n';
                 ultimoPeriodo = -1;
                 quant = 0;
 
@@ -1538,8 +1553,12 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
         //Copia clientes para vetor
         auto itCliente = veiculo->listaClientes.begin();
 
-        for(int i = 0; i < veiculo->listaClientes.size(); ++i, ++itCliente)
+        for(int i = 0; i < veiculo->listaClientes.size(); ++i)
+        {
             vetClienteRota[i].swap(*itCliente);
+
+            ++itCliente;
+        }
 
 
         bool rotaEncontrada = false;
@@ -1589,9 +1608,13 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             vetClienteRota[0].rotaMip = true;
             //Atualiza solucao
             auto it = veiculo->listaClientes.begin();
+            int i = 0;
 
-            for(int i = 0; i < veiculo->listaClientes.size(); ++i, ++it)
-                (*it)->swap(&vetClienteRota[i]);
+            for(auto it : veiculo->listaClientes)
+            {
+                it->swap(&vetClienteRota[i]);
+                ++i;
+            }
 
             auto cliente = *veiculo->listaClientes.begin();
             cliente->rotaMip = true;
@@ -1604,13 +1627,35 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             veiculo->poluicao = poluicao;
             veiculo->combustivel = combustivel;
 
-            if(!rotaEncontrada && hashRotas)
+            if((veiculo->listaClientes.size() == 4) && veiculo->tipo == 1)
             {
-                hashRotas->insereVeiculo(veiClienteRotaAux, vetClienteRota, poluicao, combustivel, veiculo->listaClientes.size(), veiculo->tipo, veiculo->tipo);
+                if((vetClienteRota[1].cliente == 5) && (vetClienteRota[2].cliente == 14))
+                {
+                    cout<<"Combustivel: "<<combustivel<<'\n';
+                    cout<<"veiculo: "<<veiculo->combustivel<<'\n';
+                    string erro = "";
+
+                    bool r = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
+
+                    if(!r)
+                    {
+                        cout << "Erro\nMotivo: " << erro << "\n\n";
+                        cout<<"Rota Original: ";
+
+                        for(int i = 0; i < veiculo->listaClientes.size(); ++i)
+                            cout<<veiClienteRotaAux[i].cliente<<' ';
+                        cout<<"\n\n";
+                    }
+                }
+            }
+
+            /*if(!rotaEncontrada && hashRotas)
+            {
+                hashRotas->insereVeiculo(veiClienteRotaAux, vetClienteRota, poluicao, combustivel, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga);
 
                 //else
                   //  cout<<"Inseriu veiculo do tipo: "<<veiculo->tipo<<" rota: "<<veiculo->getRota()<<"\n\n";
-            }
+            }*/
         }
         else
         {

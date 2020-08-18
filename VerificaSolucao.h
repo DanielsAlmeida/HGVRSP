@@ -27,11 +27,11 @@ namespace VerificaSolucao
 
     long double
     poluicaoRota(const Instancia::Instancia *const instancia, int tipoVeiculo, long double distanciaParcial, int i, int j, int k);
-    double poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
+    long double poluicaoCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, int carga, double distanciaTotal);
 
     long double
     combustivelRota(const Instancia::Instancia *const instancia, int tipoVeiculo, long double distanciaParcial, int i, int j, int k);
-    long double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, double carga, double distanciaTotal);
+    long double combustivelCarga(const Instancia::Instancia *const instancia, int tipoVeiculo, int carga, double distanciaTotal);
 
     bool verificaVeiculo(Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
     bool verificaCombustivel(const long double combustivel, const Solucao::Veiculo *veiculo, const Instancia::Instancia *const instancia);
