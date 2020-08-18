@@ -851,7 +851,6 @@ int main(int num, char **agrs)
 
                         string erro = "";
 
-                        cout<<"\n\n\n\n";
 
                         bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
                         if(resultado)
@@ -861,38 +860,23 @@ int main(int num, char **agrs)
                             cout << "Erro. verificao falhou\nErro: " << erro << '\n';
 
 
-
-                        }
-
-                        for(int i = 1; i < tam; ++i)
-                        {
-                            cout<<vetCliente[i-1].cliente<<' '<<vetCliente[i].cliente<<" ";
-
-                            for(int k = 0; k < 5; ++k)
-                            {
-                                if(vetCliente[i].percorrePeriodo[k])
-                                {
-                                    cout<<"P: "<<k<<"  D: "<<vetCliente[i].distanciaPorPeriodo[k]<<"  T: "<<vetCliente[i].tempoPorPeriodo[k]<<"  ";
-                                }
-                            }
-
-                            cout<<"\n";
-
                         }
 
                         delete veiculo;
 
-                        cout << "Rota gerada!!\n";
+                        if(resultado)
+                        {
 
-                        cout << "Rota: ";
+                            cout << "Rota: ";
 
-                        for (int i = 0; i < tam; ++i)
-                            cout << vetCliente[i].cliente << ' ';
+                            for (int i = 0; i < tam; ++i)
+                                cout << vetCliente[i].cliente << ' ';
 
-                        cout << '\n';
+                            cout << '\n';
 
-                        cout << "Combustivel: " << combustivel << '\n';
-                        cout << "Polucao: " << poluicao << '\n';
+                            cout << "Combustivel: " << combustivel << '\n';
+                            cout << "Polucao: " << poluicao << '\n';
+                        }
 
                     } else
                     {

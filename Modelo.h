@@ -55,7 +55,7 @@ namespace Modelo
         Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_);
         int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
                      const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
-                     const int numClientesTrocados);
+                     const int numArcos);
         ~Modelo();
     };
 

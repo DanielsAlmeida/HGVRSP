@@ -1136,7 +1136,7 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
             *erro += "-------ERRO-------\n";
         }
-        cout<<"Poluicao "<<poluicao<<'\n';
+
         return false;
     }
 
