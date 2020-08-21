@@ -23,12 +23,12 @@
 //Tempo total cpu: 356.13
 //Poluicao: 517.11
 
-#define Saida true
+#define Saida false
 #define Grasp 0
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao RotaMip
+#define Opcao Grasp
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849
@@ -821,6 +821,7 @@ int main(int num, char **agrs)
                 }while(cliente);
 
                 bool viavel = Movimentos_Paradas::criaRota(instancia, vetCliente, tam, peso, tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo, vetClienteAux);
+                double poluicaoHeur = poluicao;
 
                 if(viavel)
                 {
@@ -867,7 +868,7 @@ int main(int num, char **agrs)
                         if(resultado)
                         {
 
-                            cout << "Rota: ";
+                            cout << "\nRota: ";
 
                             for (int i = 0; i < tam; ++i)
                                 cout << vetCliente[i].cliente << ' ';
@@ -876,6 +877,8 @@ int main(int num, char **agrs)
 
                             cout << "Combustivel: " << combustivel << '\n';
                             cout << "Polucao: " << poluicao << '\n';
+                            cout<<"Polucao heuristica: "<<poluicaoHeur<<'\n';
+                            cout<<"Tipo: "<<tipo<<'\n';
                         }
 
                     } else

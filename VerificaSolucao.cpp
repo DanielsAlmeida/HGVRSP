@@ -245,12 +245,14 @@ VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instancia, So
 
                     //Verificar tempo de saida
 
-                    if ((*itCliente)->tempoSaida < instancia->vetorClientes[(*itCliente)->cliente].inicioJanela +
+                    if (((*itCliente)->tempoSaida + 1e-4) < instancia->vetorClientes[(*itCliente)->cliente].inicioJanela +
                                                    instancia->vetorClientes[(*itCliente)->cliente].tempoServico)
                     {
                         //Solução está ERRADA.
                         std::cout << "Erro, Tempo de saida\n";
                         std::cout << (*itCliente)->cliente << "\n";
+                        cout<<"Tempo saida: "<<(*itCliente)->tempoSaida<<"\nCalculado: "<<instancia->vetorClientes[(*itCliente)->cliente].inicioJanela +
+                                                                                          instancia->vetorClientes[(*itCliente)->cliente].tempoServico<<"\n";
                         cout << "ERRO.!\n";
                         delete[]vetorClientes;
                         return false;
@@ -1078,13 +1080,13 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
             //Verificar tempo de saida
 
-            if (((*clienteJ)->tempoSaida + 1e-6) < instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela + instancia->vetorClientes[(*clienteJ)->cliente].tempoServico)
+            if (((*clienteJ)->tempoSaida + 1e-4) < instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela + instancia->vetorClientes[(*clienteJ)->cliente].tempoServico)
             {
                 if (erro)
                 {
                     //Solução está ERRADA.
                     *erro = "Erro, Tempo de saida " + std::to_string((*clienteJ)->cliente) + '\n' +
-                            "Rota: " + to_string((*clienteJ)->tempoSaida) + "\ncalculado: " +
+                            "tempo Rota: " + to_string((*clienteJ)->tempoSaida) + "\ncalculado: " +
                             to_string(instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela + instancia->vetorClientes[(*clienteJ)->cliente].tempoServico) + '\n';
 
                 }
@@ -1101,46 +1103,59 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
     }
 
 
-    if ((veiculo->carga != carga) || (carga > instancia->vetorVeiculos[veiculo->tipo].capacidade) ||
-        ((fabs(veiculo->poluicao - poluicao) > 0.001)) || ((fabs(veiculo->combustivel - combustivel) > 0.001)) ||
+/*    if ((veiculo->carga != carga) || (carga > instancia->vetorVeiculos[veiculo->tipo].capacidade) ||
+        ((fabs(veiculo->poluicao - poluicao) > 0.01)) || ((fabs(veiculo->combustivel - combustivel) > 0.01)) ||
         (!verificaCombustivel(combustivel, veiculo->tipo, instancia)))
-    {
+    {*/
         //Solução está ERRADA.
         //cout<<"Outros.!\n";
 
-        if(erro)
-        {
+
+            *erro = "";
 
             if ((veiculo->carga != carga))
-                *erro = "Carga diferente\n";
+            {   if(erro)
+                    *erro = "Carga diferente\n";
+                return false;
+            }
 
             if (carga > instancia->vetorVeiculos[veiculo->tipo].capacidade)
-                *erro = "Verificacao final. capacidade\n";
+            {   if(erro)
+                    *erro += "Verificacao final. capacidade\n";
+                return false;
+            }
 
-            if ((fabs(veiculo->poluicao - poluicao) > 0.001))
-                *erro = "Verificacao final. poluiao diferente\n";
+            if ((fabs(veiculo->poluicao - poluicao) > 0.01))
+            {   if(erro)
+                    *erro += "Verificacao final. poluiao diferente\n";
+                return false;
+            }
 
-            if (fabs(veiculo->combustivel - combustivel) > 0.001)
+            if (fabs(veiculo->combustivel - combustivel) > 0.01)
             {
-                *erro = "Verificacao final. Combustivel diferente\n";
-                *erro += "veiculo: "+std::to_string(veiculo->combustivel)+'\n';
-                *erro += "calculado " + std::to_string(combustivel) + '\n';
-                *erro += "tipo veiculo: " + std::to_string(veiculo->tipo)+'\n';
+                if(erro)
+                {
+                    *erro += "Verificacao final. Combustivel diferente\n";
+                    *erro += "veiculo: " + std::to_string(veiculo->combustivel) + '\n';
+                    *erro += "calculado " + std::to_string(combustivel) + '\n';
+                    *erro += "tipo veiculo: " + std::to_string(veiculo->tipo) + '\n';
+                }
+                return false;
             }
 
             if (!verificaCombustivel(combustivel, veiculo->tipo, instancia))
             {
-                *erro = "consumo Combustivel a mais do que a capacidade\n";
+                if(erro)
+                    *erro += "consumo Combustivel a mais do que a capacidade\n";
+                return false;
 
             }
 
-            *erro += "-------ERRO-------\n";
-        }
 
-        return false;
-    }
 
-    cout<<"Poluicao "<<poluicao<<'\n';
+
+
+
     return true;
 
 

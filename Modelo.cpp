@@ -36,7 +36,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->set(GRB_IntParam_GomoryPasses, 3);
     modelo->set(GRB_IntParam_Cuts, 3);
     modelo->set(GRB_IntParam_Presolve, 2);
-    modelo->set(GRB_DoubleParam_IntFeasTol, 1e-7);
+    modelo->set(GRB_DoubleParam_IntFeasTol, 1e-4);
+    modelo->set(GRB_DoubleParam_FeasibilityTol, 1e-4);
 
 
     //Cria variaveis
@@ -1131,6 +1132,12 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
                     //Velor inicial é 0
                     variaveis->X[cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
                     variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+
+                    //Inicializa x
+
+                    for(int k = 0; k < instancia->numPeriodos; ++k)
+                        variaveis->x[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+
                 }
                 //modelo->chgCoeff(variaveis->restricaoTrocaClientes, variaveis->X[cliente1][cliente2], 1);
             }
@@ -1148,6 +1155,9 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
                     //Velor inicial é 0
                     variaveis->X[cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
                     variaveis->f[cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
+
+                    for(int k = 0; k < instancia->numPeriodos; ++k)
+                        variaveis->x[cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
                 }
 
                 //modelo->chgCoeff(variaveis->restricaoTrocaClientes, variaveis->X[cliente2][cliente1], 1);
@@ -1317,7 +1327,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
         }
 
 
-        if(aux > -.02)
+        if(aux > -.04)
             break;
 
         //Verifica se existe uma proxima interaca
@@ -1366,6 +1376,12 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
                 variaveis->f[cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
 
+                for(int k = 0; k < instancia->numPeriodos; ++k)
+                {
+                    variaveis->x[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    variaveis->d[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    variaveis->tao[cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                }
 
             }
 
@@ -1378,7 +1394,14 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
 
                 variaveis->f[cliente2][cliente1].set(GRB_DoubleAttr_UB, 0);
 
-                modelo->chgCoeff(variaveis->restricaoTrocaClientes, variaveis->X[cliente2][cliente1], 0);
+                for(int k = 0; k < instancia->numPeriodos; ++k)
+                {
+                    variaveis->x[cliente2][cliente1][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    variaveis->d[cliente2][cliente1][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    variaveis->tao[cliente2][cliente1][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                }
+
+
             }
         }
     }
@@ -1546,8 +1569,8 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     auto c_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tempoCpu = c_end-c_start;
 
-    cout<<"\n\nTempo cpu: "<<tempoCpu.count()<<" s\n";
-    cout<<"Numero de interacoes: "<<numInteracoes<<"\n\n";
+/*    cout<<"\n\nTempo cpu: "<<tempoCpu.count()<<" s\n";
+    cout<<"Numero de interacoes: "<<numInteracoes<<"\n\n";*/
 
     return true;
 

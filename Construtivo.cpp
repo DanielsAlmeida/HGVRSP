@@ -44,6 +44,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     auto *vetorClienteAux = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetClienteBestSecund = new Solucao::ClienteRota[instancia->numClientes+2];
     auto *vetClienteRotaSecundAux = new Solucao::ClienteRota[instancia->numClientes+2];
+    int *guardaRota = new int[MaxTamVetClientesMatrix];
+    int *guardaRota2 = new int[MaxTamVetClientesMatrix];
 
     HashRotas::HashRotas hashRotas(instancia->numClientes);
 
@@ -168,12 +170,27 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         poluicaoBestHeuristica = best->poluicao;
     }
 
+    bool numMaxAtualizacoes = false;
+    int interacoes = 0;
+
     for(int i = 0; i < numInteracoes; ++i)
     {
-
-        if(((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
+        if(!numMaxAtualizacoes)
         {
-            break;
+            if (((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
+            {
+
+                numMaxAtualizacoes = true;
+                //cout<<"Atingiu numero maximo de interacoes: "<<i<<'\n';
+                interacoes = 0;
+            }
+
+        }else
+        {
+            if(interacoes > 15)
+                break;
+
+            ++interacoes;
         }
 
         /*
@@ -286,8 +303,16 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         {
             c_start = std::chrono::high_resolution_clock::now();
 
-            Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
-                     vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, NULL);
+            if(!numMaxAtualizacoes)
+            {
+                Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
+                         vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, NULL, guardaRota, guardaRota2);
+            }
+            else
+            {
+                Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
+                         vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, &hashRotas, guardaRota, guardaRota2);
+            }
 
             c_end = std::chrono::high_resolution_clock::now();
 
@@ -302,9 +327,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             {
 
 
-                if((poluicaoHeuriAux < poluicaoBestHeuristica) || (best->veiculoFicticil))
+                if((poluicaoHeuriAux < poluicaoBestHeuristica) || (best->veiculoFicticil) || numMaxAtualizacoes)
                 {
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, NULL);
+                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
 
                 }
 
@@ -433,6 +458,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     delete []proporcao;
     delete []vetClienteRotaSecundAux;
     delete []vetorCandidatos;
+
+    delete []guardaRota;
+    delete []guardaRota2;
 
     proporcao = NULL;
     vetorMedia = NULL;
