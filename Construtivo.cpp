@@ -69,6 +69,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                          tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
     vetorProbabilidade[0] = 1.0/tamAlfa;
     solucaoAcumulada[0] = best->poluicao;
+    vetorFrequencia[0] = 1;
+
     Solucao::Solucao *solucaoAux;
     int posicaoAlfa;
     int ultimaAtualizacao = 0;
@@ -151,6 +153,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
 
     }
+
     std::string texto;
     std::string sequencia;
 
@@ -175,32 +178,35 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     for(int i = 0; i < numInteracoes; ++i)
     {
-        if(!numMaxAtualizacoes)
+
+        if (((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
         {
-            if (((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
-            {
-
-                numMaxAtualizacoes = true;
-                //cout<<"Atingiu numero maximo de interacoes: "<<i<<'\n';
-                interacoes = 0;
-            }
-
-        }else
-        {
-            if(interacoes > 15)
-                break;
-
-            ++interacoes;
+            break;
         }
 
-        /*
-        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
-            cout<<"Interacao "<<i<<'\n';
-        */
+
+
+
+/*        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
+            cout<<"Interacao "<<i<<'\n';*/
+
 
         //Atualiza probabilidade
-        if((i%numIntAtualizarProb) == 0)
+        if(((i%numIntAtualizarProb) == 0) && i > 0)
+        {
+
             atualizaProbabilidade(vetorProbabilidade, vetorFrequencia, solucaoAcumulada, vetorMedia, proporcao, tamAlfa, best->poluicao);
+
+/*            cout<<"Ultima atualizacao: "<<ultimaAtualizacao<<"\n\n";
+            cout<<"Atualizando probabilidades, interacao: "<<i<<'\n';
+
+            cout<<"Alfa\tProbabilidade\tFrequencia\n\n";
+            for(int j = 0; j < tamAlfa; ++j)
+                cout<<vetorAlfa[j]<<"\t"<<vetorProbabilidade[j]<<"\t"<<vetorFrequencia[j]<<'\n';
+
+            cout<<"*******************************\n\n";*/
+
+        }
 
 /*        if((i == numInteracoes/2) && usarDuasHeur)
         {
@@ -268,26 +274,6 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
         tempoConstrutivo += tempoCpu.count();
 
-        solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
-        vetorFrequencia[posicaoAlfa] += 1;
-
-
-/*        if(solucaoAux->veiculoFicticil)
-        {
-
-            c_start = std::chrono::high_resolution_clock::now();
-            ViabilizaSolucao::viabilizaSolucao(solucaoAux, instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos,45, 30,
-                                               vetClienteBestSecund, vetClienteRotaSecundAux, heuristica, vetorParametros, vetLimiteTempo, vetCandInteracoes, matrixClienteBest); //45 20
-
-            c_end = std::chrono::high_resolution_clock::now();
-
-            tempoCpu = c_end - c_start;
-
-            tempoViabilizador += tempoCpu.count();
-
-            if(solucaoAux->veiculoFicticil == false)
-                ++tentativasViabilizar;
-        }*/
 
         bool inviavel = false;
 
@@ -303,7 +289,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         {
             c_start = std::chrono::high_resolution_clock::now();
 
-            if(!numMaxAtualizacoes)
+            if(!modelo)
             {
                 Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
                          vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, NULL, guardaRota, guardaRota2);
@@ -320,20 +306,126 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             tempoVnd  += tempoCpu.count();
 
 
-            poluicaoHeuriAux = solucaoAux->poluicao;
+            poluicaoHeuriAux = 0.0;
+
+            HashRotas::HashNo *hashNo;
+            Solucao::ClienteRota *cliente;
+            double aux, aux2;
+
+            if(!solucaoAux->veiculoFicticil && modelo)
+            {
+
+                //Soma a poluico heuristica da solucao
+                for (auto veiclulo : solucaoAux->vetorVeiculos)
+                {
+                    cliente = (*veiclulo->listaClientes.begin());
+
+
+
+                    if (!cliente->rotaMip)
+                        poluicaoHeuriAux += veiclulo->poluicao;
+                    else
+                    {
+                        if(veiclulo->listaClientes.size() <= 2)
+                        {
+                            continue;
+                        }
+
+                        //Recupera o veiculo na hash
+                        hashNo = hashRotas.getVeiculo(veiclulo);
+
+                        if (!hashNo)
+                        {
+                            Solucao::ClienteRota *ptrClienterota = vetorClienteBest;
+
+                            cout << "Erro, rotaMip e a rota nao esta na hash.\n";
+                            for(auto cliente : veiclulo->listaClientes)
+                            {
+                                cout << cliente->cliente << ' ';
+                                ptrClienterota->cliente = cliente->cliente;
+                                ++ptrClienterota;
+                            }
+                            cout<<'\n';
+
+                            bool r = hashRotas.getVeiculo(vetorClienteBest, veiclulo->listaClientes.size(), veiclulo->tipo, &aux, &aux2);
+                            if(r)
+                                cout<<"encontrou\n??";
+                            else
+                                cout<<"nao encontrou\n";
+
+                            exit(-1);
+                        }
+
+                        if (hashNo->poluicaoH > 0.0)
+                            poluicaoHeuriAux += hashNo->poluicaoH;
+                        else
+                        {
+                            //Copia a rota para vetor
+
+                            Solucao::ClienteRota *clienteRota_ptr = vetorClienteBest;
+
+                            for (auto cliente : veiclulo->listaClientes)
+                            {
+                                clienteRota_ptr->cliente = cliente->cliente;
+
+                                ++clienteRota_ptr;
+                            }
+
+                            bool resultado = Movimentos_Paradas::criaRota(instancia, vetorClienteBest,
+                                                                          veiclulo->listaClientes.size(),
+                                                                          veiclulo->carga, veiclulo->tipo, &aux,
+                                                                          &aux2, NULL, NULL, vetLimiteTempo,
+                                                                          vetClienteRotaSecundAux);
+
+                            if (!resultado)
+                            {
+                                cout << "Nao existe solucao heuristica\n";
+                                hashNo->poluicaoH = veiclulo->poluicao + 0.15 * veiclulo->poluicao;
+
+                            } else
+                                hashNo->poluicaoH = aux2;
+
+                            poluicaoHeuriAux += hashNo->poluicaoH;
+                        }
+                    }
+
+                }
+
+            }
 
 
             if((!solucaoAux->veiculoFicticil) && (modelo))
             {
 
+                double gap = (poluicaoHeuriAux - poluicaoBestHeuristica)/poluicaoBestHeuristica;
 
-                if((poluicaoHeuriAux < poluicaoBestHeuristica) || (best->veiculoFicticil) || numMaxAtualizacoes)
+                if(gap < 0.15)
                 {
-                    Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas);
+                    int p = int((1.0 - gap) * 100.0);
 
+                    int valA = rand_u32() % 100;
+
+                    if ((p >= valA) || (best->veiculoFicticil) || (poluicaoHeuriAux < poluicaoBestHeuristica) || (gap<0.05))
+                    {
+                        Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas, guardaRota);
+
+                    }
                 }
 
             }
+
+            if(!solucaoAux->veiculoFicticil)
+            {
+                solucaoAcumulada[posicaoAlfa] += poluicaoHeuriAux;
+                vetorFrequencia[posicaoAlfa] += 1;
+            }
+            else
+            {
+                solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
+                vetorFrequencia[posicaoAlfa] += 1;
+            }
+
+
 
 
         }
@@ -446,6 +538,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     hashRotas.estatisticasHash(&tamanhoMedio, &maior);
     cout<<"Estatisticas hash: \nTamnho medio: "<<tamanhoMedio<<"\nMaior: "<<maior<<'\n';*/
+
+
 
     //Libera memória
     delete []vetorClienteBest;
@@ -1238,6 +1332,15 @@ Solucao::Solucao * Construtivo::geraSolucao(const Instancia::Instancia *const in
         ultimo = NULL;
 
 
+    }
+
+    for(auto veiculo : solucao->vetorVeiculos)
+    {
+        if(!veiculo->listaClientes.empty())
+        {
+            auto cliente = (*veiculo->listaClientes.begin());
+            cliente->rotaMip = false;
+        }
     }
 
     delete candidato;

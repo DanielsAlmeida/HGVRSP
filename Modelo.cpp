@@ -38,6 +38,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->set(GRB_IntParam_Presolve, 2);
     modelo->set(GRB_DoubleParam_IntFeasTol, 1e-4);
     modelo->set(GRB_DoubleParam_FeasibilityTol, 1e-4);
+    modelo->set(GRB_DoubleParam_MIPGap, 0.05);
+    modelo->set(GRB_IntParam_MIPFocus, GRB_MIPFOCUS_FEASIBILITY);
 
 
     //Cria variaveis
@@ -1014,17 +1016,18 @@ Modelo::Modelo::~Modelo()
 }
 
 int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso, const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
-                             const int numArcos)
+                             const int numArcos, int *vetRotaAux)
 {
 
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
-    int rota[20];
+    static int rota[20];
 
     for(int i = 0; i < tam; ++i)
     {
-        rota[i] = vetClienteRota[i].cliente;
+        rota[i] = vetRotaAux[i] = vetClienteRota[i].cliente;
+
     }
 
     if(tipo != this->tipoVeiculo)
@@ -1227,7 +1230,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     //tam - 1 => numero de arcos da rota. numArcos => numero de arcos que podem ser trocados
     int num = (tam - 1) - numArcos;
 
-    num = ((tam-1) < 0 ? 0 : num);
+    num = ((tam-1 - numArcos) < 0 ? 0 : num);
 
 
     //Muda o lado direito da restricao de trocar clientes para num. num -> numero de arcos que  nao podem ser trocados
@@ -1239,6 +1242,13 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     double ultimaPoluicao = *poluicao;
 
     int numInteracoes = 0;
+
+    int aux;
+
+    if(numArcos == 0)
+        aux = 1;
+    else
+        aux = 3;
 
     const int MaxNumInteracoes = 3;
 
@@ -1333,6 +1343,25 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
         //Verifica se existe uma proxima interaca
         if((p + 1) < MaxNumInteracoes)
         {
+            bool iguais = true;
+
+            //Verifica se a seguencia é igual a da interacao anterior
+            for(int i = 0; i < tam; ++i)
+            {
+                if(vetClienteRota[i].cliente != vetRotaAux[i])
+                {
+                    iguais = false;
+                }
+            }
+
+            if(iguais)
+                break;
+
+            for(int i = 0; i < tam; ++i)
+            {
+                vetRotaAux[i] = vetClienteRota[i].cliente;
+            }
+
             for (int i = 0; i < tam - 1; ++i)
             {
                 cliente1 = vetClienteRota[i].cliente;
@@ -1569,14 +1598,13 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, const int tam
     auto c_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tempoCpu = c_end-c_start;
 
-/*    cout<<"\n\nTempo cpu: "<<tempoCpu.count()<<" s\n";
-    cout<<"Numero de interacoes: "<<numInteracoes<<"\n\n";*/
 
     return true;
 
 }
 
-void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas)
+void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
+                             int *vetRotasAux)
 {
 
     Solucao::ClienteRota veiClienteRotaAux[25];
@@ -1640,7 +1668,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
                 poluicao = veiculo->poluicao;
 
                 resultado = modelo->criaRota(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo,
-                                             veiculo->carga, instancia, &poluicao, &combustivel, NumTrocas);
+                                             veiculo->carga, instancia, &poluicao, &combustivel, NumTrocas, vetRotasAux);
             } catch (GRBException e)
             {
                 cout << "Erro MIP. \nVeiculo tipo: " << veiculo->tipo << "\nRota: " << veiculo->getRota() << '\n';
@@ -1680,35 +1708,12 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             veiculo->poluicao = poluicao;
             veiculo->combustivel = combustivel;
 
-            if((veiculo->listaClientes.size() == 4) && veiculo->tipo == 1)
-            {
-                if((vetClienteRota[1].cliente == 5) && (vetClienteRota[2].cliente == 14))
-                {
-                    cout<<"Combustivel: "<<combustivel<<'\n';
-                    cout<<"veiculo: "<<veiculo->combustivel<<'\n';
-                    string erro = "";
 
-                    bool r = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
-
-                    if(!r)
-                    {
-                        cout << "Erro\nMotivo: " << erro << "\n\n";
-                        cout<<"Rota Original: ";
-
-                        for(int i = 0; i < veiculo->listaClientes.size(); ++i)
-                            cout<<veiClienteRotaAux[i].cliente<<' ';
-                        cout<<"\n\n";
-                    }
-                }
-            }
-
-            /*if(!rotaEncontrada && hashRotas)
+            if(!rotaEncontrada && hashRotas)
             {
                 hashRotas->insereVeiculo(veiClienteRotaAux, vetClienteRota, poluicao, combustivel, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga);
 
-                //else
-                  //  cout<<"Inseriu veiculo do tipo: "<<veiculo->tipo<<" rota: "<<veiculo->getRota()<<"\n\n";
-            }*/
+            }
         }
         else
         {

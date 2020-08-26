@@ -788,6 +788,8 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
                              Solucao::ClienteRota *vetClienteRotaAux)
 {
 
+
+
     if (tam == 2)
     {
 
@@ -1635,6 +1637,8 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
         tempoCriaRota->num += 1;
         tempoCriaRota->tamVet += clienteI.tam;
     }
+
+    vetClienteRota[0].rotaMip = vetClienteRotaAux[0].rotaMip = false;
 
     funcLiberaMemoria();
     return true;

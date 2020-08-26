@@ -890,7 +890,7 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
     auto cliente = veiculo->listaClientes.begin();
 
-    if ((((*cliente)->tempoSaida + 1e-5) < 0.5) && (veiculo->tipo == 1))
+    if ((((*cliente)->tempoSaida + 1e-4) < 0.5) && (veiculo->tipo == 1))
     {
         if(erro)
             *erro = "Erro, tempoSaida incompativel com veiculo\ntempoSaida: " + std::to_string((*cliente)->tempoSaida) + '\n'+
@@ -941,18 +941,6 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
         periodoSaida = instancia->retornaPeriodo(horaPartida);//Periodo[0, ..., 4]
 
-        /*for(int i = 0; i < periodoSaida; ++i)
-        {
-            if((*clienteJ)->percorrePeriodo[i])
-            {
-                if(erro)
-                    *erro = "Periodo de saida e percorrePeriodo incompativeis. Arco: " + std::to_string((*clienteI)->cliente) + ' ' + std::to_string((*clienteJ)->cliente) +
-                            "\nperiodoSaida: "+std::to_string(periodoSaida) + " horaSaida clienteI: " + std::to_string((*clienteI)->tempoSaida) + " horaSaida: " + std::to_string(horaPartida);
-
-                return false;
-            }
-        }*/
-
         int primeiroIndice = -1, ultimoIndice = -1, numPeriodos = 0;
 
         for(int i = periodoSaida; i < instancia->numPeriodos; ++i)
@@ -991,47 +979,6 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
         poluicao += poluicaoCarga(instancia, veiculo->tipo, cargaTotal, instancia->matrizDistancias[(*clienteI)->cliente][(*clienteJ)->cliente]);
         combustivel += combustivelCarga(instancia, veiculo->tipo, cargaTotal, instancia->matrizDistancias[(*clienteI)->cliente][(*clienteJ)->cliente]);
 
-        /*if(numPeriodos == 1)
-        {
-            horaChegada = (*clienteI)->tempoSaida + (*clienteJ)->tempoPorPeriodo[primeiroIndice];
-            horaPartida = (*clienteI)->tempoChegada + instancia->vetorClientes[(*clienteI)->cliente].tempoServico;
-
-            if(horaChegada < instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela)
-            {
-                horaChegada = instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela;
-                horaPartida = horaChegada - (*clienteJ)->tempoPorPeriodo[primeiroIndice];
-            }
-
-            if((*clienteI)->cliente == 0)
-            {
-                horaPartida = (*clienteJ)->tempoChegada - (*clienteJ)->tempoPorPeriodo[primeiroIndice];
-                horaChegada = horaPartida +
-            }
-
-        }
-        else
-        {
-            horaChegada = instancia->vetorPeriodos[ultimoIndice].inicio + (*clienteJ)->tempoPorPeriodo[ultimoIndice];
-            horaPartida = (*clienteI)->tempoChegada + instancia->vetorClientes[(*clienteI)->cliente].tempoServico;
-        }
-
-        if(!((fabs(horaChegada-(*clienteJ)->tempoChegada) <= 0.001) || ((*clienteJ)->tempoChegada > horaChegada)))
-        {
-            if(erro)
-                *erro = "erro tempo Chegada, arco: " + std::to_string((*clienteI)->cliente) + ' ' + std::to_string((*clienteJ)->cliente) + '\n' + "hora calculada: " + std::to_string(horaChegada) +
-                        " hora da rota: " + std::to_string((*clienteJ)->tempoChegada) + '\n' + "numPeriodos "+ std::to_string(numPeriodos)+"\ntempoSaida " + std::to_string((*clienteI)->tempoSaida);
-
-            return false;
-        }
-
-        if(!((fabs(horaPartida - (*clienteI)->tempoSaida) < 0.001) || ((*clienteI)->tempoSaida) > horaPartida))
-        {
-            if(erro)
-                *erro = "erro tempo saida, arco: " + std::to_string((*clienteI)->cliente) + ' ' + std::to_string((*clienteJ)->cliente) + '\n' + "hora calculada: " + std::to_string(horaPartida) +
-                        " hora da rota: " + std::to_string((*clienteI)->tempoSaida)  + " numPeriodos "+ std::to_string(numPeriodos)+"\n";
-
-            return false;
-        }*/
 
         cargaTotal -= instancia->vetorClientes[(*clienteJ)->cliente].demanda;
         if(cargaTotal < 0)
@@ -1125,9 +1072,10 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
                 return false;
             }
 
+            /*
             if ((fabs(veiculo->poluicao - poluicao) > 0.01))
             {   if(erro)
-                    *erro += "Verificacao final. poluiao diferente\n";
+                    *erro += "Verificacao final. poluiao diferente\nVeiculo: " + std::to_string(veiculo->poluicao) + " Calculado: " + std::to_string(poluicao);
                 return false;
             }
 
@@ -1143,6 +1091,7 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
                 return false;
             }
 
+            */
             if (!verificaCombustivel(combustivel, veiculo->tipo, instancia))
             {
                 if(erro)

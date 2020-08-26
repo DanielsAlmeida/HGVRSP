@@ -208,8 +208,9 @@ int main(int num, char **agrs)
 
     auto vet = instancia->vetorClientes;
 
-    #define numAlfas  18
-    float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
+    #define numAlfas  9
+    //float vetAlfas[numAlfas] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9};
+    float vetAlfas[numAlfas] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
     //{{2,1}, {1,3}, {5, 3}};
 
     #define TamVetH 2
@@ -714,14 +715,12 @@ int main(int num, char **agrs)
 {
 
     string strInstancia;
-    string saidaCompleta;
-    string saidaParcial;
     string instanciaNome;
     string log;
 
     bool logAtivo = false;
 
-    if(num != 3)
+    if(num != 2)
     {
         cout<<"Numero incorreto de parametros.\n";
         exit(-1);
@@ -729,7 +728,7 @@ int main(int num, char **agrs)
 
 
     strInstancia = agrs[1];
-    saidaCompleta = agrs[2];
+
 
     ofstream file;
 
@@ -769,11 +768,15 @@ int main(int num, char **agrs)
 
         GRBEnv env;
         env.set(GRB_IntParam_OutputFlag, 1);
-        env.set(GRB_IntParam_Threads, 8);
+        env.set(GRB_IntParam_DisplayInterval, 1);
 
         GRBModel grb_modelo = GRBModel(env);
+        Modelo::solucaoInteira solucaoInteira;
+
+        grb_modelo.setCallback(&solucaoInteira);
 
         modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
+
 
 
         // .mps, .rew, .lp, .rlp, or .ilp
@@ -825,6 +828,8 @@ int main(int num, char **agrs)
 
                 if(viavel)
                 {
+                    solucaoInteira.inicializaInicio();
+
                     if (modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados))
                     {
                         Solucao::Veiculo *veiculo = new Solucao::Veiculo(tipo);

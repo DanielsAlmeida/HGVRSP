@@ -189,7 +189,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
 
                 double combustivel, poluicao;
                 bool resultado = false;
-
+                bool veiculoHashRotas = false;
 
                 if(hashRotas)
                 {
@@ -199,6 +199,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                         guardaRota[i] = vetClienteRotaBest[i].cliente;
 
                     resultado = hashRotas->getVeiculo(vetClienteRotaBest, k, veiculo->tipo, &poluicao, &combustivel);
+                    veiculoHashRotas = resultado;
 
                 }
 
@@ -213,7 +214,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                         {
 
                             resultado = modelo->criaRota(vetClienteRotaBest, k, veiculo->tipo, peso, instancia,
-                                                         &poluicao, &combustivel, 0);
+                                                         &poluicao, &combustivel, 0, nullptr);
 
                         } else
                         {
@@ -248,7 +249,7 @@ ResultadosRota Movimentos::mvIntraRotaShift(const Instancia::Instancia *const in
                                 .poluicaoSecundario = -1.0, .combustivelSecundario = -1.0, .pesoSecundario = -1, .posicaoVetSecundario = -1};
 
 
-                    }else if(hashRotas)
+                    }else if(hashRotas && veiculoHashRotas)
                     {
                         for(int i = 0; i < k; ++i)
                             vetClienteRotaBest[i].cliente = guardaRota[i];
@@ -523,7 +524,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
 
                                 cout<<'\n';*/
                                 resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso,
-                                                             instancia, &poluicao, &combustivel, 0);
+                                                             instancia, &poluicao, &combustivel, 0, nullptr);
 
                                 /*cout<<"D Rota: ";
                                 for(int i = 0; i < posicaoAux; ++i)
@@ -612,7 +613,7 @@ ResultadosRota Movimentos::mvIntraRotaSwap(const Instancia::Instancia *const ins
 
                                 cout<<'\n';*/
                                 resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo->tipo, peso,
-                                                             instancia, &poluicao, &combustivel, 0);
+                                                             instancia, &poluicao, &combustivel, 0, nullptr);
 
                                 /*cout<<"D Rota: ";
                                 for(int i = 0; i < posicaoAux; ++i)
@@ -945,7 +946,8 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                         if (modelo->usaModeloVnd)
                         {
                             resultado = modelo->criaRota(vetClienteRotaBest, posicaoAux, veiculo1->tipo, PesoVeiculo1,
-                                                         instancia, &poluicaoAuxVeic1, &combustivelAuxVeic1, 0);
+                                                         instancia, &poluicaoAuxVeic1, &combustivelAuxVeic1, 0,
+                                                         nullptr);
                         } else
                         {
                             resultado = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoAux,
@@ -1036,7 +1038,7 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
                                             resultadoVeic2 = modelo->criaRota(vetClienteRotaSecundBest, posicaoAux,
                                                                               veiculo2->tipo, PesoVeiculo2,
                                                                               instancia, &poluicaoRotaVeic2,
-                                                                              &combustivelRotaVeic2, 0);
+                                                                              &combustivelRotaVeic2, 0, nullptr);
                                         } else
                                         {
                                             resultadoVeic2 = Movimentos_Paradas::criaRota(instancia,
@@ -2697,7 +2699,7 @@ Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Soluca
 
                 if(!resultadosRota)
                     resultadosRota = Movimentos_Paradas::criaRota(instancia, vetClienteRotaBest, posicaoVeic1, veiculo1->carga, novoTipo, &combustivelVeic1,
-                                                              &poluicaoVeic1, NULL, NULL, vetLimiteTempo, vetClienteRotaAux);
+                                                                  &poluicaoVeic1, NULL, NULL, vetLimiteTempo, vetClienteRotaAux);
             }
         }
         veiculoEscolhido++;
@@ -2765,7 +2767,7 @@ Movimentos::mvTrocarVeiculos(const Instancia::Instancia *const instancia, Soluca
 
             if(!resultadosRota2)
                 resultadosRota2 = Movimentos_Paradas::criaRota(instancia, vetClienteRotaSecundBest, posicaoVeic2, veiculo2->carga, novoTipoVeic2, &combustivelVeic2,
-                                                                &poluicaoVeic2, NULL, NULL, vetLimiteTempo, vetClienteRotaSecundAux);
+                                                               &poluicaoVeic2, NULL, NULL, vetLimiteTempo, vetClienteRotaSecundAux);
         }
         else
         {
@@ -3072,24 +3074,6 @@ void Movimentos::atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *sol
         resultado.veiculo->carga = 0;
         resultado.veiculo->poluicao = 0.0;
         resultado.veiculo->combustivel = 0.0;
-
-/*        for(auto it : resultado.veiculo->listaClientes)
-        {
-            if(it->cliente != 0)
-            {
-                cout<<"Erro, veiculo com dois clientes diferentes do deposito \nLinha: "<<__LINE__<<" Arquivo: Movimentos.cpp\n";
-                cout<<"Movimento: "<<movimento<<'\n';
-
-                for(l = 0; l <= resultado.posicaoVet; ++l)
-                {
-                    cout<<vetClienteRotaBest[l].cliente<<' ';
-                }
-                cout<<'\n';
-
-                exit(-1);
-            }
-
-        }*/
     }
     else
     {
@@ -3160,31 +3144,6 @@ void Movimentos::atualizaSolucao(ResultadosRota resultado, Solucao::Solucao *sol
                 resultado.veiculoSecundario->carga = 0;
                 resultado.veiculoSecundario->poluicao = 0.0;
                 resultado.veiculoSecundario->combustivel = 0.0;
-
-/*                for(auto it : resultado.veiculoSecundario->listaClientes)
-                {
-                    if(it->cliente != 0)
-                    {
-                        cout<<"Erro, veiculo2 com dois clientes diferentes do deposito \nLinha: "<<__LINE__<<" Arquivo: Movimentos.cpp\n";
-                        cout<<"Movimento: "<<movimento<<'\n';
-
-
-                        cout<<"Vetor: ";
-                        for(l = 0; l <= resultado.posicaoVetSecundario; ++l)
-                        {
-                            cout<<vetClienteRotaSecundBest[l].cliente<<' ';
-                        }
-                        cout<<'\n';
-
-                        cout<<"Lista: ";
-
-                        for(auto it : )
-
-                        exit(-1);
-                    }
-
-                }*/
-
 
             }
             else

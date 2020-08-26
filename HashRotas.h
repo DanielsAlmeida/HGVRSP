@@ -20,6 +20,8 @@ namespace HashRotas
         int tipo;
 
         HashNo *best;
+
+        double poluicaoH;
     };
 
     class HashRotas
@@ -28,6 +30,7 @@ namespace HashRotas
 
         u_int32_t tamTabela;
         std::list<HashNo*> *tabelaHash;
+        int numRotas;
 
         HashRotas(int numClientes);
         ~HashRotas();

@@ -1,6 +1,7 @@
 //
 // Created by igor on 09/07/2020.
 //
+#include <chrono>
 #include "gurobi_c++.h"
 #include "Instancia.h"
 #include "HashRotas.h"
@@ -55,12 +56,52 @@ namespace Modelo
         Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_);
         int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
                      const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
-                     const int numArcos);
+                     const int numArcos, int *vetRotaAux);
         ~Modelo();
     };
 
     void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota,
-                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas);
+                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
+                         int *vetRotasAux);
+
+    class solucaoInteira : public GRBCallback
+    {
+    public:
+
+        std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> c_start = std::chrono::high_resolution_clock::now();
+
+        solucaoInteira() = default;
+        void inicializaInicio()
+        {
+            c_start = std::chrono::high_resolution_clock::now();
+        }
+
+    protected:
+
+        void callback()
+        {
+            try
+            {
+
+                if (where == GRB_CB_MIPSOL)
+                {
+                    auto c_end = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<double> tempoCpu = c_end - c_start;
+
+                    double obj = getDoubleInfo(GRB_CB_MIPSOL_OBJ);
+
+                    std::cout<<"Nova solucao inteira: val: "<<obj<<" tempo: "<<tempoCpu.count()<<"s\n\n";
+                }
+
+            } catch (GRBException e)
+            {
+                std::cout << "Error number: " << e.getErrorCode() << '\n';
+                std::cout << e.getMessage() << '\n';
+            }
+
+        }
+    };
+
 }
 
 

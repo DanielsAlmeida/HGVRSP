@@ -8,7 +8,7 @@
 HashRotas::HashRotas::HashRotas(int numClientes)
 {
     numClientes -= 1;
-
+    numRotas = 0;
 
     switch (numClientes)
     {
@@ -166,7 +166,9 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
         hashNoBest->carga = carga;
         hashNoBest->tipo = tipo;
         hashNoBest->best = NULL;
+        hashNoBest->poluicaoH = -1.0;
 
+        numRotas += 1;
 
         hashNoBest->poluicao = poluicaoBest;
         hashNoBest->combustivel = combustivelBest;
@@ -257,6 +259,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
         hashNoVeic->carga = carga;
         hashNoVeic->tam = tam;
         hashNoVeic->veiculo = new Solucao::ClienteRota[hashNoVeic->tam];
+        hashNoVeic->poluicaoH = -1.0;
 
         Solucao::ClienteRota *veiculo_p = hashNoVeic->veiculo;
         Solucao::ClienteRota *ptr_veiculoOrig = clienteRotaOriginal;
