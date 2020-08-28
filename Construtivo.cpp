@@ -192,7 +192,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
 
         //Atualiza probabilidade
-        if(((i%numIntAtualizarProb) == 0) && i > 0)
+        if(((i%numIntAtualizarProb) == 0) && (i > 0) || (i == 50))
         {
 
             atualizaProbabilidade(vetorProbabilidade, vetorFrequencia, solucaoAcumulada, vetorMedia, proporcao, tamAlfa, best->poluicao);

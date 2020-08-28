@@ -15,23 +15,24 @@ namespace Modelo
     struct Variaveis
     {
 
-        GRBVar **X;         //Variavel binária. Indica se o arco (i,j) é percorrido
-        GRBVar ***x;        //Variavel binária. Indica se um arco (i,j) é percorrido em um período k
-        GRBVar *T;          //Variável contínua. Indica se o veículo é do tipo 0 ou 1.
+        GRBVar ***X;         //Variavel binária. Indica se o arco (i,j) é percorrido
+        GRBVar ****x;        //Variavel binária. Indica se um arco (i,j) é percorrido em um período k
+        GRBVar **T;          //Variável contínua. Indica se o veículo é do tipo 0 ou 1.
 
-        GRBVar ***d;        //Variavel continua. Indica a distância percorrida do arco (i,j) no período k
-        GRBVar ***tao;      //Variavel continua. Indica o tempo gasto no arco (i,j) no período k
+        GRBVar ****d;        //Variavel continua. Indica a distância percorrida do arco (i,j) no período k
+        GRBVar ****tao;      //Variavel continua. Indica o tempo gasto no arco (i,j) no período k
         GRBVar *l;          //Variavel continua. Indica o tempo de saída do cliente i
         GRBVar *a;          //Variavel continua. Indica o tempo de chegada do cliente i
-        GRBVar **f;         //Variavel continua. Indica a carga do veículo ao percorrer o arco (i,j)
-        GRBVar *C;          //Variavel continua. Guarda o combustível do veiculo de tipo T.
+        GRBVar ***f;         //Variavel continua. Indica a carga do veículo ao percorrer o arco (i,j)
+        GRBVar **C;          //Variavel continua. Guarda o combustível do veiculo de tipo T.
 
         GRBLinExpr *funcaoObjetivo;
-        GRBConstr restricaoTrocaClientes;
-        GRBConstr *restricaoPeso;
+        GRBConstr *restricaoTrocaClientes;
+        GRBConstr *restricaoPeso_veic0;
+        GRBConstr *restricaoPeso_veic1;
         GRBConstr *restricaoUmArcoJ;
         GRBConstr *restricaoUmArcoI;
-
+//1502
         Variaveis(){}
         ~Variaveis(){}
 
@@ -45,7 +46,8 @@ namespace Modelo
 
         Variaveis *variaveis;
         GRBModel *modelo;
-        bool tipoVeiculo;
+        bool tipoVeiculo0;
+        bool tipoVeiculo1;
 
         const int numClientes;
         const int numVeiculos;
@@ -56,7 +58,9 @@ namespace Modelo
         Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_);
         int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
                      const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
-                     const int numArcos, int *vetRotaAux);
+                     const int numArcos, int *vetRotaAux, Solucao::ClienteRota *vetClienteRota2, const int tam2,
+                     const bool tipo2, const int peso2, double *poluicao2, double *combustivel2,
+                     int *vetRotaAux2);
         ~Modelo();
     };
 

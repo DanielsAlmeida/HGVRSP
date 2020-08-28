@@ -23,7 +23,7 @@
 //Tempo total cpu: 356.13
 //Poluicao: 517.11
 
-#define Saida false
+#define Saida true
 #define Grasp 0
 #define RotaMip 1
 #define VerificaSol 2
