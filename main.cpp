@@ -977,7 +977,7 @@ int main(int num, char **agrs)
 
                         } else
                         {
-                            cout << "Modelo errada!!\n";
+                            cout << "Modelo errado!!\n";
                         }
 
                     }else
