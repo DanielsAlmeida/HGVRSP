@@ -5,6 +5,10 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+#set (CMAKE_CXX_FLAGS "-I $HOME/Documentos/Programas/boost_1_72_0")
+include_directories($ENV{BOOST_HOME})
+link_directories($ENV{BOOST_HOME}/stage/lib)
+
 # declara header gurobi directory
 set(GUROBI_INCLUDE_DIRECTORY $ENV{GUROBI_HOME}/include)
 
@@ -35,8 +39,6 @@ set(CMAKE_CXX_FLAGS_MSAN "-fsanitize=memory -fno-optimize-sibling-calls -fsaniti
 
 set(CMAKE_CXX_FLAGS_UBSAN "-fsanitize=undefined" CACHE STRING "Flags used by the C++ compiler during UndefinedBehaviourSanitizer builds." FORCE)
 
-
-set (CMAKE_CXX_FLAGS "-I $HOME/Documentos/Programas/boost_1_72_0")
 
 set(    SOURCE_FILES
         ${GUROBI_INCLUDE_DIRECTORY}/gurobi_c++.h

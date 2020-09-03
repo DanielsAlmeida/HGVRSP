@@ -32,6 +32,8 @@ namespace Modelo
         GRBConstr *restricaoPeso_veic1;
         GRBConstr *restricaoUmArcoJ;
         GRBConstr *restricaoUmArcoI;
+        GRBConstr restricaoUmArcoDepositoVeic1;
+        GRBConstr restricaoUmArcoDepositoVeic0;
 //1502
         Variaveis(){}
         ~Variaveis(){}
@@ -56,10 +58,10 @@ namespace Modelo
         const bool usaModeloVnd;
 
         Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, const bool usaModeloVnd_);
-        int criaRota(Solucao::ClienteRota *vetClienteRota, const int tam, bool tipo, int peso,
+        int criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, bool tipo, int *peso,
                      const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
-                     const int numArcos, int *vetRotaAux, Solucao::ClienteRota *vetClienteRota2, const int tam2,
-                     const bool tipo2, const int peso2, double *poluicao2, double *combustivel2,
+                     const int numArcos, int *vetRotaAux, Solucao::ClienteRota *vetClienteRota2, int *tam2,
+                     const bool tipo2, int *peso2, double *poluicao2, double *combustivel2,
                      int *vetRotaAux2);
         ~Modelo();
     };

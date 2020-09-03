@@ -832,7 +832,10 @@ int main(int num, char **agrs)
 
                 }while(cliente || tam == 1);
 
-                bool viavel = Movimentos_Paradas::criaRota(instancia, vetCliente, tam, peso, tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo, vetClienteAux);
+                bool viavel = true;
+
+                if(tam > 2)
+                    viavel = Movimentos_Paradas::criaRota(instancia, vetCliente, tam, peso, tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo, vetClienteAux);
                 double poluicaoHeur = poluicao;
 
                 if(viavel)
@@ -876,12 +879,17 @@ int main(int num, char **agrs)
 
                         bool resultadoModelo;
 
-                        if(tam2 > 2)
-                            resultadoModelo = modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados, vetRotas, vetCliente2, tam2, tipo2, peso2,
+                        if(tam2 > 2 && tam > 2)
+                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, clientesTrocados, vetRotas, vetCliente2, &tam2, tipo2, &peso2,
                                                                &poluicao2, &combustivel2, vetRotas2);
-                        else
-                            resultadoModelo = modelo->criaRota(vetCliente, tam, tipo, peso, instancia, &poluicao, &combustivel, clientesTrocados, vetRotas, NULL, -1, false, -1,
+                        else if(tam > 2)
+                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, clientesTrocados, vetRotas, NULL, NULL, false, NULL,
                                                                NULL, NULL, NULL);
+
+                        else
+                            resultadoModelo = modelo->criaRota(NULL, NULL, tipo, NULL, instancia, NULL, NULL, clientesTrocados, vetRotas, vetCliente2, &tam2, tipo2, &peso2,
+                                                               &poluicao2, &combustivel2, vetRotas2);
+
 
                         if (resultadoModelo)
                         {
@@ -895,6 +903,10 @@ int main(int num, char **agrs)
 
                                 if(h == 0)
                                 {
+
+                                    if(tam <= 2)
+                                        continue;
+
                                     ptr_cliente = vetCliente;
                                     tamAux = tam;
                                     tipoAux = tipo;
@@ -945,14 +957,20 @@ int main(int num, char **agrs)
                                 string erro = "";
 
 
-                                bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL,
-                                                                                         &erro);
+
+                                bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
                                 if (resultado)
                                     cout << "Veiculo correto\n";
                                 else
                                 {
                                     cout << "Erro veiculo "<<h<<" . verificao falhou\nErro: " << erro << '\n';
 
+                                    cout << "\nRota: ";
+
+                                    for (int i = 0; i < tamAux; ++i)
+                                        cout << ptr_cliente[i].cliente << ' ';
+
+                                    cout<<"\n\n";
 
                                 }
 
