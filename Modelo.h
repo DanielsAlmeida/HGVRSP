@@ -62,7 +62,7 @@ namespace Modelo
                      const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
                      const int numArcos, int *vetRotaAux, Solucao::ClienteRota *vetClienteRota2, int *tam2,
                      const bool tipo2, int *peso2, double *poluicao2, double *combustivel2,
-                     int *vetRotaAux2);
+                     int *vetRotaAux2, bool trocaClientesEntreRotas);
         ~Modelo();
     };
 

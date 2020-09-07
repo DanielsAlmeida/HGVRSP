@@ -44,6 +44,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->set(GRB_DoubleParam_FeasibilityTol, 1e-4);
     modelo->set(GRB_DoubleParam_MIPGap, 0.18);
     modelo->set(GRB_IntParam_MIPFocus, GRB_MIPFOCUS_BESTBOUND);
+    modelo->set(GRB_DoubleParam_TimeLimit, 150);
 
 
 
@@ -1315,7 +1316,7 @@ Modelo::Modelo::~Modelo()
 
 int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, bool tipo, int *peso, const Instancia::Instancia *instancia, double *poluicao, double *combustivel,
                              const int numArcos, int *vetRotaAux, Solucao::ClienteRota *vetClienteRota2, int *tam2, const bool tipo2, int *peso2, double *poluicao2,
-                             double *combustivel2, int *vetRotaAux2)
+                             double *combustivel2, int *vetRotaAux2, bool trocaClientesEntreRotas)
 
 {
     if ((!vetClienteRota) && (!vetClienteRota2))
@@ -1415,7 +1416,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
     //Muda o LB e UB de X dos arcos entre rotas
 
 
-    if(vetClienteRota && vetClienteRota2)
+    if(vetClienteRota && vetClienteRota2 && trocaClientesEntreRotas)
     {
         int cliente0, cliente1;
 
@@ -1777,7 +1778,12 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
     else
         aux = 3;
 
-    const int MaxNumInteracoes = MAX_NUM_INT_MIP;
+    const int MaxNumInteracoes = (trocaClientesEntreRotas ? 1 : 3);
+
+    if(trocaClientesEntreRotas)
+        modelo->set(GRB_DoubleParam_MIPGap, 0.18);
+    else
+        modelo->set(GRB_DoubleParam_MIPGap, 0.05);
 
     for(int p = 0; p < MaxNumInteracoes; ++p)
     {
@@ -1792,7 +1798,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
         modelo->optimize();
         modelo->write("modelo.sol");
 
-        if((modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL) == false)
+        if(!((modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL) || (modelo->get(GRB_IntAttr_Status) == GRB_TIME_LIMIT)))
         {
 
             cout << "\nArquivo: Modelo.cpp\n";
@@ -1806,7 +1812,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
 
         }
 
-        bool resultado = (modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL);
+        bool resultado = (((modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL) || (modelo->get(GRB_IntAttr_Status) == GRB_TIME_LIMIT)));
 
         if (!resultado)
             return 0;
@@ -2253,7 +2259,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
 
 
 
-    if (modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL)
+    if ((modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL) || (modelo->get(GRB_IntAttr_Status) == GRB_TIME_LIMIT))
     {
         for(int h = 0; h < NumVeiculos; ++h)
         {
@@ -2406,7 +2412,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
 
 
     //Zera o LB e UB do X entre os clientes dos veiculos
-    if(vetClienteRota && vetClienteRota2)
+    if(vetClienteRota && vetClienteRota2 && trocaClientesEntreRotas)
     {
 
         for(int h = 0; h < NumVeiculos; ++h)
@@ -2580,7 +2586,7 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
                 poluicao = veiculo->poluicao;
                 int tam = veiculo->listaClientes.size();
                 resultado = modelo->criaRota(vetClienteRota, &tam, veiculo->tipo, &veiculo->carga, instancia, &poluicao, &combustivel, NumTrocas, vetRotasAux,
-                                             NULL, NULL, false, 0, NULL, NULL, NULL);
+                                             NULL, NULL, false, 0, NULL, NULL, NULL, false);
             } catch (GRBException e)
             {
                 cout << "Erro MIP. \nVeiculo tipo: " << veiculo->tipo << "\nRota: " << veiculo->getRota() << '\n';

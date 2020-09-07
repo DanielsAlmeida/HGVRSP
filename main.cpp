@@ -768,7 +768,7 @@ int main(int num, char **agrs)
 
         GRBEnv env;
         env.set(GRB_IntParam_OutputFlag, 1);
-        env.set(GRB_IntParam_DisplayInterval, 1);
+        env.set(GRB_IntParam_DisplayInterval, 5);
 
         GRBModel grb_modelo = GRBModel(env);
         Modelo::solucaoInteira solucaoInteira;
@@ -880,15 +880,26 @@ int main(int num, char **agrs)
                         bool resultadoModelo;
 
                         if(tam2 > 2 && tam > 2)
-                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, clientesTrocados, vetRotas, vetCliente2, &tam2, tipo2, &peso2,
-                                                               &poluicao2, &combustivel2, vetRotas2);
+                        {
+                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, 3, vetRotas, vetCliente2,
+                                                               &tam2, tipo2, &peso2, &poluicao2, &combustivel2, vetRotas2, false);
+
+                            if(resultadoModelo)
+                                resultadoModelo = resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, 3, vetRotas, vetCliente2,
+                                                                                     &tam2, tipo2, &peso2, &poluicao2, &combustivel2, vetRotas2, true);
+                        }
                         else if(tam > 2)
-                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, clientesTrocados, vetRotas, NULL, NULL, false, NULL,
-                                                               NULL, NULL, NULL);
+                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, 3, vetRotas, NULL, NULL, false, NULL,
+                                                               NULL, NULL, NULL, false);
 
                         else
-                            resultadoModelo = modelo->criaRota(NULL, NULL, tipo, NULL, instancia, NULL, NULL, clientesTrocados, vetRotas, vetCliente2, &tam2, tipo2, &peso2,
-                                                               &poluicao2, &combustivel2, vetRotas2);
+                            resultadoModelo = modelo->criaRota(NULL, NULL, tipo, NULL, instancia, NULL, NULL, 3, vetRotas, vetCliente2, &tam2, tipo2, &peso2,
+                                                               &poluicao2, &combustivel2, vetRotas2, false);
+                        auto c_end = std::chrono::high_resolution_clock::now();
+
+                        std::chrono::duration<double> tempoCpu =c_end - solucaoInteira.c_start;
+
+                        cout<<"\n\nTempo total: "<<tempoCpu.count()<<"\n\n";
 
 
                         if (resultadoModelo)
@@ -931,7 +942,7 @@ int main(int num, char **agrs)
                                     poluicaoHeurAux = poluicaoHeur2;
                                 }
 
-                                Solucao::Veiculo *veiculo = new Solucao::Veiculo(tipo);
+                                Solucao::Veiculo *veiculo = new Solucao::Veiculo(tipoAux);
 
                                 for (auto cliente : veiculo->listaClientes)
                                 {
@@ -989,7 +1000,7 @@ int main(int num, char **agrs)
                                     cout << "Combustivel: " << combustivelAux << '\n';
                                     cout << "Polucao: " << poluicaoAux << '\n';
                                     cout << "Polucao heuristica: " << poluicaoHeurAux << '\n';
-                                    cout << "Tipo: " << tipo << "\n\n\n";
+                                    cout << "Tipo: " << tipoAux << "\n\n\n";
                                 }
                             }
 
