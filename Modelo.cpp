@@ -43,7 +43,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->set(GRB_DoubleParam_IntFeasTol, 1e-4);
     modelo->set(GRB_DoubleParam_FeasibilityTol, 1e-4);
     modelo->set(GRB_DoubleParam_MIPGap, 0.18);
-    modelo->set(GRB_IntParam_MIPFocus, GRB_MIPFOCUS_BESTBOUND);
+    modelo->set(GRB_IntParam_MIPFocus, GRB_MIPFOCUS_FEASIBILITY);
     modelo->set(GRB_DoubleParam_TimeLimit, 150);
 
 
@@ -1627,10 +1627,11 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                         {
                             variaveis->x[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
                             variaveis->tao[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0.0);
+                            variaveis->d[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0.0);
                         }
 
                     }
-                    modelo->chgCoeff(variaveis->restricaoTrocaClientes[h], variaveis->X[h][cliente1][cliente2], 1);
+                    //modelo->chgCoeff(variaveis->restricaoTrocaClientes[h], variaveis->X[h][cliente1][cliente2], 1);
                 }
 
                 //Verifica se existe o arco j,i
@@ -1639,7 +1640,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                     //Muda os limites superiores de X e f. Destrava x e f
                     variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
                     variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_UB, 1);
-                    //variaveis->f[h][cliente2][cliente1].set(GRB_DoubleAttr_UB, GRB_INFINITY); // variavel f
+
 
                     if (viavel)
                     {
@@ -1651,10 +1652,11 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                         {
                             variaveis->x[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
                             variaveis->tao[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0.0);
+                            variaveis->d[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0.0);
                         }
                     }
 
-                    modelo->chgCoeff(variaveis->restricaoTrocaClientes[h], variaveis->X[h][cliente2][cliente1], 1);
+
                 }
             }
         }
@@ -1781,7 +1783,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
     const int MaxNumInteracoes = (trocaClientesEntreRotas ? 1 : 3);
 
     if(trocaClientesEntreRotas)
-        modelo->set(GRB_DoubleParam_MIPGap, 0.18);
+        modelo->set(GRB_DoubleParam_MIPGap, 0.19);
     else
         modelo->set(GRB_DoubleParam_MIPGap, 0.05);
 
@@ -2147,16 +2149,16 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                 {
                     variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
                     variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
-                    variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
                     variaveis->f[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
 
                     //variaveis->f[h][cliente1][cliente2].set(GRB_DoubleAttr_UB, 0); //variavel f
 
                     for (int k = 0; k < instancia->numPeriodos; ++k)
                     {
-                        variaveis->x[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                        variaveis->d[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                        variaveis->tao[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                        variaveis->x[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->d[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->tao[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
                     }
 
                 }
@@ -2165,16 +2167,16 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                 {
                     variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
                     variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_UB, 0);
-                    variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
                     variaveis->f[h][cliente2][cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
 
 //                  variaveis->f[h][cliente2][cliente1].set(GRB_DoubleAttr_UB, 0); //variavel f
 
                     for (int k = 0; k < instancia->numPeriodos; ++k)
                     {
-                        variaveis->x[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                        variaveis->d[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                        variaveis->tao[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                        variaveis->x[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->d[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->tao[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
                     }
 
 
@@ -2227,28 +2229,39 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
             for (int i = 0; i < (tamAux - 1); ++i)
             {
                 cliente1 = vetClienteRotaAux[i].cliente;
-                cliente2 = vetClienteRotaAux[i + 1].cliente;
 
-                //Muda o valor inicial para indefinido
 
-                if((cliente1 != 0) || h == 0)
-                    variaveis->l[cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                else
-                    variaveis->l[instancia->numClientes].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-
-                if((cliente2 != 0) || (h == 0))
-                    variaveis->a[cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                else
-                    variaveis->a[instancia->numClientes].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-
-                for (int k = 0; k < instancia->numPeriodos; ++k)
+                for(int j = 0; j < (tamAux - 1); ++j)
                 {
 
-                    variaveis->x[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                    variaveis->tao[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                    variaveis->d[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-                }
+                    cliente2 = vetClienteRotaAux[j].cliente;
 
+                    if(instancia->matrizDistancias[cliente1][cliente2] == 0.0)
+                        continue;
+
+                    variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+                    variaveis->f[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+
+                    //Muda o valor inicial para indefinido
+
+                    if ((cliente1 != 0) || h == 0)
+                        variaveis->l[cliente1].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    else
+                        variaveis->l[instancia->numClientes].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+
+                    if ((cliente2 != 0) || (h == 0))
+                        variaveis->a[cliente2].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+                    else
+                        variaveis->a[instancia->numClientes].set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
+
+                    for (int k = 0; k < instancia->numPeriodos; ++k)
+                    {
+
+                        variaveis->x[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->tao[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->d[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                    }
+                }
 
             }
 
@@ -2433,22 +2446,46 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
             {
 
                 cliente1 = vetClienteRotaAux[i].cliente;
-                cliente2 = vetClienteRotaAux[i+1].cliente;
 
-
-
-
-
-                if(instancia->matrizDistancias[cliente1][cliente2] != 0.0)
+                for(int j = i + 1; j < (tamAux - 1); ++j)
                 {
-                    variaveis->X[(h+1)%2][cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
-                    variaveis->X[(h+1)%2][cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
-                }
+                    cliente2 = vetClienteRotaAux[j].cliente;
 
-                if(instancia->matrizDistancias[cliente2][cliente1] != 0.0)
-                {
-                    variaveis->X[(h+1)%2][cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
-                    variaveis->X[(h+1)%2][cliente2][cliente1].set(GRB_DoubleAttr_UB, 0);
+
+                    if (instancia->matrizDistancias[cliente1][cliente2] != 0.0)
+                    {
+                        variaveis->X[(h + 1) % 2][cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
+                        variaveis->X[(h + 1) % 2][cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
+                        variaveis->X[(h + 1) % 2][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->f[(h + 1) % 2][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+
+                        for (int k = 0; k < instancia->numPeriodos; ++k)
+                        {
+                            variaveis->x[(h + 1) % 2][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->d[(h + 1) % 2][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->tao[(h + 1) % 2][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+
+                        }
+
+
+                    }
+
+                    if (instancia->matrizDistancias[cliente2][cliente1] != 0.0)
+                    {
+                        variaveis->X[(h + 1) % 2][cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
+                        variaveis->X[(h + 1) % 2][cliente2][cliente1].set(GRB_DoubleAttr_UB, 0);
+                        variaveis->X[(h + 1) % 2][cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->f[(h + 1) % 2][cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
+
+                        for (int k = 0; k < instancia->numPeriodos; ++k)
+                        {
+                            variaveis->x[(h + 1) % 2][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->d[(h + 1) % 2][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->tao[(h + 1) % 2][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+
+                        }
+                    }
+
                 }
             }
 
@@ -2470,12 +2507,31 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                     {
                         variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_LB, 0);
                         variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_UB, 0);
+                        variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->f[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, 0);
+
+                        for(int k = 0; k < instancia->numPeriodos; ++k)
+                        {
+                            variaveis->x[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->d[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->tao[h][cliente1][cliente2][k].set(GRB_DoubleAttr_Start, 0);
+                        }
                     }
 
                     if(instancia->matrizDistancias[cliente2][cliente1] != 0)
                     {
                         variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_LB, 0);
                         variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_UB, 0);
+                        variaveis->X[h][cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
+                        variaveis->f[h][cliente2][cliente1].set(GRB_DoubleAttr_Start, 0);
+
+                        for(int k = 0; k < instancia->numPeriodos; ++k)
+                        {
+                            variaveis->x[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->d[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                            variaveis->tao[h][cliente2][cliente1][k].set(GRB_DoubleAttr_Start, 0);
+                        }
+
                     }
                 }
             }
@@ -2504,6 +2560,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
     }
 
     modelo->set(GRB_IntParam_SubMIPNodes, GRB_MAXINT);
+    modelo->reset(0);
 
     /* ************************************************************************************************************************************************************ */
 
