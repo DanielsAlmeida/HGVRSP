@@ -294,8 +294,12 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
             for (int j = 0; j < instancia->numClientes; ++j)
             {
                 if (instancia->matrizDistancias[i][j] != 0.0)
+                {
                     variaveis->f[h][i][j] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS,
-                                                        "f_" + std::to_string(h) + '_' + std::to_string(i) + '_' + std::to_string(j));
+                                                           "f_" + std::to_string(h) + '_' + std::to_string(i) + '_' +
+                                                           std::to_string(j));
+                    variaveis->f[h][i][j].set(GRB_DoubleAttr_Start, 0);
+                }
             }
         }
     }
@@ -1118,6 +1122,33 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
         }
     }
 
+    for(int h = 0; h < NumVeic; ++h)
+    {
+
+
+
+            for(int j = 1; j < numClientes; ++j)
+            {
+
+                if (instancia->matrizDistancias[0][j] != 0.0)
+                {
+                    linExpr = 0;
+                    linExpr += variaveis->f[h][0][j];
+
+
+                    for (int t = 0; t < 2; ++t)
+                    {
+                        linExpr += -instancia->vetorVeiculos[t].capacidade;
+                        linExpr += instancia->vetorVeiculos[t].capacidade * variaveis->T[h][t];
+                    }
+
+                    modelo->addConstr(linExpr <= 0, "restricaoPeso_veic_" + std::to_string(h) + "_cliente_"+std::to_string(j));
+                }
+            }
+
+
+    }
+
 }
 Modelo::Modelo::~Modelo()
 {
@@ -1319,6 +1350,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                              double *combustivel2, int *vetRotaAux2, bool trocaClientesEntreRotas)
 
 {
+
     if ((!vetClienteRota) && (!vetClienteRota2))
     {
         cout << "\nArquivo: Modelo.cpp\n";
@@ -1676,6 +1708,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
                 variaveis->X[h][cliente1][cliente2].set(GRB_DoubleAttr_Start, 1);
 
             }
+
 
             //inicializa peso
             if (viavel)

@@ -808,11 +808,6 @@ int main(int num, char **agrs)
 
             if(tipo != -1)
             {
-                cout<<"clientes trocados: ";
-                cin>>clientesTrocados;
-
-                if(clientesTrocados < 0)
-                    break;
 
                 cout<<"Rota:  ";
 
@@ -831,6 +826,8 @@ int main(int num, char **agrs)
 
 
                 }while(cliente || tam == 1);
+
+                cout<<"Peso: "<<peso<<'\n';
 
                 bool viavel = true;
 
@@ -997,8 +994,8 @@ int main(int num, char **agrs)
 
                                     cout << '\n';
 
-                                    cout << "Combustivel: " << combustivelAux << '\n';
                                     cout << "Polucao: " << poluicaoAux << '\n';
+                                    cout << "Combustivel: " << combustivelAux << '\n';
                                     cout << "Polucao heuristica: " << poluicaoHeurAux << '\n';
                                     cout << "Tipo: " << tipoAux << "\n\n\n";
                                 }
