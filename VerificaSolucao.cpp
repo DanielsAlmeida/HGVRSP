@@ -229,12 +229,12 @@ VerificaSolucao::verificaSolucao(const Instancia::Instancia *const instancia, So
 
                     if (!((((*itCliente)->tempoChegada <= instancia->vetorClientes[(*itCliente)->cliente].fimJanela) ||
                            (((*itCliente)->tempoChegada -
-                             instancia->vetorClientes[((*itCliente))->cliente].fimJanela) <= 1.0 / 60)) &&
-                          ((fabs(tempoSaida - (*itCliente)->tempoSaida) <= 0.001) ||
+                             instancia->vetorClientes[((*itCliente))->cliente].fimJanela) <= ((1.0 / 60) + 1e-6))) &&
+                          ((fabs(tempoSaida - (*itCliente)->tempoSaida) <= ((1.0 / 60) + 1e-6)) ||
                            ((*itCliente)->tempoSaida > tempoSaida) || ((*itCliente)->cliente == 0))))
                     {
                         //Solução está ERRADA.
-                        cout << "Erro, Tempo\n";
+                        cout << "Erro, Tempo ***\n";
                         delete[]vetorClientes;
                         return false;
                     }
@@ -1010,14 +1010,21 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
             if (!((((*clienteJ)->tempoChegada <= instancia->vetorClientes[(*clienteJ)->cliente].fimJanela) ||
                    (((*clienteJ)->tempoChegada - instancia->vetorClientes[((*clienteJ))->cliente].fimJanela) <=
-                    1.0 / 60)) && ((fabs(tempoSaida - (*clienteJ)->tempoSaida) <= 0.001) ||
+                           (1.0 / 60 + 1e-3))) && ((fabs(tempoSaida - (*clienteJ)->tempoSaida) <= 0.001) ||
                                    ((*clienteJ)->tempoSaida > tempoSaida) || ((*clienteJ)->cliente == 0))))
             {
                 //Solução está ERRADA.
 
                 if (erro)
-                    *erro = "Erro, Tempo\n";
+                {
+                    *erro = "\n1 Erro, Tempo\n"+std::to_string((*clienteI)->cliente) + " "+std::to_string((*clienteJ)->cliente)+"\n\n";
 
+                    *erro += "Tempo de chegada solucao: j " + std::to_string((*clienteJ)->tempoChegada)+"\ntempo fim janela tempo: "+std::to_string(instancia->vetorClientes[((*clienteJ))->cliente].fimJanela)+'\n';
+                    *erro += "Tempo de saida j solucao: " + std::to_string(((*clienteJ)->tempoSaida)) + "\ncalculado " + std::to_string(tempoSaida);
+                }
+
+
+                cout<<"Erro depois do incicio da janela\n";
                 return false;
             }
 

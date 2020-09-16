@@ -37,7 +37,6 @@ Numero_arestas    Poluicao    Gap(%)   Tempo(s)  N_interacoes  Rota
 
 
 3
--1
 1º inteira:   316,7  0,19 s,  32,6 %
 Best          314,2  0,9 s,   19 %
 
@@ -59,6 +58,7 @@ Polucao: 314.2
 
 Poluicao Total: 536,1
 Tempo: 5,0
+gap: 0.0
 
 **********************************************************************************************
 **********************************************************************************************
@@ -159,7 +159,7 @@ Rota: 0 4 2 10 8 1 5 0
 Polucao: 265
 
 Poluicao Total: 512,2
-Tempo: 3,5
+Tempo: 3,38
 
 ########################################
 
@@ -412,7 +412,7 @@ Rota: 0 10 4 5 2 15 12 0
 Tipo: 1
 
 Poluicao total: 474
-Tempo: 0,72
+Tempo: 0,8
 Tempo rotas separadas: 0,75
 
 *************************
@@ -425,8 +425,9 @@ Rota: 0 10 4 5 2 0
 Tipo: 1
 Poluicao: 174,6
 
-Poluicao total: 463,6 gap: -2
-Tempo: 6,04-1
+Poluicao total: 463,6
+Tempo: 9,7
+gap: -2
 
 ########################################
 
@@ -898,7 +899,7 @@ Polucao: 356.1
 
 Soma Poluicao: 592,3
 Tempo: 6,3
-Gap: 2,6
+Gap: -2,6
 
 ########################################
 
@@ -1079,7 +1080,7 @@ Polucao: 276
 
 Soma Poluicao: 480,5
 tempo: 14,5
-gap: -6,6
+gap: -7,3
 
 ########################################
 
@@ -1110,8 +1111,62 @@ Tipo: 0
 Rota: 0 10 5 25 14 12 6 0
 Tipo: 1
 
-Soma Poluicao: 
-Tempo: 
+Soma Poluicao: 530,4
+Tempo: 1,7
+
+Rota: 0 13 23 24 15 8 0 
+Polucao: 245.3
+
+Rota: 0 10 5 25 14 12 6 0 
+Polucao: 285
+
+
+Soma Poluicao: 530,4
+Tempo: 17,3
+gap: 0,0
+
+########################################
+
+Rota: 0 19 7 2 0
+Tipo: 0
+
+Rota: 0 10 5 25 14 12 6 0
+Tipo: 1
+
+Soma Poluicao: 477
+Tempo: 1,1
+
+Rota: 0 19 12 6 7 2 0 
+Polucao: 254.6
+
+Rota: 0 10 5 25 14 0 
+Polucao: 159.4
+
+Soma Poluicao: 414,1
+Tempo: 6,8
+gap: -13,2
+
+
+########################################
+
+Rota: 0 16 20 17 0
+Tipo: 0
+
+Rota: 0 11 9 3 21 1 22 18 4 0
+Tipo: 1
+
+Soma Poluicao: 566
+Tempo: 1,7
+
+Rota: 0 16 20 17 0 
+Polucao: 240
+
+Rota: 0 11 9 3 21 1 22 18 4 0 
+Polucao: 326
+
+Soma Poluicao: 566
+Tempo: 8,4
+gap: 0,0
 
 ########################################
 

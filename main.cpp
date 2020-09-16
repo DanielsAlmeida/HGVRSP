@@ -748,7 +748,8 @@ int main(int num, char **agrs)
 
     }
 
-
+    double vetPoluicao[3] = {0.0, 0.0, 0.0};
+    double vetTempo[3] = {0.0, 0.0, 0.0};
 
     string texto;
     std::time_t result = std::time(nullptr);
@@ -827,194 +828,310 @@ int main(int num, char **agrs)
 
                 }while(cliente || tam == 1);
 
-                cout<<"Peso: "<<peso<<'\n';
+
 
                 bool viavel = true;
 
-                if(tam > 2)
-                    viavel = Movimentos_Paradas::criaRota(instancia, vetCliente, tam, peso, tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo, vetClienteAux);
+
+                viavel = Movimentos_Paradas::criaRota(instancia, vetCliente, tam, peso, tipo, &combustivel, &poluicao, NULL, NULL, vetLimiteTempo, vetClienteAux);
                 double poluicaoHeur = poluicao;
 
                 if(viavel)
                 {
 
-                    cout<<"Segunda rota: \n";
-                    cout<<"tipo: ";
-                    cin>>tipo2;
+                    for (int i = 0; i < tam; ++i)
+                        vetClienteAux[i].swap(&vetCliente[i]);
 
-                    cout<<"Rota:  ";
+                    double combustivelAux = combustivel;
+                    double poluicaoAux = poluicao;
 
-                    tam2 = cliente = 0;
-                    peso2 = 0;
-                    combustivel2 = poluicao2 = 0.0;
+                    cout<<"Inicio modelo rota1\n\n";
 
-                    do
+                    solucaoInteira.inicializaInicio();
+
+                    auto c_start = std::chrono::high_resolution_clock::now();
+
+
+
+                    viavel = modelo->criaRota(vetClienteAux, &tam, tipo, &peso, instancia, &poluicaoAux, &combustivelAux, 3, vetRotas,
+                                              NULL, NULL, false, NULL, NULL, NULL, NULL, false);
+
+                    auto c_end = std::chrono::high_resolution_clock::now();
+
+                    cout<<"\n\nFim modelo rota1\n\n******************************************************************************************\n\n\n";
+
+                    std::chrono::duration<double> tempoCpu = c_end - c_start;
+
+                    if (viavel)
                     {
 
-                        cin>>cliente;
-                        ++tam2;
+                        vetPoluicao[0] = poluicaoAux;
+                        vetTempo[0] = tempoCpu.count();
 
-                        vetCliente2[tam2-1].cliente = cliente;
-                        peso2 += instancia->vetorClientes[cliente].demanda;
+                        cout << "Segunda rota: \n";
+                        cout << "tipo: ";
+                        cin >> tipo2;
 
+                        cout << "Rota:  ";
 
-                    }while(cliente || tam2 == 1);
+                        tam2 = cliente = 0;
+                        peso2 = 0;
+                        combustivel2 = poluicao2 = 0.0;
 
-                    bool viavel2 = true;
-
-                    if(tam2 > 2)
-                    {
-                        viavel2 = Movimentos_Paradas::criaRota(instancia, vetCliente2, tam2, peso2, tipo2, &combustivel2, &poluicao2, NULL, NULL, vetLimiteTempo, vetClienteAux);
-
-                    }
-                    double poluicaoHeur2 = poluicao2;
-
-                    if(viavel2)
-                    {
-
-                        solucaoInteira.inicializaInicio();
-
-                        bool resultadoModelo;
-
-                        if(tam2 > 2 && tam > 2)
+                        do
                         {
-                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, 3, vetRotas, vetCliente2,
-                                                               &tam2, tipo2, &peso2, &poluicao2, &combustivel2, vetRotas2, false);
 
-                            if(resultadoModelo)
-                                resultadoModelo = resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, 3, vetRotas, vetCliente2,
-                                                                                     &tam2, tipo2, &peso2, &poluicao2, &combustivel2, vetRotas2, true);
-                        }
-                        else if(tam > 2)
-                            resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia, &poluicao, &combustivel, 3, vetRotas, NULL, NULL, false, NULL,
-                                                               NULL, NULL, NULL, false);
+                            cin >> cliente;
+                            ++tam2;
 
-                        else
-                            resultadoModelo = modelo->criaRota(NULL, NULL, tipo, NULL, instancia, NULL, NULL, 3, vetRotas, vetCliente2, &tam2, tipo2, &peso2,
-                                                               &poluicao2, &combustivel2, vetRotas2, false);
-                        auto c_end = std::chrono::high_resolution_clock::now();
-
-                        std::chrono::duration<double> tempoCpu =c_end - solucaoInteira.c_start;
-
-                        cout<<"\n\nTempo total: "<<tempoCpu.count()<<"\n\n";
+                            vetCliente2[tam2 - 1].cliente = cliente;
+                            peso2 += instancia->vetorClientes[cliente].demanda;
 
 
-                        if (resultadoModelo)
+                        } while (cliente || tam2 == 1);
+
+
+                        if ((tam2 > 2) && (tipo2 == 0 || tipo2 == 1))
                         {
-                            Solucao::ClienteRota *ptr_cliente;
-                            int tamAux, tipoAux, pesoAux;
 
-                            double poluicaoAux, combustivelAux, poluicaoHeurAux;
+                            bool viavel2 = true;
 
-                            for(int h = 0; h < 2; ++h)
+
+                            viavel2 = Movimentos_Paradas::criaRota(instancia, vetCliente2, tam2, peso2, tipo2,
+                                                                   &combustivel2, &poluicao2, NULL, NULL,
+                                                                   vetLimiteTempo, vetClienteAux);
+
+
+
+                            double poluicaoHeur2 = poluicao2;
+
+                            if (viavel2)
                             {
 
-                                if(h == 0)
+
+                                for(int i = 0; i < tam2; ++i)
+                                    vetClienteAux[i].swap(&vetCliente2[i]);
+
+                                poluicaoAux = poluicao2;
+                                combustivelAux = combustivel2;
+
+                                cout<<"Inicio modelo rota2\n\n";
+                                solucaoInteira.inicializaInicio();
+
+                                c_start = std::chrono::high_resolution_clock::now();
+
+
+                                viavel2 = modelo->criaRota(vetClienteAux, &tam2, tipo2, &peso2, instancia, &poluicaoAux, &combustivelAux, 3, vetRotas,
+                                                 NULL, NULL, false, NULL, NULL, NULL, NULL, false);
+
+
+                                c_end = std::chrono::high_resolution_clock::now();
+
+                                cout<<"\n\nFim modelo rota2\n\n******************************************************************************************\n\n\n";
+
+                                tempoCpu = c_end - c_start;
+
+                                if(viavel2)
                                 {
+                                    vetPoluicao[0] += poluicaoAux;
+                                    vetTempo[0] += tempoCpu.count();
 
-                                    if(tam <= 2)
-                                        continue;
+                                    cout << "Inicio modelo rota1 e rota2 sem trocar clientes\n\n";
 
-                                    ptr_cliente = vetCliente;
-                                    tamAux = tam;
-                                    tipoAux = tipo;
+                                    solucaoInteira.inicializaInicio();
 
-                                    pesoAux = peso;
-                                    poluicaoAux = poluicao;
-                                    combustivelAux = combustivel;
-                                    poluicaoHeurAux = poluicaoHeur;
+                                    bool resultadoModelo;
+                                    c_start = std::chrono::high_resolution_clock::now();
+
+                                    resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo, &peso, instancia,
+                                                                       &poluicao, &combustivel, 3, vetRotas,
+                                                                       vetCliente2,
+                                                                       &tam2, tipo2, &peso2, &poluicao2, &combustivel2,
+                                                                       vetRotas2, false);
+
+                                    c_end = std::chrono::high_resolution_clock::now();
+
+                                    cout<< "\n\nFim modelo rota1 e rota2 sem trocar clientes\n\n******************************************************************************************\n\n\n";
+
+                                    if (resultadoModelo)
+                                    {
+                                        tempoCpu = c_end - c_start;
+
+                                        vetPoluicao[1] = poluicao + poluicao2;
+                                        vetTempo [1] = tempoCpu.count();
+
+
+
+                                        cout << "Inicio modelo rota1 e rota2 trocando clientes\n\n";
+
+                                        solucaoInteira.inicializaInicio();
+                                        c_start = std::chrono::high_resolution_clock::now();
+
+                                        resultadoModelo = resultadoModelo = modelo->criaRota(vetCliente, &tam, tipo,
+                                                                                             &peso, instancia,
+                                                                                             &poluicao, &combustivel, 3,
+                                                                                             vetRotas,
+                                                                                             vetCliente2, &tam2, tipo2,
+                                                                                             &peso2, &poluicao2,
+                                                                                             &combustivel2, vetRotas2,
+                                                                                             true);
+
+                                        auto c_end = std::chrono::high_resolution_clock::now();
+                                        cout<< "\n\nFim modelo rota1 e rota2 trocando trocar clientes\n\n******************************************************************************************\n\n\n";
+                                        tempoCpu = c_end - c_start;
+
+
+
+
+                                        if (resultadoModelo)
+                                        {
+                                            vetPoluicao[2] = poluicao + poluicao2;
+                                            vetTempo[2] = tempoCpu.count();
+
+                                            Solucao::ClienteRota *ptr_cliente;
+                                            int tamAux, tipoAux, pesoAux;
+
+                                            double poluicaoAux, combustivelAux, poluicaoHeurAux;
+
+                                            for (int h = 0; h < 2; ++h)
+                                            {
+
+                                                if (h == 0)
+                                                {
+
+                                                    if (tam <= 2)
+                                                        continue;
+
+                                                    ptr_cliente = vetCliente;
+                                                    tamAux = tam;
+                                                    tipoAux = tipo;
+
+                                                    pesoAux = peso;
+                                                    poluicaoAux = poluicao;
+                                                    combustivelAux = combustivel;
+                                                    poluicaoHeurAux = poluicaoHeur;
+                                                } else
+                                                {
+                                                    if (tam2 <= 2)
+                                                        break;
+
+                                                    ptr_cliente = vetCliente2;
+                                                    tamAux = tam2;
+                                                    tipoAux = tipo2;
+
+                                                    pesoAux = peso2;
+                                                    poluicaoAux = poluicao2;
+                                                    combustivelAux = combustivel2;
+                                                    poluicaoHeurAux = poluicaoHeur2;
+                                                }
+
+                                                Solucao::Veiculo *veiculo = new Solucao::Veiculo(tipoAux);
+
+                                                for (auto cliente : veiculo->listaClientes)
+                                                {
+                                                    delete cliente;
+                                                }
+
+
+                                                for (int i = 0; i < 2; ++i)
+                                                    veiculo->listaClientes.pop_front();
+
+                                                for (int i = 0; i < tamAux; ++i)
+                                                {
+                                                    Solucao::ClienteRota *clienteRota = new Solucao::ClienteRota;
+                                                    clienteRota->swap(&ptr_cliente[i]);
+
+                                                    veiculo->listaClientes.push_back(clienteRota);
+                                                }
+
+                                                veiculo->carga = pesoAux;
+                                                veiculo->combustivel = combustivelAux;
+                                                veiculo->poluicao = poluicaoAux;
+
+                                                string erro = "";
+
+
+                                                bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo,
+                                                                                                         instancia,
+                                                                                                         NULL,
+                                                                                                         &erro);
+                                                if (resultado)
+                                                    cout << "Veiculo correto\n";
+                                                else
+                                                {
+                                                    cout << "Erro veiculo " << h << " . verificacao falhou\nErro: "
+                                                         << erro
+                                                         << '\n';
+
+                                                    cout << "\nRota: ";
+
+                                                    for (int i = 0; i < tamAux; ++i)
+                                                        cout << ptr_cliente[i].cliente << ' ';
+
+                                                    cout << "\n\n";
+
+                                                }
+
+                                                delete veiculo;
+
+                                                if (resultado)
+                                                {
+
+                                                    cout << "\nRota: ";
+
+                                                    for (int i = 0; i < tamAux; ++i)
+                                                        cout << ptr_cliente[i].cliente << ' ';
+
+                                                    cout << '\n';
+
+                                                    cout << "Polucao: " << poluicaoAux << '\n';
+                                                    cout << "Combustivel: " << combustivelAux << '\n';
+                                                    cout << "Polucao heuristica: " << poluicaoHeurAux << '\n';
+                                                    cout << "Tipo: " << tipoAux << "\n\n\n";
+                                                }
+                                            }
+
+                                            cout<<"\n\n**********************************\n\n";
+                                            cout<<"Resultados:\n\n";
+
+                                            cout<<"Veiculos separados: Poluicao: "<<vetPoluicao[0]<<"  Tempo: "<<vetTempo[0]<<"\n\n";
+                                            cout<<"Veiculos juntos, sem trocar clientes: Poluicao: "<<vetPoluicao[1]<<"  Tempo: "<<vetTempo[1]<<"\n\n";
+                                            cout<<"Veiculos juntos, com troca de clientes: Poluicao: "<<vetPoluicao[2]<<"  Tempo: "<<vetTempo[2]<<"\n\n";
+
+                                            double gap = (vetPoluicao[2] - vetPoluicao[1])/vetPoluicao[1];
+                                            gap *= 100.0;
+
+                                            cout<<"\n\n******************\n\ngap: "<<gap<<"\n";
+
+
+                                        } else
+                                        {
+                                            cout << "Modelo errado!!\n";
+                                        }
+
+                                    }
+                                    else
+                                        cout<<"Erro modelo rota1 e rota2 sem trocar clientes\n";
+
+
                                 }
                                 else
-                                {
-                                    if(tam2 <= 2)
-                                        break;
+                                    cout<<"Erro MIP rota2\n";
 
-                                    ptr_cliente = vetCliente2;
-                                    tamAux = tam2;
-                                    tipoAux = tipo2;
-
-                                    pesoAux = peso2;
-                                    poluicaoAux = poluicao2;
-                                    combustivelAux = combustivel2;
-                                    poluicaoHeurAux = poluicaoHeur2;
-                                }
-
-                                Solucao::Veiculo *veiculo = new Solucao::Veiculo(tipoAux);
-
-                                for (auto cliente : veiculo->listaClientes)
-                                {
-                                    delete cliente;
-                                }
-
-
-                                for (int i = 0; i < 2; ++i)
-                                    veiculo->listaClientes.pop_front();
-
-                                for (int i = 0; i < tamAux; ++i)
-                                {
-                                    Solucao::ClienteRota *clienteRota = new Solucao::ClienteRota;
-                                    clienteRota->swap(&ptr_cliente[i]);
-
-                                    veiculo->listaClientes.push_back(clienteRota);
-                                }
-
-                                veiculo->carga = pesoAux;
-                                veiculo->combustivel = combustivelAux;
-                                veiculo->poluicao = poluicaoAux;
-
-                                string erro = "";
-
-
-
-                                bool resultado = VerificaSolucao::verificaVeiculoRotaMip(veiculo, instancia, NULL, &erro);
-                                if (resultado)
-                                    cout << "Veiculo correto\n";
-                                else
-                                {
-                                    cout << "Erro veiculo "<<h<<" . verificao falhou\nErro: " << erro << '\n';
-
-                                    cout << "\nRota: ";
-
-                                    for (int i = 0; i < tamAux; ++i)
-                                        cout << ptr_cliente[i].cliente << ' ';
-
-                                    cout<<"\n\n";
-
-                                }
-
-                                delete veiculo;
-
-                                if (resultado)
-                                {
-
-                                    cout << "\nRota: ";
-
-                                    for (int i = 0; i < tamAux; ++i)
-                                        cout << ptr_cliente[i].cliente << ' ';
-
-                                    cout << '\n';
-
-                                    cout << "Polucao: " << poluicaoAux << '\n';
-                                    cout << "Combustivel: " << combustivelAux << '\n';
-                                    cout << "Polucao heuristica: " << poluicaoHeurAux << '\n';
-                                    cout << "Tipo: " << tipoAux << "\n\n\n";
-                                }
-                            }
-
+                            } else
+                                cout << "Rota heuristica2 eh inviavel\n";
                         } else
-                        {
-                            cout << "Modelo errado!!\n";
-                        }
+                            cout << "tipo ou tamanho errados. tipo (0,1), tamanho da rota > 2\n";
 
-                    }else
-                        cout<<"Rota heuristica2 eh inviavel\n";
-                }
-                else
-                    cout<<"Rota heuristica1 eh inviavel";
+                    }
+                    else
+                        cout<<"Erro MIP rota1\n";
 
-                cout<<"\n\n***********************************************************************\n\n";
-
+                } else
+                    cout << "Rota heuristica1 eh inviavel";
             }
+
+            cout << "\n\n***********************************************************************\n\n";
 
         }while (tipo != -1);
 

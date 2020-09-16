@@ -33,7 +33,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
     modelo->set(GRB_StringAttr_ModelName, "HGVRSP_model");
     modelo->set(GRB_IntParam_NumericFocus, 1);
     modelo->set(GRB_IntParam_ScaleFlag, -1);
-    modelo->set(GRB_IntParam_Method, GRB_METHOD_BARRIER); //GRB_METHOD_DUAL
+    modelo->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL); //GRB_METHOD_DUAL
     modelo->set(GRB_DoubleParam_ObjScale, -0.5);
     modelo->set(GRB_IntParam_BarHomogeneous, 1);
     modelo->set(GRB_IntParam_CrossoverBasis, 1);
@@ -185,7 +185,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
                     for (int k = 0; k < instancia->numPeriodos; ++k)
                     {
 
-                        variaveis->d[h][i][j][k] = modelo->addVar(1e-8, GRB_INFINITY, 0, GRB_SEMICONT, "d_" + std::to_string(h) + '_' + std::to_string(i) +
+                        variaveis->d[h][i][j][k] = modelo->addVar(1e-5, GRB_INFINITY, 0, GRB_SEMICONT, "d_" + std::to_string(h) + '_' + std::to_string(i) +
                                                                   '_' + std::to_string(j) + '_' + std::to_string(k));
 
                     }
@@ -345,7 +345,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
                         linExprDist_d = 0;
                         linExprDist_d = variaveis->d[h][i][j][k] - instancia->matrizDistancias[i][j] * variaveis->x[h][i][j][k];
 
-                        GRBVar var = modelo->addVar(-1e-4, 1e-4, 0, GRB_CONTINUOUS,"var_erro_rest_restringe_d_" + std::to_string(h) + '_'  +
+                        GRBVar var = modelo->addVar(-1e-3, 1e-3, 0, GRB_CONTINUOUS,"var_erro_rest_restringe_d_" + std::to_string(h) + '_'  +
                                                      std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(k));
 
                         modelo->addConstr(linExprDist_d + var <= 0.0,"restringe_d_" + std::to_string(h) + '_' + std::to_string(i) + "_" + std::to_string(j) +
@@ -427,7 +427,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
                     for (int k = 0; k < numPeriodos; ++k)
                         linExpr += variaveis->d[h][i][j][k];
 
-                    GRBVar varAux = modelo->addVar(-1e-5, 1e-5, 0, GRB_CONTINUOUS, "var_erro_rest_restringe_soma_d_k_" +
+                    GRBVar varAux = modelo->addVar(-1e-3, 1e-3, 0, GRB_CONTINUOUS, "var_erro_rest_restringe_soma_d_k_" +
                                                    std::to_string(h) + '_' + std::to_string(i) + "_" + std::to_string(j));
 
                     linExpr += -instancia->matrizDistancias[i][j] * variaveis->X[h][i][j] + varAux;
@@ -703,7 +703,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
 
     for(int i = 1; i < numClientes; ++i)
     {
-        GRBVar varAux = modelo->addVar(-5e-3, 0.0, 0, GRB_CONTINUOUS,"var_erro_rest_fim_janela_"+std::to_string(i));
+        GRBVar varAux = modelo->addVar(-1.0/60.0, 0.0, 0, GRB_CONTINUOUS,"var_erro_rest_fim_janela_"+std::to_string(i));
 
         modelo->addConstr(variaveis->a[i] >= instancia->vetorClientes[i].inicioJanela, "inicio_janela_"+std::to_string(i));
         modelo->addConstr(variaveis->a[i]  + varAux <= (instancia->vetorClientes[i].fimJanela), "fim_janela_"+std::to_string(i));
@@ -1447,9 +1447,16 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
 
     //Muda o LB e UB de X dos arcos entre rotas
 
+    if(vetClienteRota && vetClienteRota2)
+        modelo->set(GRB_IntParam_Method, GRB_METHOD_BARRIER); //GRB_METHOD_DUAL
+
+    else
+        modelo->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL); //GRB_METHOD_DUAL
+
 
     if(vetClienteRota && vetClienteRota2 && trocaClientesEntreRotas)
     {
+
         int cliente0, cliente1;
 
         for(int veic0 = 0; veic0 < (*tam - 1); ++veic0)
