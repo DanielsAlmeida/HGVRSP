@@ -28,7 +28,7 @@
 #define RotaMip 1
 #define VerificaSol 2
 
-#define Opcao RotaMip
+#define Opcao Grasp
 
 // UK_50x5_5_0 90.8872    0 24 50 38 0   tempo: 0.07, presove: 0.05, Poluicao: 90.88, Combustivel: 34.12
 //  UK_50x5_6 1593111849

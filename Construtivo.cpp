@@ -179,6 +179,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     for(int i = 0; i < numInteracoes; ++i)
     {
 
+        if(!best->veiculoFicticil)
+            break;
+
         if (((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
         {
             break;

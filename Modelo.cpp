@@ -2619,7 +2619,6 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
 void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
                              int *vetRotasAux)
 {
-
     Solucao::ClienteRota veiClienteRotaAux[25];
 
     if(solucao->veiculoFicticil)

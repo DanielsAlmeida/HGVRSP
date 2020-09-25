@@ -67,8 +67,7 @@ namespace Modelo
     };
 
     void geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota,
-                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
-                         int *vetRotasAux);
+                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas, int *vetRotasAux);
 
     class solucaoInteira : public GRBCallback
     {

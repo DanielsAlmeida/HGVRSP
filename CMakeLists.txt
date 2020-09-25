@@ -68,7 +68,7 @@ set(    SOURCE_FILES
         Modelo.cpp
         Modelo.h
         HashRotas.cpp
-        HashRotas.h)
+        HashRotas.h Modelo2Rotas.cpp Modelo2Rotas.h)
 
 add_executable(HGVRSP ${SOURCE_FILES})
         
