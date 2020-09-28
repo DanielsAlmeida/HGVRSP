@@ -9,6 +9,7 @@
 #include "Movimentos_Paradas.h"
 #include "Constantes.h"
 #include "HashRotas.h"
+#include "Modelo2Rotas.h"
 
 using namespace Construtivo;
 using namespace std;
@@ -62,7 +63,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     //Inicializa a melhor solução
     vetorFrequencia[0] = 1;
 
+    int **matRotas = new int*[instancia->numVeiculos];
 
+    for(int i = 0; i < instancia->numVeiculos; ++i)
+        matRotas[i] = new int[instancia->numVeiculos];
 
     Solucao::Solucao *best = geraSolucao(instancia, vetorAlfa[0], vetorClienteBest, vetorClienteAux, nullptr, false,
                                          vetorCandidatos, VetHeuristica[0], vetorParametros, matrixClienteBest,
@@ -161,6 +165,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     double tempoConstrutivo = 0.0;
     double tempoVnd = 0.0;
     double tempoViabilizador = 0.0;
+    int numChamadasModelo2Rotas = 0;
+    double tempoModelo2Rotas = 0.0;
 
     auto c_start = std::chrono::high_resolution_clock::now();
     auto c_end = std::chrono::high_resolution_clock::now();
@@ -178,20 +184,43 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     for(int i = 0; i < numInteracoes; ++i)
     {
+        int diferenca = i - ultimaAtualizacao;
 
-        if(!best->veiculoFicticil)
-            break;
-
-        if (((i - ultimaAtualizacao) >= 300) && (!best->veiculoFicticil))
+        if ((diferenca >= 300) && (!best->veiculoFicticil))
         {
             break;
         }
 
 
 
+        if((diferenca % 100) == 0 && (diferenca > 0) && !best->veiculoFicticil)
+        {
+            numChamadasModelo2Rotas += 1;
 
-/*        if(i == 0 || i == 1 || i == 50 || i == 200 || i == 500 || i == 600 || i == 800 || i == 990)
-            cout<<"Interacao "<<i<<'\n';*/
+            double antes = best->poluicao;
+
+            auto start = std::chrono::high_resolution_clock::now();
+
+            Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+
+            auto end = std::chrono::high_resolution_clock::now();
+
+            auto tempo = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+
+            tempoModelo2Rotas += tempo.count();
+
+            if(best->poluicao < antes)
+            {
+                cout<<"Atualizacao com duas rotas!!! Interacao: "<<i<<"\n";
+                ultimaAtualizacao = i;
+
+            }
+
+            cout<<"Antes "<<antes<<" Depois: "<<best->poluicao<<"\n\n";
+        }
+
+        if(i == 0 || i == 1 || i == 50 || i == 100 || i == 130 || i == 170 || i == 200 || i== 230 || i == 270 || i == 300 || i == 330 || i == 370 || i == 400 || i == 430 || i == 470||i == 500 || i == 600 || i == 800 || i == 990)
+            cout<<"Interacao "<<i<<'\n';
 
 
         //Atualiza probabilidade
@@ -286,19 +315,19 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         double poluicaoHeuriAux;
         instancia->atualizaPoluicaoSolucao(solucaoAux);
 
-/*        if(solucaoAux->veiculoFicticil)
-            numSolInviaveis += 1;
-        else*/
-        {
+
+
             c_start = std::chrono::high_resolution_clock::now();
 
             if(!modelo)
             {
+
                 Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
                          vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, NULL, guardaRota, guardaRota2);
             }
             else
             {
+
                 Vnd::vnd(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, false, vetClienteBestSecund,
                          vetClienteRotaSecundAux, i, vetEstatisticaMv, vetLimiteTempo, NULL, &hashRotas, guardaRota, guardaRota2);
             }
@@ -431,7 +460,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
 
 
-        }
+
 
         if(solucaoAux->veiculoFicticil)
             numSolInviaveis += 1;
@@ -558,6 +587,17 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     delete []guardaRota;
     delete []guardaRota2;
+
+
+
+
+    for(int i = 0; i < instancia->numVeiculos; ++i)
+        delete []matRotas[i];
+
+
+    delete []matRotas;
+
+    cout<<"Numero de chamadas Mip duas rotas: "<<numChamadasModelo2Rotas<<'\n'<<"Tempo Mip duas rotas: "<<tempoModelo2Rotas<<"\n\n";
 
     proporcao = NULL;
     vetorMedia = NULL;

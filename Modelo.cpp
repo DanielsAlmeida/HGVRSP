@@ -2609,7 +2609,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
     auto c_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tempoCpu = c_end-c_start;
 
-    cout<<"Tempo cpu: "<<tempoCpu.count()<<'\n';
+
 
 
     return true;

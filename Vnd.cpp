@@ -16,6 +16,7 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
               int *guardaRota2)
 {
 
+
     static int vetMovimentos[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     //static int vetMovimentos[1] = {5};
 

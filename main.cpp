@@ -246,6 +246,8 @@ int main(int num, char **agrs)
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
+
+
     auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
                                        matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo);
 
