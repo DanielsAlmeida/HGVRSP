@@ -12,6 +12,7 @@
 #include "HashRotas.h"
 #include "time.h"
 #include "Constantes.h"
+#include "mersenne-twister.h"
 
 #define NumTrocas 3
 #define NumVeiculos 2
@@ -255,7 +256,7 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
         if(i < instancia->numClientes)
             variaveis->l[i] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "l_" + std::to_string(i));
         else
-            variaveis->l[i] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "l_" + std::to_string(i) + "\'");
+            variaveis->l[i] = modelo->addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "l_" + std::to_string(i));
     }
 
     //*************************************************************************************************************************************************************
@@ -472,7 +473,8 @@ Modelo::Modelo::Modelo(Instancia::Instancia *instancia, GRBModel *grbModel, cons
 
 
                     {
-                        for (int i = 0; i < numClientes; ++i) {
+                        for (int i = 0; i < numClientes; ++i)
+                        {
                             if (instancia->matrizDistancias[i][j] != 0.0)
                                 linExpr += variaveis->x[h][i][j][k2];
                         }
@@ -1832,13 +1834,13 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
         ++numInteracoes;
 
         modelo->update();
-        modelo->write("modelo.lp");
+
 
         //modelo->feasRelax(1, false, false, true);
 
 
         modelo->optimize();
-        modelo->write("modelo.sol");
+        //modelo->write("modelo.sol");
 
         if(!((modelo->get(GRB_IntAttr_Status) == GRB_OPTIMAL) || (modelo->get(GRB_IntAttr_Status) == GRB_TIME_LIMIT)))
         {
@@ -1848,8 +1850,33 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
             cout << "Linha: " << __LINE__ << "\n\n";
             cout<<"Motivo: Modelo inviavel\n";
 
-            modelo->computeIIS();
-            modelo->write("modelo.ilp");
+            cout<<"Rota1: ";
+
+            for(int i = 0; i < *tam; ++i)
+                cout<<vetClienteRota[i].cliente<<' ';
+
+            cout<<"\n\nRota2: ";
+
+            for(int i = 0; i < *tam2; ++i)
+                cout<<vetClienteRota2[i].cliente<<' ';
+
+            cout<<"\n\n";
+
+           // modelo->computeIIS();
+            //modelo->write("modelo.ilp");
+
+
+            modelo->feasRelax(1, false, false, true);
+
+
+            modelo->optimize();
+
+
+            modelo->write("modelo.lp");
+            modelo->write("modelo.sol");
+
+
+
             exit(-1);
 
         }
@@ -1887,7 +1914,7 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
             ultimaPoluicao2 = *poluicao2;
         }
 
-
+        //cout<<"otimizou o modelo\n";
 
         //Zera os coeficientes da restricao de troca clientes
 
@@ -2615,77 +2642,235 @@ int Modelo::Modelo::criaRota(Solucao::ClienteRota *vetClienteRota, int *tam, boo
     return true;
 
 }
-
+/*
 void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao::ClienteRota *vetClienteRota, const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
-                             int *vetRotasAux)
+                             int *vetRotasAux, int *vetRotasOt, Solucao::ClienteRota *vetClienteRota2, int *vetRotasAux2)
 {
-    Solucao::ClienteRota veiClienteRotaAux[25];
+    static Solucao::ClienteRota veiClienteRotaAux1[25];
+    static Solucao::ClienteRota veiClienteRotaAux2[25];
 
-    if(solucao->veiculoFicticil)
+
+    Solucao::ClienteRota *veiClienteRotaAux[2] = {veiClienteRotaAux1, veiClienteRotaAux2};
+    Solucao::ClienteRota *ptr_vetClienteRotaAux[2] = {vetClienteRota, veiClienteRotaAux2};
+
+    if (solucao->veiculoFicticil)
         return;
 
+    std::fill(vetRotasOt, vetRotasOt + instancia->numVeiculos, 0);
 
-    double poluicao, combustivel;
+    double poluicao[2];
+    double combustivel[2];
+
     int resultado;
+    bool rotasOtimizadas = false;
+    Solucao::Veiculo *veiculo[2];
+    int indice[2] = {0, 0};
+    bool naoEncontrouRota = false;
 
-    for(auto veiculo : solucao->vetorVeiculos)
+
+    while (!rotasOtimizadas)
     {
-        if(veiculo->tipo == 2)
-        {
-            cout<<"Erro, veiculo ficticio em uma solucao viavel\n";
-            cout<<veiculo->getRota()<<'\n';
-            delete modelo;
-            exit(-1);
-        }
 
-        auto vetAux = *veiculo->listaClientes.begin();
+        indice[0] = indice[1] = -1;
 
-        if((veiculo->listaClientes.size() == 2) || vetAux->rotaMip)
-            continue;
+        //Escolhe duas rotas
 
-        //Copia clientes para vetor
-        auto itCliente = veiculo->listaClientes.begin();
-
-        for(int i = 0; i < veiculo->listaClientes.size(); ++i)
-        {
-            vetClienteRota[i].swap(*itCliente);
-
-            ++itCliente;
-        }
-
-
-        bool rotaEncontrada = false;
-
-        if(hashRotas)
-            rotaEncontrada = hashRotas->getVeiculo(vetClienteRota, veiculo->listaClientes.size(), veiculo->tipo, &poluicao, &combustivel);
-
-        resultado = false;
-
-        if(!rotaEncontrada)
+        for (int h = 0; h < 2; ++h)
         {
 
-            auto ptrVeicAux = veiClienteRotaAux;
+            indice[h] = rand_u32() % instancia->numVeiculos;
+            veiculo[h] = solucao->vetorVeiculos[indice[h]];
 
-            for(auto cliente : veiculo->listaClientes)
+            if (veiculo[h]->tipo == 2)
             {
-                ptrVeicAux->swap(cliente);
-
-                ++ptrVeicAux;
+                cout << "Erro, veiculo ficticio em uma solucao viavel\n";
+                cout << veiculo[h]->getRota() << '\n';
+                delete modelo;
+                exit(-1);
             }
+
+            auto vetAux = *veiculo[h]->listaClientes.begin();
+            naoEncontrouRota = false;
+
+            if ((veiculo[h]->listaClientes.size() <= 2) || vetAux->rotaMip || vetRotasOt[indice[h]] == 1 || ((h == 1) && indice[0] == indice[1]))
+            {
+
+
+                int indiceOrig = indice[h];
+
+                indice[h] = (indice[h] + 1) % instancia->numVeiculos;
+                veiculo[h] = solucao->vetorVeiculos[indice[h]];
+                vetAux = *veiculo[h]->listaClientes.begin();
+
+                while (indice[h] != indiceOrig && ((veiculo[h]->listaClientes.size() <= 2) || vetAux->rotaMip || vetRotasOt[indice[h]] == 1 ||
+                      ((h == 1) && indice[0] == indice[1])))
+                {
+
+                    indice[h] = (indice[h] + 1) % instancia->numVeiculos;
+                    veiculo[h] = solucao->vetorVeiculos[indice[h]];
+                    vetAux = *veiculo[h]->listaClientes.begin();
+
+                }
+
+                if (indice[h] == indiceOrig)
+                {
+                    indice[h] = -1;
+                    naoEncontrouRota = true;
+
+                }
+            }
+
+            if (naoEncontrouRota)
+                break;
+
+            //Copia clientes para vetor
+            auto itCliente = veiculo[h]->listaClientes.begin();
+
+            for (int i = 0; i < veiculo[h]->listaClientes.size(); ++i)
+            {
+                ptr_vetClienteRotaAux[h][i].swap(*itCliente);
+
+                ++itCliente;
+            }
+
+
+            bool rotaEncontrada = false;
+
+            //Procura a rota na hash
+            if (hashRotas)
+                rotaEncontrada = hashRotas->getVeiculo(ptr_vetClienteRotaAux[h], veiculo[h]->listaClientes.size(),
+                                                       veiculo[h]->tipo, &poluicao[h], &combustivel[h]);
+
+            resultado = false;
+
+            if (rotaEncontrada)
+            {
+
+
+                //Copia o veiculo para a solucao
+                itCliente = veiculo[h]->listaClientes.begin();
+
+                for (int i = 0; i < veiculo[h]->listaClientes.size(); ++i)
+                {
+                    (*itCliente)->swap(&ptr_vetClienteRotaAux[h][i]);
+                    ++itCliente;
+                }
+
+                //Atualiza poluicao e combustivel
+
+                solucao->poluicao -= veiculo[h]->poluicao;
+                veiculo[h]->poluicao = poluicao[h];
+                solucao->poluicao += poluicao[h];
+
+                veiculo[h]->combustivel = combustivel[h];
+
+                vetRotasOt[indice[h]] = 1;
+                h -= 1;
+                continue;
+            } else
+            {
+                //Copia o veiculo para veiClienteRotaAux para colocar o veiculo na hash depois do mip
+
+                auto ptrVeicAux = veiClienteRotaAux[h];
+
+                for (auto cliente : veiculo[h]->listaClientes)
+                {
+                    ptrVeicAux->swap(cliente);
+
+                    ++ptrVeicAux;
+                }
+            }
+
+        }
+
+
+
+
+
+        //Verifica se encontrou um veiculo
+        if (indice[0] < 0)
+            rotasOtimizadas = true;
+
+
+        if (!rotasOtimizadas)
+        {
+            resultado = false;
 
             //Cria rota
             try
             {
+                int tam = veiculo[0]->listaClientes.size();
+                int tam2;
+
+                if (indice[1] == -1)
+                {
+                    vetRotasOt[indice[0]] = 1;
 
 
-                combustivel = veiculo->combustivel;
-                poluicao = veiculo->poluicao;
-                int tam = veiculo->listaClientes.size();
-                resultado = modelo->criaRota(vetClienteRota, &tam, veiculo->tipo, &veiculo->carga, instancia, &poluicao, &combustivel, NumTrocas, vetRotasAux,
-                                             NULL, NULL, false, 0, NULL, NULL, NULL, false);
+                    resultado = modelo->criaRota(ptr_vetClienteRotaAux[0], &tam, veiculo[0]->tipo, &veiculo[0]->carga, instancia, &poluicao[0],
+                                                 &combustivel[0], NumTrocas, vetRotasAux, NULL, NULL, false, 0, NULL, NULL, NULL, false);
+
+                } else
+                {
+                    vetRotasOt[indice[0]] = 1;
+                    vetRotasOt[indice[1]] = 1;
+
+
+
+                    tam2 = veiculo[1]->listaClientes.size();
+
+                    resultado = modelo->criaRota(ptr_vetClienteRotaAux[0], &tam, veiculo[0]->tipo, &veiculo[0]->carga, instancia, &poluicao[0],
+                                                 &combustivel[0], NumTrocas, vetRotasAux, ptr_vetClienteRotaAux[1], &tam2, veiculo[1]->tipo,
+                                                 &veiculo[1]->carga,&poluicao[1], &combustivel[1], vetRotasAux2, false);
+                }
+
+                //Atualiza os veiculos
+                for (int h = 0; h < 2; ++h)
+                {
+                    if (indice[h] > 0)
+                    {
+                        //Verifica se a solucao mip é melhor
+                        if ((poluicao[h] + 1e-5) < veiculo[h]->poluicao)
+                        {
+                            //Atualiza a hash
+                            hashRotas->insereVeiculo(veiClienteRotaAux[h], ptr_vetClienteRotaAux[h], poluicao[h], combustivel[h],
+                                                     veiculo[h]->listaClientes.size(), veiculo[h]->tipo, veiculo[h]->carga);
+
+                            //Atualiza os clientes
+
+                            ptr_vetClienteRotaAux[0][0].rotaMip = true;
+                            Solucao::ClienteRota *ptrCliente = ptr_vetClienteRotaAux[0];
+
+
+                            for (auto it : veiculo[h]->listaClientes)
+                            {
+                                it->swap(ptrCliente);
+
+                                ++ptrCliente;
+                            }
+
+                            //Atualiza poluicao e combustivel da solucao e do veiculo
+                            solucao->poluicao -= veiculo[h]->poluicao;
+                            solucao->poluicao += poluicao[h];
+                            veiculo[h]->poluicao = poluicao[h];
+
+                            veiculo[h]->combustivel = combustivel[h];
+                        }
+                    }
+                }
+
             } catch (GRBException e)
             {
-                cout << "Erro MIP. \nVeiculo tipo: " << veiculo->tipo << "\nRota: " << veiculo->getRota() << '\n';
+                int id;
+                cout << "Erro MIP \narquivo: Modelo.cpp\nLinha: " << __LINE__ << "\n\n";
+
+                if (indice[0] >= 0)
+                    cout << "Veiculo tipo: " << veiculo[0]->tipo << "\nRota: " << veiculo[0]->getRota() << '\n';
+
+                if(indice[1] >= 0)
+                    cout << "Veiculo tipo: " << veiculo[1]->tipo << "\nRota: " << veiculo[1]->getRota() << '\n';
+
+                cout<<"indice: "<<indice[0]<<" "<<indice[1]<<"\n\n";
                 cout << "Erro code: " << e.getErrorCode();
                 cout << "Mensagem: " << e.getMessage() << '\n';
                 delete modelo;
@@ -2693,59 +2878,13 @@ void Modelo::geraRotasOtimas(Solucao::Solucao *solucao, Modelo *modelo, Solucao:
             }
 
         }
-        else
-            resultado = true;
 
 
 
-        if(((poluicao - 1e-5) < veiculo->poluicao) && resultado || rotaEncontrada)
-        {
-            vetClienteRota[0].rotaMip = true;
-            //Atualiza solucao
-            auto it = veiculo->listaClientes.begin();
-            int i = 0;
 
-            for(auto it : veiculo->listaClientes)
-            {
-                it->swap(&vetClienteRota[i]);
-                ++i;
-            }
-
-            auto cliente = *veiculo->listaClientes.begin();
-            cliente->rotaMip = true;
-
-            //Retira poluicao do veiculo e adiciona a nova poluicao
-            solucao->poluicao -= veiculo->poluicao;
-            solucao->poluicao += poluicao;
-
-            //Atualiza poluicao e combustivel do veiculo
-            veiculo->poluicao = poluicao;
-            veiculo->combustivel = combustivel;
-
-
-            if(!rotaEncontrada && hashRotas)
-            {
-                hashRotas->insereVeiculo(veiClienteRotaAux, vetClienteRota, poluicao, combustivel, veiculo->listaClientes.size(), veiculo->tipo, veiculo->carga);
-
-            }
-        }
-        else
-        {
-            if(!rotaEncontrada)
-            {
-                if (!resultado)
-                {
-                    cout << "resultado : " << resultado << '\n';
-                    cout << "Veiculo tipo: " << veiculo->tipo << '\n';
-                    cout << "Rota: " << veiculo->getRota() << "\n";
-                } else if (((poluicao - 1e-5) >= veiculo->poluicao))
-                    cout << "rota mip eh maior. Mip: " << poluicao << ",  original: " << veiculo->poluicao << '\n';
-                else
-                    cout << "Rota errada. motivo: ???\n";
-            }
-        }
     }
 
     solucao->rotasMip = true;
 
 }
+*/

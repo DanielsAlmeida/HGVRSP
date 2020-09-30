@@ -983,7 +983,10 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
         cargaTotal -= instancia->vetorClientes[(*clienteJ)->cliente].demanda;
         if(cargaTotal < 0)
         {
-            *erro = "peso negativo.\nArquivo:\nVerificaSolucao\n Funcao verificaVeiculoRotaMip\n Linha: "+std::to_string(__LINE__) + '\n';
+
+            *erro = "peso negativo.\nArquivo:\nVerificaSolucao\n Funcao verificaVeiculoRotaMip\n Linha: "+std::to_string(__LINE__) + "\nVeiculo: "+veiculo->getRota()+"\n" +
+                    "Peso " + std::to_string(veiculo->carga) + "\n";
+
             return false;
         }
 

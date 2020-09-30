@@ -241,15 +241,20 @@ int main(int num, char **agrs)
     GRBEnv env;
     env.set(GRB_IntParam_OutputFlag, 0);
     GRBModel grb_modelo = GRBModel(env);
+    GRBModel grb_modelo1Rota = GRBModel(env);
 
     Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
+    Modelo_1_rota::Modelo *modelo1Rota = new Modelo_1_rota::Modelo(instancia, &grb_modelo1Rota, false);
+
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
 
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas, TamVetH, vetParametro, vetEstatisticaMv,
-                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo);
+    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas,
+                                       TamVetH, vetParametro, vetEstatisticaMv,
+                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
+                                       modelo1Rota);
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
@@ -705,7 +710,7 @@ int main(int num, char **agrs)
     delete solucao;
     delete instancia;
     delete modelo;
-
+    delete modelo1Rota;
     //muntrace();
 
     return 0;

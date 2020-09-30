@@ -29,7 +29,7 @@ namespace HashRotas
     public:
 
         u_int32_t tamTabela;
-        std::list<HashNo*> *tabelaHash;
+        std::vector<HashNo*> *tabelaHash;
         int numRotas;
 
         HashRotas(int numClientes);
@@ -42,6 +42,9 @@ namespace HashRotas
 
         bool insereVeiculo(Solucao::ClienteRota *clienteRotaOriginal, Solucao::ClienteRota *clienteBest,
                            double poluicaoBest, double combustivelBest, const int tam, const bool tipo,
+                           const int carga);
+
+        bool insereVeiculo(Solucao::ClienteRota *vetClienteRota, double poluicaoBest, double combustivelBest, const int tam, const bool tipo,
                            const int carga);
 
         void estatisticasHash(float *tamanhoMedio_, int *maior_);

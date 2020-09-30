@@ -10,6 +10,7 @@
 #include "Vnd.h"
 #include "Movimentos_Paradas.h"
 #include "Modelo.h"
+#include "Modelo_1_rota.h"
 
 #ifndef HGVRSP_CONSTRUTIVO_H
 #define HGVRSP_CONSTRUTIVO_H
@@ -59,10 +60,10 @@ namespace Construtivo
     Solucao::Solucao *
     grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa, const int numInteracoes,
           const int numIntAtualizarProb, bool log, stringstream *strLog, boost::tuple<int, int> *VetHeuristica,
-          const int tamVetHeuristica, const double *const vetorParametros,
-          Vnd::EstatisticaMv *vetEstatisticaMv, Solucao::ClienteRota **matrixClienteBest,
-          Movimentos_Paradas::TempoCriaRota *tempoCriaRota, GuardaCandInteracoes *vetCandInteracoes,
-          double *vetLimiteTempo, Modelo::Modelo *modelo);
+          const int tamVetHeuristica, const double *const vetorParametros, Vnd::EstatisticaMv *vetEstatisticaMv,
+          Solucao::ClienteRota **matrixClienteBest, Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
+          GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo, Modelo::Modelo *modelo,
+          Modelo_1_rota::Modelo *modelo1Rota);
 
     Solucao::Solucao *
     geraSolucao(const Instancia::Instancia *const instancia, float alfa,

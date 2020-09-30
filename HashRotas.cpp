@@ -34,7 +34,7 @@ HashRotas::HashRotas::HashRotas(int numClientes)
             tamTabela = 2003;
     }
 
-    tabelaHash = new std::list<HashNo*>[tamTabela];
+    tabelaHash = new std::vector<HashNo*>[tamTabela];
 
     if(tabelaHash == NULL)
     {
@@ -108,7 +108,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
     hashRotaBest = getHash(clienteBest, tam, tipo);
     hashRotaBest = hashRotaBest % tamTabela;
 
-    std::list<HashNo*> *lista = &tabelaHash[hashRotaBest];
+    std::vector<HashNo*> *lista = &tabelaHash[hashRotaBest];
 
 
         if(!lista->empty())
@@ -299,6 +299,98 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
 
 }
 
+bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *vetClienteRota, double poluicaoBest, double combustivelBest, const int tam, const bool tipo, const int carga)
+{
+    u_int32_t hashRotaBest;
+    HashNo *hashNoVeic = NULL;
+
+    hashRotaBest = getHash( vetClienteRota, tam, tipo);
+    hashRotaBest = hashRotaBest % tamTabela;
+
+    std::vector<HashNo*> *lista = &tabelaHash[hashRotaBest];
+
+
+    if(!lista->empty())
+    {
+        //Percorre a lista
+        for(auto hashNo : *lista)
+        {
+
+
+            if((hashNo->tam == tam) && (hashNo->tipo == tipo) && (hashNo->carga == carga))
+            {
+
+
+                bool encontrou = true;
+
+                //Percorre os clientes
+
+                Solucao::ClienteRota *veiculo_p = hashNo->veiculo;
+
+                for(int i = 0; i < tam; ++i)
+                {
+
+
+                    if(veiculo_p->cliente != vetClienteRota[i].cliente)
+                    {
+                        encontrou = false;
+                        break;
+                    }
+
+
+                    ++veiculo_p;
+                }
+
+                if(encontrou)
+                {
+                    //Veiculo_p ja esta na hash
+
+                    return false;
+
+
+                }
+                else
+                {
+
+
+                    hashNoVeic = hashNo;
+                    break;
+                }
+
+            }
+
+        }
+    }
+
+
+    if(!hashNoVeic)
+    {
+        hashNoVeic = new HashNo;
+        hashNoVeic->tipo = tipo;
+        hashNoVeic->carga = carga;
+        hashNoVeic->tam = tam;
+        hashNoVeic->veiculo = new Solucao::ClienteRota[hashNoVeic->tam];
+        hashNoVeic->poluicaoH = -1.0;
+
+        Solucao::ClienteRota *veiculo_p = hashNoVeic->veiculo;
+        Solucao::ClienteRota *ptr_veiculoOrig = vetClienteRota;
+
+        for(int i = 0; i < tam; ++i)
+        {
+
+            veiculo_p->swap(ptr_veiculoOrig);
+
+            ++veiculo_p;
+            ++ptr_veiculoOrig;
+        }
+
+
+        lista->push_back(hashNoVeic);
+    }
+
+    return true;
+}
+
 bool HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const int tam, const int tipo, double *poluicao, double *combustivel)
 {
 
@@ -311,7 +403,7 @@ bool HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const i
 
     hash = hash % tamTabela;
 
-    std::list<HashNo*> *lista = &tabelaHash[hash];
+    std::vector<HashNo*> *lista = &tabelaHash[hash];
 
     if(lista->empty())
         return false;
@@ -380,7 +472,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::Veiculo *veiculo)
 
     hash = hash % tamTabela;
 
-    std::list<HashNo*> *lista = &tabelaHash[hash];
+    std::vector<HashNo*> *lista = &tabelaHash[hash];
 
     if(lista->empty())
         return NULL;
@@ -444,7 +536,7 @@ HashRotas::HashRotas::~HashRotas()
 {
 
 
-    std::list<HashNo*> *list;
+    std::vector<HashNo*> *list;
 
     //deleta HashNo
     for(int i = 0; i < tamTabela; ++i)

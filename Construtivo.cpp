@@ -11,6 +11,8 @@
 #include "HashRotas.h"
 #include "Modelo2Rotas.h"
 
+#define DEBUG true
+
 using namespace Construtivo;
 using namespace std;
 
@@ -32,10 +34,12 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                       const int numIntAtualizarProb, bool log, stringstream *strLog,
                                       boost::tuple<int, int> *VetHeuristica,
                                       const int tamVetHeuristica, const double *const vetorParametros,
-                                      Vnd::EstatisticaMv *vetEstatisticaMv, Solucao::ClienteRota **matrixClienteBest,
+                                      Vnd::EstatisticaMv *vetEstatisticaMv,
+                                      Solucao::ClienteRota **matrixClienteBest,
                                       Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
-                                      GuardaCandInteracoes *vetCandInteracoes,
-                                      double *vetLimiteTempo, Modelo::Modelo *modelo)
+                                      GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo,
+                                      Modelo::Modelo *modelo,
+                                      Modelo_1_rota::Modelo *modelo1Rota)
 {
 
     unordered_map<int, int> hash;
@@ -47,6 +51,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     auto *vetClienteRotaSecundAux = new Solucao::ClienteRota[instancia->numClientes+2];
     int *guardaRota = new int[MaxTamVetClientesMatrix];
     int *guardaRota2 = new int[MaxTamVetClientesMatrix];
+    int *vetRotasOpt = new int [instancia->numVeiculos];
 
     HashRotas::HashRotas hashRotas(instancia->numClientes);
 
@@ -186,22 +191,30 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     {
         int diferenca = i - ultimaAtualizacao;
 
-        if ((diferenca >= 300) && (!best->veiculoFicticil))
+        if (((diferenca >= 300) && (!best->veiculoFicticil)))
         {
             break;
         }
 
 
 
-        if((diferenca % 100) == 0 && (diferenca > 0) && !best->veiculoFicticil)
+        if((diferenca % 100) == 0 && (diferenca > 0) && !best->veiculoFicticil && modelo)
         {
             numChamadasModelo2Rotas += 1;
 
             double antes = best->poluicao;
 
             auto start = std::chrono::high_resolution_clock::now();
+            try
+            {
 
-            Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+                Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+            }
+            catch (GRBException e)
+            {
+                cout<<"code: "<<e.getErrorCode()<<"\nMessage: "<<e.getMessage()<<"\n";
+                exit(-1);
+            }
 
             auto end = std::chrono::high_resolution_clock::now();
 
@@ -211,17 +224,21 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
             if(best->poluicao < antes)
             {
-                cout<<"Atualizacao com duas rotas!!! Interacao: "<<i<<"\n";
+                #if DEBUG
+                    cout<<"Atualizacao mip 2 rotas\n";
+                #endif
                 ultimaAtualizacao = i;
 
             }
 
-            cout<<"Antes "<<antes<<" Depois: "<<best->poluicao<<"\n\n";
         }
 
-        if(i == 0 || i == 1 || i == 50 || i == 100 || i == 130 || i == 170 || i == 200 || i== 230 || i == 270 || i == 300 || i == 330 || i == 370 || i == 400 || i == 430 || i == 470||i == 500 || i == 600 || i == 800 || i == 990)
-            cout<<"Interacao "<<i<<'\n';
+        #if DEBUG
 
+            if((i % 100) == 0)
+                cout<<"Interacao "<<i<<'\n';
+
+        #endif
 
         //Atualiza probabilidade
         if(((i%numIntAtualizarProb) == 0) && (i > 0) || (i == 50))
@@ -296,9 +313,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
         c_start = std::chrono::high_resolution_clock::now();
 
-        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log,
-                                 vetorCandidatos, heuristica, vetorParametros, matrixClienteBest, tempoCriaRota,
-                                 vetCandInteracoes, vetLimiteTempo);
+        solucaoAux = geraSolucao(instancia, vetorAlfa[posicaoAlfa], vetorClienteBest, vetorClienteAux, &sequencia, log, vetorCandidatos,
+                                 heuristica, vetorParametros, matrixClienteBest, tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
 
         c_end = std::chrono::high_resolution_clock::now();
 
@@ -433,13 +449,13 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                 if(gap < 0.15)
                 {
-                    int p = int((1.0 - gap) * 100.0);
+                    const static int p = 100 - 40;
 
                     int valA = rand_u32() % 100;
 
-                    if ((p >= valA) || (best->veiculoFicticil) || (poluicaoHeuriAux < poluicaoBestHeuristica) || (gap<0.05))
+                    if ((p <= valA) || (best->veiculoFicticil) || (poluicaoHeuriAux < poluicaoBestHeuristica) || (gap <= 0.1))
                     {
-                        Modelo::geraRotasOtimas(solucaoAux, modelo, vetorClienteAux, instancia, &hashRotas, guardaRota);
+                        Modelo_1_rota::geraRotasOtimas(solucaoAux, modelo1Rota, vetorClienteAux, instancia, &hashRotas, guardaRota);
 
                     }
                 }
@@ -456,10 +472,6 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                 solucaoAcumulada[posicaoAlfa] += solucaoAux->poluicao + solucaoAux->poluicaoPenalidades;
                 vetorFrequencia[posicaoAlfa] += 1;
             }
-
-
-
-
 
 
         if(solucaoAux->veiculoFicticil)
@@ -584,6 +596,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     delete []proporcao;
     delete []vetClienteRotaSecundAux;
     delete []vetorCandidatos;
+    delete []vetRotasOpt;
 
     delete []guardaRota;
     delete []guardaRota2;
@@ -597,7 +610,11 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     delete []matRotas;
 
-    cout<<"Numero de chamadas Mip duas rotas: "<<numChamadasModelo2Rotas<<'\n'<<"Tempo Mip duas rotas: "<<tempoModelo2Rotas<<"\n\n";
+    #if DEBUG
+
+        cout<<"Numero de chamadas Mip duas rotas: "<<numChamadasModelo2Rotas<<'\n'<<"Tempo Mip duas rotas: "<<tempoModelo2Rotas<<"\n\n";
+
+    #endif
 
     proporcao = NULL;
     vetorMedia = NULL;

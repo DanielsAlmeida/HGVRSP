@@ -113,7 +113,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
         if(indice0 < 0 || indice1 < 0)
             break;
 
-        std::cout<<"Rotas: "<<indice0<<" e "<<indice1<<"\n";
+
 
         existePares = true;
 
@@ -151,9 +151,34 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
         poluicaoAntes = poluico0 + poluicao1;
 
-        //Otimza as duas rotas
-        modelo->criaRota(vetClienteRota, &tam0, tipo0, &peso0, instancia, &poluico0, &combustivel0, 3, vetRotasAux, vetClienteRota2, &tam1, tipo1, &peso1,
-                         &poluicao1, &combustivel1, vetRotasAux2, true);
+        try
+        {
+
+
+            //Otimza as duas rotas
+            modelo->criaRota(vetClienteRota, &tam0, tipo0, &peso0, instancia, &poluico0, &combustivel0, 3, vetRotasAux,
+                             vetClienteRota2, &tam1, tipo1, &peso1,
+                             &poluicao1, &combustivel1, vetRotasAux2, true);
+        }
+        catch (GRBException e)
+        {
+            std::cout<<"code: "<<e.getErrorCode()<<"\nMessage: "<<e.getMessage()<<"\n";
+            std::cout<<"Rota1: "<<solucao->vetorVeiculos[indice0]->getRota()<<"\nRota2: "<<solucao->vetorVeiculos[indice1]->getRota()<<"\n\n";
+
+            std::cout<<"vet1: ";
+            for(int i = 0; i < tam0; ++i)
+                std::cout<<vetClienteRota[i].cliente<<' ';
+
+
+            std::cout<<"\nvet2: ";
+            for(int i = 0; i < tam1; ++i)
+                std::cout<<vetClienteRota2[i].cliente<<' ';
+
+            std::cout<<"\n\n";
+
+            exit(-1);
+
+        }
 
         if(vetClienteRota[tam0-1].cliente != 0 || vetClienteRota[0].cliente != 0 ||
            vetClienteRota2[tam1-1].cliente != 0 || vetClienteRota2[0].cliente != 0)
@@ -180,6 +205,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
             //Escrever as rotas na solucao
 
+            hashRotas->insereVeiculo(vetClienteRota, poluico0, combustivel0, tam0, solucao->vetorVeiculos[indice0]->tipo, peso0);
+            hashRotas->insereVeiculo(vetClienteRota2, poluicao1, combustivel1, tam1, solucao->vetorVeiculos[indice1]->tipo, peso1);
 
             for (int i = 0; i < 2; ++i)
             {
@@ -227,9 +254,10 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
                 int tamAux = 0;
 
+
+
                 //Copia a solucao para o veiculo
-                for (auto it = ptr_veiculo->listaClientes.begin();
-                     it != ptr_veiculo->listaClientes.end(); ++it, ++tamAux)
+                for (auto it = ptr_veiculo->listaClientes.begin(); it != ptr_veiculo->listaClientes.end(); ++it, ++tamAux)
                 {
                     (*it)->swap(&ptr_clienteRota[tamAux]);
                 }
@@ -247,8 +275,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
             solucao->vetorVeiculos[indice0]->combustivel = combustivel0;
             solucao->vetorVeiculos[indice1]->combustivel = combustivel1;
 
-            solucao->vetorVeiculos[indice1]->carga = peso0;
-            solucao->vetorVeiculos[indice0]->carga = peso1;
+            solucao->vetorVeiculos[indice1]->carga = peso1;
+            solucao->vetorVeiculos[indice0]->carga = peso0;
 
 
         }
