@@ -366,11 +366,15 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *vetClienteRota, d
     if(!hashNoVeic)
     {
         hashNoVeic = new HashNo;
+
         hashNoVeic->tipo = tipo;
         hashNoVeic->carga = carga;
+        hashNoVeic->poluicao = poluicaoBest;
+        hashNoVeic->combustivel = combustivelBest;
         hashNoVeic->tam = tam;
         hashNoVeic->veiculo = new Solucao::ClienteRota[hashNoVeic->tam];
         hashNoVeic->poluicaoH = -1.0;
+        hashNoVeic->best = NULL;
 
         Solucao::ClienteRota *veiculo_p = hashNoVeic->veiculo;
         Solucao::ClienteRota *ptr_veiculoOrig = vetClienteRota;

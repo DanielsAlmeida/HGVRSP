@@ -11,7 +11,7 @@
 #include "HashRotas.h"
 #include "Modelo2Rotas.h"
 
-#define DEBUG true
+#define DEBUG false
 
 using namespace Construtivo;
 using namespace std;
@@ -172,6 +172,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     double tempoViabilizador = 0.0;
     int numChamadasModelo2Rotas = 0;
     double tempoModelo2Rotas = 0.0;
+    int ultimaAtualizacaoGrasp = 0;
 
     auto c_start = std::chrono::high_resolution_clock::now();
     auto c_end = std::chrono::high_resolution_clock::now();
@@ -190,8 +191,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     for(int i = 0; i < numInteracoes; ++i)
     {
         int diferenca = i - ultimaAtualizacao;
+        int diferenca2 = i - ultimaAtualizacaoGrasp;
 
-        if (((diferenca >= 300) && (!best->veiculoFicticil)))
+        if (((diferenca2 >= 300) && (!best->veiculoFicticil)))
         {
             break;
         }
@@ -225,8 +227,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             if(best->poluicao < antes)
             {
                 #if DEBUG
-                    cout<<"Atualizacao mip 2 rotas\n";
+                    cout<<"Atualizacao mip 2 rotas interacao: "<<i<<"\n";
                 #endif
+
                 ultimaAtualizacao = i;
 
             }
@@ -516,7 +519,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                 delete best;
                 best = solucaoAux;
                 solucaoAux = NULL;
-                ultimaAtualizacao = i;
+                ultimaAtualizacaoGrasp = ultimaAtualizacao = i;
                 poluicaoUltima = best->poluicao;
                 poluicaoBestHeuristica = poluicaoHeuriAux;
 
@@ -555,12 +558,15 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                     delete best;
                     best = solucaoAux;
                     solucaoAux = NULL;
-                    ultimaAtualizacao = i;
+                    ultimaAtualizacaoGrasp = ultimaAtualizacao = i;
                     poluicaoUltima = best->poluicao;
 
                     ultimaAtualizacaoHeuristica = i;
                     poluicaoBestHeuristica = poluicaoHeuriAux;
 
+                    #if DEBUG
+                        cout<<"Atualizacao Grasp, interacao: "<<i<<"\n";
+                    #endif
 
 
                 }
