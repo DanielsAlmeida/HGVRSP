@@ -20,6 +20,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
     }
 
+    static const int  NumMaximoRotasMip = 10;
+
     //Variaveis
     bool existePares = true;
     int indice0, indice1;
@@ -31,8 +33,9 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
     double gap;
     Solucao::Veiculo *ptr_veiculo = NULL;
     int tam;
+    int numRotas = 0;
 
-    while(existePares)
+    while(existePares && numRotas < NumMaximoRotasMip)
     {
         existePares = false;
 
@@ -47,33 +50,52 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
             int indice = rand_u32() % instancia->numVeiculos;
 
             //Verifica a rota eh maior que 2 e diferente de indice0
-            while((solucao->vetorVeiculos[indice]->listaClientes.size() <= 2) || ((indice0 == indice) && (k == 1)))
+            while((solucao->vetorVeiculos[indice]->listaClientes.size() <= 2) || (((indice0 == indice) || (matRotas[indice][indice0]) ) && (k == 1)))
                 indice = (indice + 1) % instancia->numVeiculos;
+
+
 
             int indiceOrig = indice;
 
             do
             {
-                bool rotaUsada = false;
 
-                if(solucao->vetorVeiculos[indice]->listaClientes.size() > 2)
+                bool rotaUsada = true;
+
+                if((solucao->vetorVeiculos[indice]->listaClientes.size() > 2))
                 {
 
-                    //Percorre todos os veiculos
-                    for (int j = 0; j < instancia->numVeiculos; ++j)
+                    bool condicao = true;
+
+                    if(indice0 >= 0)
+                        condicao = !((matRotas[indice0][indice])&&(k==1));
+
+                    if(condicao || (k == 0))
                     {
 
-                        //Verifica se j eh diferente de indice
-                        if (j != indice)
+                        if(k == 0)
                         {
-                            if (matRotas[indice][j] != 0)
+                            //Percorre todos os veiculos
+                            for (int j = 0; j < instancia->numVeiculos; ++j)
                             {
-                                rotaUsada = true;
-                                indice0 = indice1 = -1;
-                                break;
+
+                                //Verifica se j eh diferente de indice
+                                if (j != indice)
+                                {
+                                    if (matRotas[indice][j] == 0)
+                                    {
+                                        rotaUsada = false;
+                                        //indice0 = indice1 = -1;
+                                        break;
+                                    }
+                                }
                             }
                         }
+                        else
+                            rotaUsada = false;
                     }
+
+
 
                     //Verifica se a rota ja foi usada
                     if (rotaUsada)
@@ -89,6 +111,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
 
             }while (indice != indiceOrig);
+
+
 
             //Percorreu todas as rotas
             if(indice0 == -1 && indice1 == -1)
@@ -125,15 +149,21 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
         for(int i = 0; i < 2; ++i)
         {
 
-            int j = 0;
 
-            for(auto itRota = solucao->vetorVeiculos[indice]->listaClientes.begin(); itRota != solucao->vetorVeiculos[indice]->listaClientes.end(); ++itRota, ++j)
-                ptr_clienteRota[j].swap(*itRota);
+
+            for(auto itRota : solucao->vetorVeiculos[indice]->listaClientes)
+            {
+                ptr_clienteRota->swap(itRota);
+                ++ptr_clienteRota;
+
+            }
 
             indice = indice1;
             ptr_clienteRota = vetClienteRota2;
 
         }
+
+        ptr_clienteRota = NULL;
 
         //Quarda tipo, tam, poluicao, combustivel e peso das rotas
 
@@ -154,11 +184,10 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
         try
         {
 
-
             //Otimza as duas rotas
             modelo->criaRota(vetClienteRota, &tam0, tipo0, &peso0, instancia, &poluico0, &combustivel0, 3, vetRotasAux,
-                             vetClienteRota2, &tam1, tipo1, &peso1,
-                             &poluicao1, &combustivel1, vetRotasAux2, true);
+                             vetClienteRota2, &tam1, tipo1, &peso1, &poluicao1, &combustivel1, vetRotasAux2, true);
+
         }
         catch (GRBException e)
         {
@@ -180,8 +209,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
         }
 
-        if(vetClienteRota[tam0-1].cliente != 0 || vetClienteRota[0].cliente != 0 ||
-           vetClienteRota2[tam1-1].cliente != 0 || vetClienteRota2[0].cliente != 0)
+        if(vetClienteRota[tam0-1].cliente != 0 || vetClienteRota[0].cliente != 0 || vetClienteRota2[tam1-1].cliente != 0 || vetClienteRota2[0].cliente != 0)
         {
             std::cout<<"Erro arquivo: Modelo2Rotas.cpp \nLinha"<<__LINE__<<"\n\n";
             std::cout<<"Motivo: rotas nao comecao ou terminao no deposito\n\n";
@@ -196,12 +224,39 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
         {
             matRotas[indice0][indice1] = 2;
             matRotas[indice1][indice0] = 2;
+
+            //std::cout<<"nao ouve melhora. Par: "<<indice0<<' '<<indice1<<'\n';
         }
         else
         {
 
+
+            indice = indice0;
+
+            for(int k = 0; k < 2; ++k)
+            {
+                for (int j = 0; j < instancia->numVeiculos; ++j)
+                {
+                    if(j != indice)
+                        matRotas[j][indice] = 0;
+
+                }
+
+                for(int j = 0; j < instancia->numVeiculos; ++j)
+                {
+                    if(j != indice)
+                        matRotas[indice][j] = 0;
+                }
+
+                if(k == 0)
+                    indice = indice1;
+
+            }
+
             matRotas[indice0][indice1] = 1;
             matRotas[indice1][indice0] = 1;
+
+            //std::cout<<"Melhora. Par: "<<indice0<<' '<<indice1<<'\n';
 
             //Escrever as rotas na solucao
 
@@ -227,7 +282,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
                 //Verificar se é necessário adicionar ou remover
 
                 //Se diferenca é < 0 : remover da lista |diferenca| a lista. Se é > 0 : adicionar |diferenca| a lista. Se é 0, nao faz nada.
-                int diferenca = ptr_veiculo->listaClientes.size() - tam;
+                int diferenca =  tam - ptr_veiculo->listaClientes.size();
+                int size = ptr_veiculo->listaClientes.size();
 
                 if (diferenca < 0)
                 {
@@ -254,7 +310,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
                 int tamAux = 0;
 
-
+                if(ptr_veiculo->listaClientes.size() != tam)
+                    std::cout<<"tam != lista.size()\n\n"<<"tam: "<<tam<<"\nsize orig: "<<size<<"\nsize novo: "<<ptr_veiculo->listaClientes.size()<<'\n';
 
                 //Copia a solucao para o veiculo
                 for (auto it = ptr_veiculo->listaClientes.begin(); it != ptr_veiculo->listaClientes.end(); ++it, ++tamAux)
@@ -280,6 +337,8 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
 
         }
+
+        ++numRotas;
     }
 
 }

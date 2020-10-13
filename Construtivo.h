@@ -60,10 +60,11 @@ namespace Construtivo
     Solucao::Solucao *
     grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa, const int numInteracoes,
           const int numIntAtualizarProb, bool log, stringstream *strLog, boost::tuple<int, int> *VetHeuristica,
-          const int tamVetHeuristica, const double *const vetorParametros, Vnd::EstatisticaMv *vetEstatisticaMv,
-          Solucao::ClienteRota **matrixClienteBest, Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
-          GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo, Modelo::Modelo *modelo,
-          Modelo_1_rota::Modelo *modelo1Rota);
+          const int tamVetHeuristica, const double *const vetorParametros,
+          Vnd::EstatisticaMv *vetEstatisticaMv, Solucao::ClienteRota **matrixClienteBest,
+          Movimentos_Paradas::TempoCriaRota *tempoCriaRota, GuardaCandInteracoes *vetCandInteracoes,
+          double *vetLimiteTempo, Modelo::Modelo *modelo, Modelo_1_rota::Modelo *modelo1Rota,
+          const Instancia::TimeType timeStart, u_int64_t *inicioSegundaFase_ptr, u_int64_t *totalInteracoes);
 
     Solucao::Solucao *
     geraSolucao(const Instancia::Instancia *const instancia, float alfa,

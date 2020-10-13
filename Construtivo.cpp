@@ -11,7 +11,7 @@
 #include "HashRotas.h"
 #include "Modelo2Rotas.h"
 
-#define DEBUG false
+#define DEBUG true
 
 using namespace Construtivo;
 using namespace std;
@@ -34,15 +34,18 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                       const int numIntAtualizarProb, bool log, stringstream *strLog,
                                       boost::tuple<int, int> *VetHeuristica,
                                       const int tamVetHeuristica, const double *const vetorParametros,
-                                      Vnd::EstatisticaMv *vetEstatisticaMv,
-                                      Solucao::ClienteRota **matrixClienteBest,
+                                      Vnd::EstatisticaMv *vetEstatisticaMv, Solucao::ClienteRota **matrixClienteBest,
                                       Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
-                                      GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo,
-                                      Modelo::Modelo *modelo,
-                                      Modelo_1_rota::Modelo *modelo1Rota)
+                                      GuardaCandInteracoes *vetCandInteracoes,
+                                      double *vetLimiteTempo, Modelo::Modelo *modelo,
+                                      Modelo_1_rota::Modelo *modelo1Rota,
+                                      const Instancia::TimeType timeStart, u_int64_t *inicioSegundaFase_ptr,
+                                      u_int64_t *totalInteracoes)
 {
 
     unordered_map<int, int> hash;
+
+    Instancia::TimeType tempo_end;
 
     //Vetor guarda o resto da lista. São passados para construir a solução
     auto *vetorClienteBest = new Solucao::ClienteRota[instancia->numClientes+2];
@@ -82,12 +85,12 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     Solucao::Solucao *solucaoAux;
     int posicaoAlfa;
-    int ultimaAtualizacao = 0;
+    u_int64_t ultimaAtualizacao = 0;
     double poluicaoUltima = -1.0;
     
     boost::tuple<int,int> heuristica(VetHeuristica[0]);
     int posicaoHeuristica = 0;
-    int ultimaAtualizacaoHeuristica = 0;
+    u_int64_t ultimaAtualizacaoHeuristica = 0;
 
     //Inicializa os vetores de todos os alfas
     for(int i = 1; i < tamAlfa; ++i)
@@ -172,7 +175,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     double tempoViabilizador = 0.0;
     int numChamadasModelo2Rotas = 0;
     double tempoModelo2Rotas = 0.0;
-    int ultimaAtualizacaoGrasp = 0;
+    u_int64_t ultimaAtualizacaoGrasp = 0;
 
     auto c_start = std::chrono::high_resolution_clock::now();
     auto c_end = std::chrono::high_resolution_clock::now();
@@ -188,53 +191,137 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     bool numMaxAtualizacoes = false;
     int interacoes = 0;
 
-    for(int i = 0; i < numInteracoes; ++i)
-    {
-        int diferenca = i - ultimaAtualizacao;
-        int diferenca2 = i - ultimaAtualizacaoGrasp;
+    u_int64_t i = 0;
 
-        if (((diferenca2 >= 300) && (!best->veiculoFicticil)))
+    //__int128 a;
+    
+    tempo_end = std::chrono::high_resolution_clock::now();
+
+    auto time = std::chrono::duration_cast<std::chrono::seconds>(tempo_end - timeStart);
+
+    double tempo = time.count();
+    bool segundaFase = false;
+    u_int64_t inicioSegundaFase;
+
+    //while(tempo < instancia->tempoCpuPermitido)
+    while(i < 1000)
+    {
+
+        u_int64_t diferenca = i - ultimaAtualizacao;
+        u_int64_t diferenca2 = i - ultimaAtualizacaoGrasp;
+
+
+        if (((diferenca >= 300) && (!best->veiculoFicticil)))
         {
             break;
         }
 
 
 
-        if((diferenca % 100) == 0 && (diferenca > 0) && !best->veiculoFicticil && modelo)
+
+        //if((diferenca % 100) == 0 && (diferenca > 0) && !best->veiculoFicticil && modelo)
+        if((ultimaAtualizacaoGrasp == (i-1) || diferenca > 100) && !best->veiculoFicticil && (i > 0))
         {
-            numChamadasModelo2Rotas += 1;
+            bool condicao = true;
 
-            double antes = best->poluicao;
+            if(diferenca > 100)
+                condicao = (diferenca % 50) == 0;
 
-            auto start = std::chrono::high_resolution_clock::now();
-            try
+            if(condicao)
             {
 
-                Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+                Solucao::Solucao *solucaoAux = new Solucao::Solucao(best);
+
+
+                if(diferenca > 100)
+                {
+                    //Realiza pertubacao
+
+                    for(auto veiculo : solucaoAux->vetorVeiculos)
+                        (*veiculo->listaClientes.begin())->rotaMip = false;
+
+                    Movimentos::ResultadosRota resultadosRota =  Movimentos::mv_2optSwapInterRotas(instancia, solucaoAux, vetorClienteBest, vetorClienteAux, vetClienteBestSecund, vetClienteRotaSecundAux,
+                                                                                                  true, true, vetLimiteTempo, modelo, &hashRotas, guardaRota, guardaRota2);
+
+                    if(resultadosRota.viavel)
+                    {
+
+
+                        Movimentos::atualizaSolucao(resultadosRota, best, vetorClienteBest, vetClienteBestSecund, instancia, 5);
+
+                        Modelo_1_rota::geraRotasOtimas(solucaoAux, modelo1Rota, vetorClienteBest, instancia, &hashRotas, guardaRota);
+
+                        #if DEBUG
+                            cout<<"Pertubacao 2 opt, interacao: "<<i<<'\n';
+                        #endif
+
+                    }
+                    else
+                    {
+
+                        delete solucaoAux;
+                        solucaoAux = NULL;
+                    }
+                }
+
+
+                if (solucaoAux)
+                {
+                    numChamadasModelo2Rotas += 1;
+
+                    double antes = best->poluicao;
+
+                    auto start = std::chrono::high_resolution_clock::now();
+                    try
+                    {
+                        #if DEBUG
+                            cout << "Inicio Mip\n";
+                        #endif
+
+                        Modelo2Rotas::geraRotas_comb_2Rotas(solucaoAux, modelo, vetorClienteBest, vetClienteBestSecund,
+                                                            instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+
+                        #if DEBUG
+                            cout << "Fim Mip\n";
+                        #endif
+
+                    }
+                    catch (GRBException e)
+                    {
+                        cout << "code: " << e.getErrorCode() << "\nMessage: " << e.getMessage() << "\n";
+                        exit(-1);
+                    }
+
+                    auto end = std::chrono::high_resolution_clock::now();
+
+                    auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+
+                    tempoModelo2Rotas += tempo_.count();
+
+                    if (solucaoAux->poluicao < antes)
+                    {
+                        #if DEBUG
+                            cout << "Atualizacao mip 2 rotas interacao: " << i << "\n";
+                        #endif
+
+                        ultimaAtualizacao = i;
+
+                        delete best;
+                        best = solucaoAux;
+                        solucaoAux = NULL;
+
+                    } else
+                    {
+                        delete solucaoAux;
+                        solucaoAux = NULL;
+                    }
+
+//                break;
+                }
+
             }
-            catch (GRBException e)
-            {
-                cout<<"code: "<<e.getErrorCode()<<"\nMessage: "<<e.getMessage()<<"\n";
-                exit(-1);
-            }
-
-            auto end = std::chrono::high_resolution_clock::now();
-
-            auto tempo = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-
-            tempoModelo2Rotas += tempo.count();
-
-            if(best->poluicao < antes)
-            {
-                #if DEBUG
-                    cout<<"Atualizacao mip 2 rotas interacao: "<<i<<"\n";
-                #endif
-
-                ultimaAtualizacao = i;
-
-            }
-
         }
+
 
         #if DEBUG
 
@@ -578,7 +665,11 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             }
         }
 
+        ++i;
 
+        tempo_end = std::chrono::high_resolution_clock::now();
+        time =  std::chrono::duration_cast<std::chrono::seconds>(tempo_end - timeStart);
+        tempo = time.count();
     }
 
     //std::cout<<"Numero de solucoes inviaveis: "<<numSolInviaveis<<'\n';
@@ -589,7 +680,17 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     hashRotas.estatisticasHash(&tamanhoMedio, &maior);
     cout<<"Estatisticas hash: \nTamnho medio: "<<tamanhoMedio<<"\nMaior: "<<maior<<'\n';*/
 
+    if(!best->veiculoFicticil)
+    {
+        double poluicao = best->poluicao;
+        Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
 
+        if(best->poluicao + 1e-3 < poluicao)
+        {
+            ultimaAtualizacao = i + 1;
+        }
+
+    }
 
     //Libera memória
     delete []vetorClienteBest;
@@ -608,17 +709,21 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     delete []guardaRota2;
 
 
-
+    if(segundaFase)
+        *inicioSegundaFase_ptr = inicioSegundaFase;
+    else
+        *inicioSegundaFase_ptr = -1;
 
     for(int i = 0; i < instancia->numVeiculos; ++i)
         delete []matRotas[i];
 
+    *totalInteracoes = i;
 
     delete []matRotas;
 
     #if DEBUG
 
-        cout<<"Numero de chamadas Mip duas rotas: "<<numChamadasModelo2Rotas<<'\n'<<"Tempo Mip duas rotas: "<<tempoModelo2Rotas<<"\n\n";
+        cout<<"Numero de chamadas Mip duas rotas: "<<numChamadasModelo2Rotas<<'\n'<<"Tempo Mip duas rotas: "<<tempoModelo2Rotas<<"\n";
 
     #endif
 

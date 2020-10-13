@@ -890,7 +890,7 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
     auto cliente = veiculo->listaClientes.begin();
 
-    if ((((*cliente)->tempoSaida + 1e-4) < 0.5) && (veiculo->tipo == 1))
+    if ((((*cliente)->tempoSaida + 1e-2) < 0.5) && (veiculo->tipo == 1))
     {
         if(erro)
             *erro = "Erro, tempoSaida incompativel com veiculo\ntempoSaida: " + std::to_string((*cliente)->tempoSaida) + '\n'+
@@ -1037,7 +1037,7 @@ bool VerificaSolucao::verificaVeiculoRotaMip(Solucao::Veiculo *veiculo, const In
 
             //Verificar tempo de saida
 
-            if (((*clienteJ)->tempoSaida + 1e-4) < instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela + instancia->vetorClientes[(*clienteJ)->cliente].tempoServico)
+            if (((*clienteJ)->tempoSaida + 1e-2) < instancia->vetorClientes[(*clienteJ)->cliente].inicioJanela + instancia->vetorClientes[(*clienteJ)->cliente].tempoServico)
             {
                 if (erro)
                 {

@@ -245,7 +245,8 @@ int main(int num, char **agrs)
 
     Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
     Modelo_1_rota::Modelo *modelo1Rota = new Modelo_1_rota::Modelo(instancia, &grb_modelo1Rota, false);
-
+    u_int64_t inicioSegundaFase;
+    u_int64_t totalInteracoes;
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
@@ -254,7 +255,7 @@ int main(int num, char **agrs)
     auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas,
                                        TamVetH, vetParametro, vetEstatisticaMv,
                                        matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
-                                       modelo1Rota);
+                                       modelo1Rota, c_start, &inicioSegundaFase, &totalInteracoes);
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
@@ -412,7 +413,7 @@ int main(int num, char **agrs)
     {
         for (auto veiculo : solucao->vetorVeiculos)
         {
-            if(veiculo->listaClientes.size() == 2)
+            if(veiculo->listaClientes.size() <= 2)
                 continue;
 
             auto cliente2 = veiculo->listaClientes.begin();
@@ -423,6 +424,7 @@ int main(int num, char **agrs)
             {
                 cliente2 = cliente1;
                 ++cliente2;
+
 
                 texto += std::to_string((*cliente1)->cliente) + ' ' + std::to_string((*cliente2)->cliente) + ' ';
 
@@ -474,6 +476,8 @@ int main(int num, char **agrs)
                 if ((*cliente2)->cliente == 0)
                     break;
             }
+
+
         }
     }
     string erro;
@@ -531,7 +535,10 @@ int main(int num, char **agrs)
     tempo << "Tempo total cpu: " << tempoCpu.count()<< " S\n";
     tempo <<"Tempo total construtivo: "<<solucao->tempoConstrutivo<<" S\n";
     tempo <<"Tempo total viabilizador: "<<solucao->tempoViabilizador<<" S\n";
-    tempo <<"Tempo total Vnd: "<<solucao->tempoVnd<<" S\n\n";
+    tempo <<"Tempo total Vnd: "<<solucao->tempoVnd<<" S\n";
+    tempo<<"Inicio da segunda fase: "<<inicioSegundaFase<<"\n";
+    tempo<<"Total interacoes Grasp: "<<totalInteracoes<<"\n\n";
+
 
     tempo<<"Tamanho medio vetor: "<<double(tempoCriaRota.tamVet)/ tempoCriaRota.num<<'\n';
     tempo<<"Numero chamadas: "<<tempoCriaRota.num<<"\n";

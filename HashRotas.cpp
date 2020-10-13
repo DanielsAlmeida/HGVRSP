@@ -9,7 +9,7 @@ HashRotas::HashRotas::HashRotas(int numClientes)
 {
     numClientes -= 1;
     numRotas = 0;
-
+    /*
     switch (numClientes)
     {
         case 10:
@@ -33,6 +33,9 @@ HashRotas::HashRotas::HashRotas(int numClientes)
         case 100:
             tamTabela = 2003;
     }
+    */
+
+    tamTabela = 4099;
 
     tabelaHash = new std::vector<HashNo*>[tamTabela];
 
@@ -43,9 +46,9 @@ HashRotas::HashRotas::HashRotas(int numClientes)
     }
 }
 
-u_int32_t HashRotas::HashRotas::getHash(Solucao::Veiculo *veiculo)
+u_int64_t HashRotas::HashRotas::getHash(Solucao::Veiculo *veiculo)
 {
-    u_int32_t hash = 5381;
+    u_int64_t hash = 5381;
 
     for(auto cliente : veiculo->listaClientes)
     {
@@ -58,23 +61,6 @@ u_int32_t HashRotas::HashRotas::getHash(Solucao::Veiculo *veiculo)
     return hash;
 }
 
-u_int32_t HashRotas::HashRotas::getHash(Solucao::ClienteRota *clienteRota, const int tam, const int tipo)
-{
-
-    u_int32_t hash = 5381;
-    Solucao::ClienteRota *cliente = &clienteRota[1];
-
-    for(int i = 1; i < tam-1; ++i, ++cliente)
-    {
-        hash = ((hash << 5) + hash) + cliente->cliente;
-    }
-
-    hash = ((hash << 5) + hash) + tipo;
-
-    return hash;
-
-}
-
 bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOriginal, Solucao::ClienteRota *clienteBest,
                                          double poluicaoBest, double combustivelBest, const int tam, const bool tipo,
                                          const int carga)
@@ -85,7 +71,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
         return false;
 
 
-    u_int32_t hashRotaOriginal = getHash(clienteRotaOriginal, tam, tipo);
+    u_int64_t hashRotaOriginal = getHash(clienteRotaOriginal, tam, tipo);
     hashRotaOriginal = hashRotaOriginal % tamTabela;
 
     bool iguais = true;
@@ -100,7 +86,7 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
         }
     }
 
-    u_int32_t hashRotaBest;
+    u_int64_t hashRotaBest;
     HashNo *hashNoBest = NULL;
 
 
@@ -111,52 +97,52 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
     std::vector<HashNo*> *lista = &tabelaHash[hashRotaBest];
 
 
-        if(!lista->empty())
+    if(!lista->empty())
+    {
+        //Percorre a lista
+        for(auto hashNo : *lista)
         {
-            //Percorre a lista
-            for(auto hashNo : *lista)
+
+
+            if((hashNo->tam == tam) && (hashNo->tipo == tipo) && (hashNo->carga == carga))
             {
 
 
-                if((hashNo->tam == tam) && (hashNo->tipo == tipo) && (hashNo->carga == carga))
+                bool encontrou = true;
+
+                //Percorre os clientes
+
+                Solucao::ClienteRota *veiculo_p = hashNo->veiculo;
+
+                for(int i = 0; i < tam; ++i)
                 {
 
 
-                    bool encontrou = true;
-
-                    //Percorre os clientes
-
-                    Solucao::ClienteRota *veiculo_p = hashNo->veiculo;
-
-                    for(int i = 0; i < tam; ++i)
+                    if(veiculo_p->cliente != clienteBest[i].cliente)
                     {
-
-
-                        if(veiculo_p->cliente != clienteBest[i].cliente)
-                        {
-                            encontrou = false;
-                            break;
-                        }
-
-
-                        ++veiculo_p;
-                    }
-
-                    if(encontrou)
-                    {
-                        if(iguais)
-                            return false;
-
-                        hashNoBest = hashNo;
+                        encontrou = false;
                         break;
-
-
                     }
+
+
+                    ++veiculo_p;
+                }
+
+                if(encontrou)
+                {
+                    if(iguais)
+                        return false;
+
+                    hashNoBest = hashNo;
+                    break;
+
 
                 }
 
             }
+
         }
+    }
 
     if(!hashNoBest)
     {
@@ -299,9 +285,26 @@ bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *clienteRotaOrigin
 
 }
 
+u_int64_t  HashRotas::HashRotas::getHash(Solucao::ClienteRota *clienteRota, const int tam, const int tipo)
+{
+
+    u_int64_t hash = 5381;
+    Solucao::ClienteRota *cliente = &clienteRota[1];
+
+    for(int i = 1; i < tam-1; ++i, ++cliente)
+    {
+        hash = ((hash << 5) + hash) + cliente->cliente;
+    }
+
+    hash = ((hash << 5) + hash) + tipo;
+
+    return hash;
+
+}
+
 bool HashRotas::HashRotas::insereVeiculo(Solucao::ClienteRota *vetClienteRota, double poluicaoBest, double combustivelBest, const int tam, const bool tipo, const int carga)
 {
-    u_int32_t hashRotaBest;
+    u_int64_t hashRotaBest;
     HashNo *hashNoVeic = NULL;
 
     hashRotaBest = getHash( vetClienteRota, tam, tipo);
@@ -402,7 +405,7 @@ bool HashRotas::HashRotas::getVeiculo(Solucao::ClienteRota *clienteRota, const i
     if(tam <= 2)
         return NULL;
 
-    u_int32_t hash = getHash(clienteRota, tam, tipo);
+    u_int64_t hash = getHash(clienteRota, tam, tipo);
 
 
     hash = hash % tamTabela;
@@ -472,7 +475,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::Veiculo *veiculo)
     if(veiculo->listaClientes.size() <= 2)
         return NULL;
 
-    u_int32_t hash = getHash(veiculo);
+    u_int64_t hash = getHash(veiculo);
 
     hash = hash % tamTabela;
 
@@ -521,7 +524,7 @@ HashRotas::HashNo* HashRotas::HashRotas::getVeiculo(Solucao::Veiculo *veiculo)
 
 void HashRotas::HashRotas::estatisticasHash(float *tamanhoMedio_, int *maior_)
 {
-    u_int32_t tamanhoMedio= 0;
+    u_int64_t tamanhoMedio= 0;
     int maior = tabelaHash[0].size();
 
     for(int i = 0; i < tamTabela; ++i)

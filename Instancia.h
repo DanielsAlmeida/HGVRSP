@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <map>
+#include <chrono>
 #include "Solucao.h"
 
 #ifndef HGVRSP_INSTANCIA_H
@@ -52,6 +53,8 @@ namespace Instancia
         double fimJanela;
     } Veiculo;
 
+    typedef std::chrono::_V2::system_clock::time_point TimeType;
+
     /// Classe Instancia ...
     class Instancia
     {
@@ -72,6 +75,11 @@ namespace Instancia
         int numClientes, numPeriodos, numVeiculos, veiculosTipo1, veiculosTipo2;
         double *distanciaDeposito;
         int demandaTotal;
+
+        double tempoCpuPermitido;
+
+        std::map<int,double> tempoLiteratura;
+        std::map<int, double> tempoMedias;
 
         Instancia(std::string arquivo);
         int retornaPeriodo(double hora) const ;

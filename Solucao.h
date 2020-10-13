@@ -178,6 +178,25 @@ namespace Solucao
 
         }
 
+        Veiculo(const Veiculo *outro)
+        {
+
+            combustivel = outro->combustivel;
+            poluicao = outro->poluicao;
+            carga = outro->carga;
+            tipo = outro->tipo;
+            id = outro->id;
+
+            ClienteRota *clientePtr = 0;
+
+            for(auto it : outro->listaClientes)
+            {
+                clientePtr = new ClienteRota(*it);
+
+                listaClientes.push_back(clientePtr);
+            }
+        }
+
         std::string getRota(void)
         {
             std::string saida;
@@ -239,6 +258,7 @@ namespace Solucao
         bool rotasMip;
 
         Solucao(int numVeiculos);
+        Solucao(Solucao *outro);
 
         double getPoluicaoTotal()
         {

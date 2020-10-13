@@ -32,6 +32,34 @@ Solucao::Solucao::Solucao(int numVeiculos)
 
 }
 
+Solucao::Solucao::Solucao(Solucao *outro)
+{
+
+    poluicao = outro->poluicao;
+    vetorVeiculos.reserve(outro->vetorVeiculos.size());
+    veiculoFicticil = outro->veiculoFicticil;
+
+    veiculoFicticil = outro->veiculoFicticil;
+    poluicaoPenalidades = outro->poluicaoPenalidades;
+    ultimaAtualizacao = outro->ultimaAtualizacao;
+    numSolucoesInv = outro->numSolucoesInv;
+    rotasMip = outro->rotasMip;
+
+
+    Veiculo *veiculo;
+    Veiculo *veiculoOutro = outro->vetorVeiculos[0];
+
+    for(int i = 0; i < outro->vetorVeiculos.size(); ++i)
+    {
+        veiculo = new Veiculo(veiculoOutro);
+        vetorVeiculos.push_back(veiculo);
+
+        if((i+1)<outro->vetorVeiculos.size())
+            veiculoOutro = outro->vetorVeiculos[i+1];
+    }
+
+}
+
 Solucao::Solucao::~Solucao()
 {
 

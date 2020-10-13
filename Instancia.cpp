@@ -278,6 +278,67 @@ Instancia::Instancia::Instancia(std::string arquivo)
         exit(-1);
     }
 
+
+    // **************************************************************************************
+
+    //Calcula o tempo maximo permitido
+
+    string arquivoTempo = "/home/igor/Documentos/HGVRSP/Tempos/UK_" + std::to_string(numClientes-1) + ".txt";
+
+    int indice = arquivo.size() - 6;
+    string num;
+
+    if(arquivo[indice] == '_')
+    {
+        indice += 1;
+        num = arquivo[indice];
+    }
+    else
+    {
+        num = arquivo[indice];
+        indice += 1;
+
+        num += arquivo[indice];
+    }
+
+    tempoLiteratura[10]  = 464.0;
+    tempoLiteratura[15]  = 775.0;
+    tempoLiteratura[20]  = 1079.0;
+    tempoLiteratura[25]  = 1864.0;
+    tempoLiteratura[50]  = 3540.0;
+    tempoLiteratura[75]  = 5340.0;
+    tempoLiteratura[100] = 5880.0;
+
+    tempoMedias[10]  = 5.43;
+    tempoMedias[15]  = 35.48;
+    tempoMedias[20]  = 67.39;
+    tempoMedias[25]  = 233.48;
+    tempoMedias[50]  = 523.4;
+    tempoMedias[75]  = 1108.94;
+    tempoMedias[100] = 1561.8;
+
+
+
+    ifstream fileTempo;
+    fileTempo.open(arquivoTempo, ios::out);
+
+    int intNum = atoi(num.c_str());
+    double tempo;
+
+
+    for(int i = 0; i < intNum; ++i)
+        fileTempo>>tempo;
+
+    fileTempo.close();
+
+    double tempoL = tempoLiteratura[numClientes-1];
+
+   // cout<<"Tempo literaturua: "<<tempoL<<"\n"<<"tempo instancancia: "<<tempo<<"\n tempo media: "<<tempoMedias[numClientes-1]<<"\n";
+
+    tempoCpuPermitido = (tempoL * tempo) / tempoMedias[numClientes-1];
+
+
+
 }
 
 Instancia::Instancia::~Instancia()
