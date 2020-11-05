@@ -72,7 +72,9 @@ set(    SOURCE_FILES
         Modelo2Rotas.cpp
         Modelo2Rotas.h
         Modelo_1_rota.h
-        Modelo_1_rota.cpp)
+        Modelo_1_rota.cpp
+        Ils.cpp
+        Ils.h Alvo.h)
 
 add_executable(HGVRSP ${SOURCE_FILES})
         

@@ -18,3 +18,12 @@ const int Heuristica_Cliente_2 = 2;
 const int Heuristica_Cliente_3 = 3;
 
 const int MaxTamVetClientesMatrix = 20;
+
+
+const int OpcaoGrasp          = 0;
+const int OpcaoIls            = 1;
+const int OpcaoGraspMip       = 2;
+const int OpcaoIlsMip         = 3;
+const int OpcaoGraspIls       = 4;
+const int OpcaoGraspIlsMip    = 5;
+const int OpcaoGraspComIlsMip = 6;

@@ -728,6 +728,9 @@ ResultadosRota Movimentos::mvInterRotasShift(const Instancia::Instancia *const i
 
         veiculo1 = solucao->vetorVeiculos[veiculoEscolhido1];
 
+
+
+
         if ((veiculo1->listaClientes.size() <= 2) || (veiculoEscolhido1 == veiculoEscolhido2))
         {
             veiculoEscolhido1++;

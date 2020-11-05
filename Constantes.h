@@ -20,4 +20,8 @@ extern const int Heuristica_Cliente_3; // Distancia
 
 extern const int MaxTamVetClientesMatrix;
 
+extern const int OpcaoGrasp, OpcaoIls, OpcaoGraspMip, OpcaoIlsMip, OpcaoGraspIls, OpcaoGraspIlsMip, OpcaoGraspComIlsMip;
+
+
+
 #endif //HGVRSP_CONSTANTES_H

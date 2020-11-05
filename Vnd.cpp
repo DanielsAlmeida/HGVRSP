@@ -9,11 +9,10 @@ using namespace Vnd;
 
 
 void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao,
-              Solucao::ClienteRota *vetClienteRotaBest,
-              Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao, Solucao::ClienteRota *vetClienteRotaSecundBest,
-              Solucao::ClienteRota *vetClienteRotaSecundAux, int interacao, EstatisticaMv *vetEstatisticaMv,
-              double *vetLimiteTempo, Modelo::Modelo *modelo, HashRotas::HashRotas *hashRotas, int *guardaRota,
-              int *guardaRota2)
+              Solucao::ClienteRota *vetClienteRotaBest, Solucao::ClienteRota *vetClienteRotaAux, bool pertubacao,
+              Solucao::ClienteRota *vetClienteRotaSecundBest, Solucao::ClienteRota *vetClienteRotaSecundAux,
+              int interacao, EstatisticaMv *vetEstatisticaMv, double *vetLimiteTempo, Modelo::Modelo *modelo,
+              HashRotas::HashRotas *hashRotas, int *guardaRota, int *guardaRota2, int mvNaoUtilizado)
 {
 
 
@@ -29,6 +28,8 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
         inicio = 2;
         vetMovimentos[0] = 2;
         vetMovimentos[1] = 3;
+
+        mvNaoUtilizado = -1;
     }
 
     for(int i = inicio; i < Num; ++i)
@@ -59,6 +60,11 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
 
     while(posicao < Num)
     {
+            if(vetMovimentos[posicao] == mvNaoUtilizado)
+            {
+                ++posicao;
+                continue;
+            }
 
             auto c_start = std::chrono::high_resolution_clock::now();
 

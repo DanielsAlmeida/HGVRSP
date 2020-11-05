@@ -20,7 +20,9 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
     }
 
-    static const int  NumMaximoRotasMip = 10;
+    const int NumMaximoRotasGrupo = ((instancia->numVeiculos) * (instancia->numVeiculos - 1))/2;
+    const int  NumMaximoRotasMip =  (10 < NumMaximoRotasGrupo) ? 10 : NumMaximoRotasGrupo;
+
 
     //Variaveis
     bool existePares = true;
@@ -50,7 +52,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
             int indice = rand_u32() % instancia->numVeiculos;
 
             //Verifica a rota eh maior que 2 e diferente de indice0
-            while((solucao->vetorVeiculos[indice]->listaClientes.size() <= 2) || (((indice0 == indice) || (matRotas[indice][indice0]) ) && (k == 1)))
+            while((solucao->vetorVeiculos[indice]->listaClientes.size() <= 2) || ((k == 1) && ((indice0 == indice) || (matRotas[indice][indice0]))))
                 indice = (indice + 1) % instancia->numVeiculos;
 
 
@@ -115,7 +117,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
 
             //Percorreu todas as rotas
-            if(indice0 == -1 && indice1 == -1)
+            if(indice == -1)
             {
                 indice0 = indice1 = -1;
                 break;
@@ -219,9 +221,13 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
         gap = (((poluico0+poluicao1)-poluicaoAntes)/poluicaoAntes) * 100.0;
 
+        existePares = true;
+
         //Verifica se  o gap é significativo
         if(gap > -1e-4)
         {
+            //if(matRotas[indice0][indice1] == 2 || matRotas[indice0][indice1]==2)
+              //  existePares = false;
             matRotas[indice0][indice1] = 2;
             matRotas[indice1][indice0] = 2;
 
@@ -229,6 +235,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
         }
         else
         {
+
 
 
             indice = indice0;

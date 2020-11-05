@@ -9,7 +9,7 @@ HashRotas::HashRotas::HashRotas(int numClientes)
 {
     numClientes -= 1;
     numRotas = 0;
-    /*
+
     switch (numClientes)
     {
         case 10:
@@ -31,11 +31,12 @@ HashRotas::HashRotas::HashRotas(int numClientes)
             tamTabela = 1511;
 
         case 100:
-            tamTabela = 2003;
-    }
-    */
 
-    tamTabela = 4099;
+            //tamTabela = 2003;
+            tamTabela = 4099;
+    }
+
+
 
     tabelaHash = new std::vector<HashNo*>[tamTabela];
 

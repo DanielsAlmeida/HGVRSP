@@ -15,6 +15,7 @@
 #include <string>
 #include <fstream>
 #include "HashRotas.h"
+#include "Ils.h"
 
 //UK_10x5_5
 //Tempo total cpu: 90.45 S
@@ -151,7 +152,7 @@ int main(int num, char **agrs)
 
     bool logAtivo = false;
 
-    if(num != 5)
+    if(num != 7)
     {
         cout<<"Numero incorreto de parametros.\n";
         exit(-1);
@@ -161,6 +162,18 @@ int main(int num, char **agrs)
     strInstancia = agrs[1];
     saidaCompleta = agrs[2];
     saidaParcial = agrs[3];
+
+    int opcao = atoi(agrs[5]);
+    double alvo = atof(agrs[6]);
+
+    if(alvo < 0)
+        alvo = HUGE_VALF;
+
+    if(opcao < 0 || opcao > 6)
+    {
+        cout<<"Ultimo argumento tem que estar entre 0 e 6\n";
+        exit(-1);
+    }
 
     ofstream file;
 
@@ -203,7 +216,7 @@ int main(int num, char **agrs)
 
     Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
 
-    const double vetParametro[7] = {parametroHeur0[instancia->numClientes - 1], parametroHeur1[instancia->numClientes - 1], 0.0, parametroHeur3[instancia->numClientes - 1],
+    double vetParametro[7] = {parametroHeur0[instancia->numClientes - 1], parametroHeur1[instancia->numClientes - 1], 0.0, parametroHeur3[instancia->numClientes - 1],
                                     parametroHeur4[instancia->numClientes - 1], parametroHeur5[instancia->numClientes -1], parametroHeur6[instancia->numClientes - 1]};
 
     auto vet = instancia->vetorClientes;
@@ -245,19 +258,83 @@ int main(int num, char **agrs)
 
     Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
     Modelo_1_rota::Modelo *modelo1Rota = new Modelo_1_rota::Modelo(instancia, &grb_modelo1Rota, false);
-    u_int64_t inicioSegundaFase;
+    double tempoMip2Rotas;
     u_int64_t totalInteracoes;
 
     auto c_start = std::chrono::high_resolution_clock::now();
 
+    Solucao::Solucao *solucao;
+
+    const int numInteracoes = 3000;
+    const double tempoTotal= 1500;
 
 
-    auto *solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 1000, 150, logAtivo, &strLog, vetHeuristicas,
-                                       TamVetH, vetParametro, vetEstatisticaMv,
-                                       matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
-                                       modelo1Rota, c_start, &inicioSegundaFase, &totalInteracoes);
+    Alvo::Alvo alvoTempo(alvo, c_start, (opcao == 0 ? 2 : 3));
+
+    if(opcao == OpcaoIlsMip || opcao == OpcaoIls)
+    {
+        Solucao::ClienteRota *vetSolucaoClienteRota[4];
+
+        for(int i = 0; i < 4; ++i)
+            vetSolucaoClienteRota[i] = new Solucao::ClienteRota[instancia->numClientes+2];
+
+        int *vetGuardaRotas[2];
+
+        for(int i = 0; i < 2; ++i)
+            vetGuardaRotas[i] = new int[MaxTamVetClientesMatrix];
+
+        HashRotas::HashRotas hashRotas(instancia->numClientes);
+
+        int **matRotas = new int*[instancia->numVeiculos];
+
+        for(int i = 0; i < instancia->numVeiculos; ++i)
+            matRotas[i] = new int[instancia->numVeiculos];
+
+        int alfa =  rand_u32() % 5;
+        Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
+
+        solucao = Construtivo::geraSolucao(instancia, vetAlfas[alfa], vetSolucaoClienteRota[0], vetSolucaoClienteRota[1], nullptr, false,
+                                             vetorCandidatos, vetHeuristicas[0], vetParametro, matrixClienteBest,
+                                             &tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
+
+        u_int64_t ultimaAtualizacao = 0;
+        totalInteracoes = 0;
+
+
+        Ils::ils(instancia, &solucao, numInteracoes, UINT64_MAX, tempoTotal, opcao, vetSolucaoClienteRota,
+                 &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
+                 &tempoMip2Rotas,
+                 &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
+                 vetCandInteracoes, alvo, &alvoTempo);
+
+
+        solucao->ultimaAtualizacao = ultimaAtualizacao;
+
+        delete []vetorCandidatos;
+
+        for(int i = 0; i < 4; ++i)
+            delete []vetSolucaoClienteRota[i];
+
+        for(int i = 0; i < 2; ++i)
+            delete []vetGuardaRotas[i];
+
+        for(int i = 0; i < instancia->numVeiculos; ++i)
+            delete []matRotas[i];
+
+        delete []matRotas;
+    }
+    else
+    {
+        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, numInteracoes, 150, logAtivo, &strLog,
+                                     vetHeuristicas,
+                                     TamVetH, vetParametro, vetEstatisticaMv,
+                                     matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
+                                     modelo1Rota, c_start, &tempoMip2Rotas, &totalInteracoes, opcao, tempoTotal, alvo,
+                                     &alvoTempo);
+    }
 
     auto c_end = std::chrono::high_resolution_clock::now();
+
 
     /*
     if(!solucao->veiculoFicticil)
@@ -328,10 +405,10 @@ int main(int num, char **agrs)
             for(int i = 0; i < 5; ++i)
             {
                 if((*prox)->percorrePeriodo[i])
-                    cout<<"("<<(*prox)->percorrePeriodo[i]<<" "<<(*prox)->distanciaPorPeriodo[i]<<" "<<(*prox)->tempoPorPeriodo[i]<<")  ";
-                else
+                    cout<<"("<<(*prox)->percorrePeriodo[i]<<" "<<(*prox)->distanciaaPorPeriodo[i]<<" "<<(*prox)->tempoPorPeriodo[i]<<")  ";
+                elseaa
                     cout<<"(0 0 0) ";
-
+a
             }
             cout<<"\n\n";
 
@@ -536,7 +613,7 @@ int main(int num, char **agrs)
     tempo <<"Tempo total construtivo: "<<solucao->tempoConstrutivo<<" S\n";
     tempo <<"Tempo total viabilizador: "<<solucao->tempoViabilizador<<" S\n";
     tempo <<"Tempo total Vnd: "<<solucao->tempoVnd<<" S\n";
-    tempo<<"Inicio da segunda fase: "<<inicioSegundaFase<<"\n";
+    tempo << "Tempo MIP duas rotas " << tempoMip2Rotas << "\n";
     tempo<<"Total interacoes Grasp: "<<totalInteracoes<<"\n\n";
 
 
@@ -587,15 +664,34 @@ int main(int num, char **agrs)
     {
 
         file.open(saidaCompleta, ios::out);
+
+        if(!file.is_open())
+        {
+            cout << "Caminho nao existe : " << saidaCompleta << '\n';
+
+            return 1;
+
+        }
+
         file << texto;
 
         file.close();
+
+        /*
+
         file.open(saidaParcial, ios::out | ios::app);
 
+        if(!file.is_open())
+        {
+            cout << "Caminho nao existe : " << saidaCompleta << '\n';
+
+            return 1;
+
+        }
 
             // Poluicao (kg), tempo cpu (SEC), ultima atualizacao, numero de solucoes inviaveis, tempo total de viagem (min), distancia total (km).
 
-        if(Veificacao)
+        if(Veificacao && solucao->poluicao <= alvo)
         {
 
 
@@ -609,24 +705,53 @@ int main(int num, char **agrs)
             for(int i = 0; i < 8; ++i)
                 file<<" "<<vetEstatisticaMv[i].tempo;
 
+            file<<' '<<tempoMip2Rotas<<' '<<totalInteracoes;
+
             file<<'\n';
 
+            file<<tempoCpu.count()<<'\n';
         }
         else
-            file << std::to_string(0.0) << " " <<tempoCpu.count()<<
+        {    file << std::to_string(0.0) << " " <<tempoCpu.count()<<
                  " " <<std::to_string(instancia->numVeiculos)<<" " << std::to_string(numVeiculosUsados) <<" "<<std::to_string(solucao->numSolucoesInv) << " "<< std::to_string(solucao->ultimaAtualizacao)<<
                  solucao->solucoesViabilizadas<<' '<<solucao->tempoConstrutivo<<' ' <<solucao->tempoViabilizador<<' '<<solucao->tempoVnd<<
-                 " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"<<'\n';
+                 " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"<<'\n';
 
-         /*if(Veificacao)
+
+            //file<<tempoCpu.count()<<'\n';
+        }
+         if(Veificacao)
              file << std::to_string(solucao->poluicao) << " " << tempoCpu.count() <<
                  " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.0)<<" "<<std::to_string(distanciaTotal)<<'\n';
 
          else
              file << std::to_string(0.0) << " " <<tempoCpu.count()<<
-             " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.)<<" "<<std::to_string(distanciaTotal)<<'\n';*/
+             " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.)<<" "<<std::to_string(distanciaTotal)<<'\n';
 
         file.close();
+        */
+
+        for(int t = 0; t < alvoTempo.n; ++t)
+        {
+            //string strAlvo = saidaParcial + "Alvo_"+to_string(t) + "/solucoesParciais/saidaParcial_alg_"+to_string(opcao) + "_.txt";
+            string strAlvo = saidaParcial + "Alvo_"+to_string(t) + /*"/solucoesParciais/saidaParcial_alg_"+to_string(opcao) +*/ "_.txt";
+
+            file.open(strAlvo, ios::out | ios::app);
+
+            if(!file.is_open())
+            {
+                cout << "Caminho nao existe : " << saidaCompleta << '\n';
+
+                return 1;
+
+            }
+
+            if(alvoTempo.vetTime[t] != -1.0)
+                file<<alvoTempo.vetTime[t]<<'\n';
+
+            file.close();
+
+        }
 
     }
 
