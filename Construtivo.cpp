@@ -44,7 +44,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                       Modelo_1_rota::Modelo *modelo1Rota, const Instancia::TimeType timeStart,
                                       double *ptr_tempoMip2rotas,
                                       u_int64_t *totalInteracoes, const int opcao, const double tempoMax,
-                                      const double alvo, Alvo::Alvo *alvoTempos)
+                                      const double alvo, Alvo::Alvo *alvoTempos,
+                                      list<EstatisticasQualidade> &listaEstQual)
 {
 
     unordered_map<int, int> hash;
@@ -188,6 +189,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
     u_int64_t ultimaAtualizacaoGrasp = 0;
 
     auto c_start = std::chrono::high_resolution_clock::now();
+    auto construtivo_c_start = std::chrono::high_resolution_clock::now();
     auto c_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tempoCpu;
 
@@ -216,7 +218,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
     if(!best->veiculoFicticil)
     {
-        alvoTempos->novaSolucao(best->poluicao);
+        if(alvoTempos)
+            alvoTempos->novaSolucao(best->poluicao);
 
     }
 
@@ -228,10 +231,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         u_int64_t diferenca2 = i - ultimaAtualizacaoGrasp;
 
 
-        /*if (((diferenca >= 300) && (!best->veiculoFicticil)))
+        if (((diferenca >= 400) && (!best->veiculoFicticil) && i > 1400))
         {
             break;
-        }*/
+        }
 
 
 
@@ -281,8 +284,10 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                         #endif
 
                         ultimaAtualizacao = i;
+                        listaEstQual.push_back(EstatisticasQualidade(best->poluicao, i, true, construtivo_c_start));
 
-                        alvoTempos->novaSolucao(best->poluicao);
+                        if(alvoTempos)
+                            alvoTempos->novaSolucao(best->poluicao);
 
 
                     }
@@ -304,14 +309,17 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
             Ils::ils(instancia, &best, 200, 2, 2 * 60, opcao, vetVetClienteRota, &hashRotas, vetGuardaRotas,
                      vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo, &tempoModelo2Rotas,
-                     &interacoesIls, &ultimaAtualizacaoIls, NULL, NULL, NULL, NULL, NULL, alvo, alvoTempos);
+                     &interacoesIls, &ultimaAtualizacaoIls, NULL, NULL, NULL, NULL, NULL, alvo, alvoTempos,
+                     listaEstQual);
 
 
 
             if(ultimaAtualizacaoIls > 0)
             {
                 ultimaAtualizacao = i;
-                alvoTempos->novaSolucao(best->poluicao);
+
+                if(alvoTempos)
+                    alvoTempos->novaSolucao(best->poluicao);
             }
 
         }
@@ -321,7 +329,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         time =  std::chrono::duration_cast<std::chrono::seconds>(tempo_end - timeStart);
         tempo = time.count();
 
-        if(tempo > tempoMax || best->poluicao <= alvo)
+        if(tempo > tempoMax)
             break;
 
         #if DEBUG
@@ -405,7 +413,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         tempoConstrutivo += tempoCpu.count();
 
 
-        bool inviavel = false;
+        bool inviavel = false, mip = false;
 
         if(solucaoAux->veiculoFicticil)
             inviavel = true;
@@ -561,7 +569,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
 
                         Modelo_1_rota::geraRotasOtimas(solucaoAux, modelo1Rota, vetorClienteAux, instancia, &hashRotas, guardaRota);
-
+                        mip = true;
 
                         if(opcao == OpcaoGraspMip)
                         {
@@ -610,7 +618,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                      vetGuardaRotas,
                                      vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
                                      &tempoModelo2Rotas, &interacoesIls, &ultimaAtualizacaoIls, NULL, NULL, NULL, NULL,
-                                     NULL, alvo, alvoTempos);
+                                     NULL, alvo, alvoTempos, listaEstQual);
 
 
 #                           if Debug
@@ -684,9 +692,13 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                 solucaoAux = NULL;
                 ultimaAtualizacaoGrasp = ultimaAtualizacao = i;
                 poluicaoUltima = best->poluicao;
+
+                listaEstQual.push_back(EstatisticasQualidade(best->poluicao, i, mip, construtivo_c_start));
+
                 poluicaoBestHeuristica = poluicaoHeuriAux;
 
-                alvoTempos->novaSolucao(best->poluicao);
+                if(alvoTempos)
+                    alvoTempos->novaSolucao(best->poluicao);
 
 
             }
@@ -722,6 +734,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
 
                     delete best;
                     best = solucaoAux;
+
+                    listaEstQual.push_back(EstatisticasQualidade(best->poluicao, i, mip, construtivo_c_start));
+
                     solucaoAux = NULL;
                     ultimaAtualizacaoGrasp = ultimaAtualizacao = i;
                     poluicaoUltima = best->poluicao;
@@ -732,7 +747,8 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                     #if DEBUG
                         cout<<"Atualizacao Grasp, interacao: "<<i<<"\n";
                     #endif
-                    alvoTempos->novaSolucao(best->poluicao);
+                    if(alvoTempos)
+                        alvoTempos->novaSolucao(best->poluicao);
 
                 }
                 else
@@ -749,7 +765,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
         time =  std::chrono::duration_cast<std::chrono::seconds>(tempo_end - timeStart);
         tempo = time.count();
 
-        if(tempo > tempoMax || alvoTempos->antingilTodosAlvos())
+        if(alvoTempos && (tempo > tempoMax || alvoTempos->antingilTodosAlvos()))
         {
 
 

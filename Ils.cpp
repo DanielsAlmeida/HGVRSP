@@ -17,11 +17,13 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
               const u_int64_t numInteracoesMaxSemMelhora, const double tempoLimite, const int opcao,
               Solucao::ClienteRota **vetVetorClienteRota, HashRotas::HashRotas *hashRotas, int **vetGuardaRota,
               Vnd::EstatisticaMv *vetEstatistica, double *vetLimiteTempo, int **matRotas,
-              Modelo_1_rota::Modelo *modelo1Rota, Modelo::Modelo *modelo, double *tempoModelo2Rotas,
-              u_int64_t *interacoesIls, u_int64_t *ultimaAtualizacaoIls, Construtivo::Candidato *vetorCandidatos,
-              double *vetorParametors, Solucao::ClienteRota **matrixClienteBest,
+              Modelo_1_rota::Modelo *modelo1Rota,
+              Modelo::Modelo *modelo, double *tempoModelo2Rotas, u_int64_t *interacoesIls,
+              u_int64_t *ultimaAtualizacaoIls,
+              Construtivo::Candidato *vetorCandidatos, double *vetorParametors,
+              Solucao::ClienteRota **matrixClienteBest,
               Movimentos_Paradas::TempoCriaRota *tempoCriaRota, Construtivo::GuardaCandInteracoes *vetCandInteracoes,
-              const double alvo, Alvo::Alvo *alvoTempo)
+              const double alvo, Alvo::Alvo *alvoTempo, list<EstatisticasQualidade> &listaEstQual)
 {
 
 
@@ -39,18 +41,13 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
     if(!(*solucao)->veiculoFicticil)
     {   double poluicao = (*solucao)->poluicao;
 
-        if(!alvoTempo)
-        {
-
-            exit(-1);
-        }
-
-        alvoTempo->novaSolucao(poluicao);
+        if(alvoTempo)
+            alvoTempo->novaSolucao(poluicao);
     }
 
 
 
-    if(alvoTempo->antingilTodosAlvos())
+    if(alvoTempo && (alvoTempo->antingilTodosAlvos()))
     {
 
         return;
@@ -83,14 +80,17 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
 
     int numChamadasMip = 0;
+    *ultimaAtualizacaoIls = 0;
 
 
-    while((!alvoTempo->antingilTodosAlvos()) && (timeIls.count() <= tempoLimite) && (( opcao != OpcaoGraspComIlsMip && (*interacoesIls - *ultimaAtualizacaoIls) < numInteracoesMaxSemMelhora) ||
-          (opcao == OpcaoGraspComIlsMip)) && (*interacoesIls < numInteracoesMax))
+    while(((alvoTempo&&!alvoTempo->antingilTodosAlvos()) || alvoTempo==NULL ) && (timeIls.count() <= tempoLimite) && (( (*interacoesIls > 1400) && (*interacoesIls - *ultimaAtualizacaoIls) < numInteracoesMaxSemMelhora) || (*interacoesIls <= 1400)) && (*interacoesIls < numInteracoesMax))
     {
+
 
         if(*interacoesIls == NumInteracoes && !(*solucao)->veiculoFicticil && opcao == OpcaoIlsMip)
         {
+
+            double poluicao = (*solucao)->poluicao;
 
             Modelo_1_rota::geraRotasOtimas(*solucao, modelo1Rota, vetVetorClienteRota[0], instancia, hashRotas,vetGuardaRota[0]);
 
@@ -106,9 +106,15 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
             auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(end - start);
             *tempoModelo2Rotas += tempo_.count();
 
-            *ultimaAtualizacaoIls = *interacoesIls;
+            if((*solucao)->poluicao < poluicao)
+            {
+                *ultimaAtualizacaoIls = *interacoesIls;
+                listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, true, tempoStartIls));
 
-            alvoTempo->novaSolucao((*solucao)->poluicao);
+            }
+
+            if(alvoTempo && !((*solucao)->veiculoFicticil))
+                alvoTempo->novaSolucao((*solucao)->poluicao);
 
 #           if Debug
             cout<<" MIP best 1000\n";
@@ -174,6 +180,8 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
         //MIP uma rota
 
+        bool chamadaMip = false;
+
         //if((*interacoesIls >= 100) && (opcao == OpcaoGraspIlsMip || opcao == OpcaoIlsMip || opcao == OpcaoGraspComIlsMip) && !solucaoCorrente->veiculoFicticil)
         if((((opcao == OpcaoIlsMip && *interacoesIls > NumInteracoes && (*interacoesIls - *ultimaAtualizacaoIls) >= 300) || ((opcao == OpcaoGraspIlsMip || opcao == OpcaoGraspComIlsMip) &&
                 numChamadasMip < numInteracoesMaxSemMelhora && (*interacoesIls - *ultimaAtualizacaoIls) >= 50)) || (solucaoCorrente->poluicao < (*solucao)->poluicao &&  *interacoesIls > NumInteracoes)) && !solucaoCorrente->veiculoFicticil )
@@ -224,7 +232,9 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
                     #endif
 
 
+
                     Modelo_1_rota::geraRotasOtimas(solucaoCorrente, modelo1Rota, vetVetorClienteRota[0], instancia, hashRotas,vetGuardaRota[0]);
+
 
 
                     auto start = std::chrono::high_resolution_clock::now();
@@ -238,6 +248,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
                     auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(end - start);
                     *tempoModelo2Rotas += tempo_.count();
+                    chamadaMip = true;
 
 
 
@@ -255,7 +266,12 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
 
             *ultimaAtualizacaoIls = *interacoesIls;
-            alvoTempo->novaSolucao((*solucao)->poluicao);
+
+
+            if(alvoTempo&&!((*solucao)->veiculoFicticil))
+                alvoTempo->novaSolucao((*solucao)->poluicao);
+
+            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip, tempoStartIls));
 
 #           if Debug
 
@@ -281,8 +297,10 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
     }
 
-    if(opcao==OpcaoGraspComIlsMip && numChamadasMip == numInteracoesMaxSemMelhora && !alvoTempo->antingilTodosAlvos())
+    if(opcao==OpcaoGraspComIlsMip && numChamadasMip == numInteracoesMaxSemMelhora && ((alvoTempo && !alvoTempo->antingilTodosAlvos()) || alvoTempo == NULL))
     {
+
+
 
 
         Modelo_1_rota::geraRotasOtimas(solucaoCorrente, modelo1Rota, vetVetorClienteRota[0], instancia, hashRotas,vetGuardaRota[0]);
@@ -298,8 +316,22 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
         auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(end - start);
         *tempoModelo2Rotas += tempo_.count();
+
+        if(solucaoCorrente->poluicao - (*solucao)->poluicao  < -0.001)
+        {
+            delete *solucao;
+            *solucao = solucaoCorrente;
+            solucaoCorrente = NULL;
+
+            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, true, tempoStartIls));
+        }
+
     }
 
+
+    delete solucaoCorrente;
+
+    (*solucao)->ultimaAtualizacao = *ultimaAtualizacaoIls;
 }
 double Ils::calculaSolucaoHeuristica(const Instancia::Instancia *instancia, Solucao::Solucao *solucao, HashRotas::HashRotas *hashRotas,
                                      Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorAux, double *vetorLimiteTempo)

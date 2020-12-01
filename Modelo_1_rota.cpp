@@ -1638,8 +1638,13 @@ void Modelo_1_rota::geraRotasOtimas(Solucao::Solucao *solucao, Modelo_1_rota::Mo
     double poluicao, combustivel;
     int resultado;
 
+    int v = 0;
+
     for(auto veiculo : solucao->vetorVeiculos)
     {
+
+
+
         if(veiculo->tipo == 2)
         {
             cout<<"Erro, veiculo ficticio em uma solucao viavel\n";

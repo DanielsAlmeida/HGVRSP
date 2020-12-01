@@ -74,7 +74,9 @@ set(    SOURCE_FILES
         Modelo_1_rota.h
         Modelo_1_rota.cpp
         Ils.cpp
-        Ils.h Alvo.h)
+        Ils.h
+        Alvo.h
+        EstatisticasQualidade.h)
 
 add_executable(HGVRSP ${SOURCE_FILES})
         

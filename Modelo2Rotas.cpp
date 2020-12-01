@@ -37,8 +37,14 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
     int tam;
     int numRotas = 0;
 
+    int it = 0;
+
     while(existePares && numRotas < NumMaximoRotasMip)
     {
+
+
+        ++it;
+
         existePares = false;
 
         indice0 = -1;
@@ -48,19 +54,31 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
         for(int k = 0; k < 2; ++k)
         {
 
+
             //Escolhe um indice
             int indice = rand_u32() % instancia->numVeiculos;
+            int indiceOrig = indice;
 
             //Verifica a rota eh maior que 2 e diferente de indice0
             while((solucao->vetorVeiculos[indice]->listaClientes.size() <= 2) || ((k == 1) && ((indice0 == indice) || (matRotas[indice][indice0]))))
+            {
                 indice = (indice + 1) % instancia->numVeiculos;
 
+                if(indice == indiceOrig)
+                {
+                    return;
+                }
+
+            }
 
 
-            int indiceOrig = indice;
+
+            indiceOrig = indice;
 
             do
             {
+
+
 
                 bool rotaUsada = true;
 
@@ -112,6 +130,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
                     break;
 
 
+
             }while (indice != indiceOrig);
 
 
@@ -137,7 +156,11 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
 
         //Verifica se encontrou as rotas
         if(indice0 < 0 || indice1 < 0)
+        {
+            indice0 = indice1 = -1;
             break;
+
+        }
 
 
 
@@ -189,6 +212,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
             //Otimza as duas rotas
             modelo->criaRota(vetClienteRota, &tam0, tipo0, &peso0, instancia, &poluico0, &combustivel0, 3, vetRotasAux,
                              vetClienteRota2, &tam1, tipo1, &peso1, &poluicao1, &combustivel1, vetRotasAux2, true);
+
 
         }
         catch (GRBException e)

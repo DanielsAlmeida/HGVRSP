@@ -12,6 +12,7 @@
 #include "Modelo.h"
 #include "Modelo_1_rota.h"
 #include "Alvo.h"
+#include "EstatisticasQualidade.h"
 
 #ifndef HGVRSP_CONSTRUTIVO_H
 #define HGVRSP_CONSTRUTIVO_H
@@ -20,6 +21,8 @@ typedef std::list<Solucao::ClienteRota *, std::allocator<Solucao::ClienteRota *>
 typedef std::tuple<bool, int, double, double> TupleBID;
 
 #define HEURIST_DIST false
+
+using namespace EstatisticasQualidadeN;
 
 namespace Construtivo
 {
@@ -65,8 +68,8 @@ namespace Construtivo
           Solucao::ClienteRota **matrixClienteBest, Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
           GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo, Modelo::Modelo *modelo,
           Modelo_1_rota::Modelo *modelo1Rota, const Instancia::TimeType timeStart, double *ptr_tempoMip2rotas,
-          u_int64_t *totalInteracoes, const int opcao, const double tempoMax, const double alvo,
-          Alvo::Alvo *alvoTempos);
+          u_int64_t *totalInteracoes, const int opcao, const double tempoMax, const double alvo, Alvo::Alvo *alvoTempos,
+          list<EstatisticasQualidade> &listaEstQual);
 
     Solucao::Solucao *
     geraSolucao(const Instancia::Instancia *const instancia, float alfa,

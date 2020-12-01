@@ -16,6 +16,8 @@
 #include <fstream>
 #include "HashRotas.h"
 #include "Ils.h"
+//#include "EstatisticasQualidade.h"
+
 
 //UK_10x5_5
 //Tempo total cpu: 90.45 S
@@ -80,8 +82,12 @@
  * ****************************************************************************************************************************************************************/
 
 using namespace std;
+using namespace EstatisticasQualidadeN;
 
 #if Opcao == Grasp
+
+
+
 int main(int num, char **agrs)
 {
 
@@ -165,6 +171,8 @@ int main(int num, char **agrs)
 
     int opcao = atoi(agrs[5]);
     double alvo = atof(agrs[6]);
+
+
 
     if(alvo < 0)
         alvo = HUGE_VALF;
@@ -261,15 +269,22 @@ int main(int num, char **agrs)
     double tempoMip2Rotas;
     u_int64_t totalInteracoes;
 
-    auto c_start = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::time_point c_start = std::chrono::high_resolution_clock::now();
+
+    list<EstatisticasQualidade> listaEstQual;
 
     Solucao::Solucao *solucao;
 
+    Alvo::Alvo *alvoTempo = NULL;
+    if(alvo > 0)
+        alvoTempo = new Alvo::Alvo(alvo, c_start,  3);
+
+
+
     const int numInteracoes = 3000;
-    const double tempoTotal= 1500;
+    const double tempoTotal= 50;
 
 
-    Alvo::Alvo alvoTempo(alvo, c_start, (opcao == 0 ? 2 : 3));
 
     if(opcao == OpcaoIlsMip || opcao == OpcaoIls)
     {
@@ -305,7 +320,7 @@ int main(int num, char **agrs)
                  &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
                  &tempoMip2Rotas,
                  &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
-                 vetCandInteracoes, alvo, &alvoTempo);
+                 vetCandInteracoes, alvo, alvoTempo, listaEstQual);
 
 
         solucao->ultimaAtualizacao = ultimaAtualizacao;
@@ -325,16 +340,23 @@ int main(int num, char **agrs)
     }
     else
     {
-        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, numInteracoes, 150, logAtivo, &strLog,
+    solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, numInteracoes, 150, logAtivo, &strLog,
                                      vetHeuristicas,
                                      TamVetH, vetParametro, vetEstatisticaMv,
                                      matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
                                      modelo1Rota, c_start, &tempoMip2Rotas, &totalInteracoes, opcao, tempoTotal, alvo,
-                                     &alvoTempo);
+                                     alvoTempo, listaEstQual);
     }
 
     auto c_end = std::chrono::high_resolution_clock::now();
 
+    /*
+    cout<<"poluicao\ttempo\tinteracao\tmip\n\n";
+    for(auto it:listaEstQual)
+    {
+        cout<<it.poluicao<<"\t\t"<<it.tempo<<"\t"<<it.interacao<<"\t"<<it.mip<<'\n';
+    }
+    */
 
     /*
     if(!solucao->veiculoFicticil)
@@ -673,11 +695,29 @@ a
 
         }
 
-        file << texto;
+        if(true)
+        {
+            file<<"Poluicao\tInteracao\t\tTempo\t\tInteracaoMip\t\ttempoMip\n\n";
+
+            for(auto it:listaEstQual)
+            {
+
+                file << it.poluicao<< "\t"<< it.interacao <<"\t\t"<<it.tempo;
+
+
+                if(it.mip)
+                    file<<"\t\t"<<it.interacao<<"\t\t"<<it.tempo<<'\n';
+                else
+                    file<<"\t\t$ $\n";
+
+            }
+        }
+        else
+            file << texto;
 
         file.close();
 
-        /*
+/*
 
         file.open(saidaParcial, ios::out | ios::app);
 
@@ -731,14 +771,40 @@ a
         file.close();
         */
 
-        for(int t = 0; t < alvoTempo.n; ++t)
+        if(alvoTempo)
         {
-            //string strAlvo = saidaParcial + "Alvo_"+to_string(t) + "/solucoesParciais/saidaParcial_alg_"+to_string(opcao) + "_.txt";
-            string strAlvo = saidaParcial + "Alvo_"+to_string(t) + /*"/solucoesParciais/saidaParcial_alg_"+to_string(opcao) +*/ "_.txt";
+            for (int t = 0; t < alvoTempo->n; ++t)
+            {
+                //string strAlvo = saidaParcial + "Alvo_"+to_string(t) + "/solucoesParciais/saidaParcial_alg_"+to_string(opcao) + "_.txt";
+//                string strAlvo = saidaParcial + "Alvo_" + to_string(t) + "/solucoesParciais/saidaParcial_alg_" +
+                                 to_string(opcao) + "_.txt";
 
-            file.open(strAlvo, ios::out | ios::app);
+                string strAlvo = saidaParcial + "/Alvo_"+to_string(t)+".txt";
+                file.open(strAlvo, ios::out | ios::app);
 
-            if(!file.is_open())
+                if (!file.is_open())
+                {
+                    cout << "Caminho nao existe : " << strAlvo << '\n';
+
+                    return 1;
+
+                }
+
+                if (alvoTempo->vetTime[t] != -1.0)
+                    file << alvoTempo->vetTime[t] << '\n';
+
+                file.close();
+
+            }
+
+        }
+        else
+        {
+
+
+            file.open(saidaParcial, ios::out | ios::app);
+
+            if (!file.is_open())
             {
                 cout << "Caminho nao existe : " << saidaCompleta << '\n';
 
@@ -746,8 +812,12 @@ a
 
             }
 
-            if(alvoTempo.vetTime[t] != -1.0)
-                file<<alvoTempo.vetTime[t]<<'\n';
+            //tempo cpu     poluicao    ultimaAtualizacao
+
+            if (solucao->veiculoFicticil)
+                file << "-1.0 -1.0 -1.0\n";
+            else
+                file << tempoCpu.count() << ' ' << solucao->poluicao << ' ' << solucao->ultimaAtualizacao << '\n';
 
             file.close();
 
@@ -755,9 +825,9 @@ a
 
     }
 
-    #if Saida
+#if Saida
 
-        cout<<"Instancia: "<<instanciaNome<<'\n';
+    cout<<"Instancia: "<<instanciaNome<<'\n';
         cout<<tempo.str()<<'\n';
         cout<<"Semente: "<<semente<<'\n';
 
