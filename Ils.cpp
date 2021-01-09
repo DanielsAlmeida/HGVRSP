@@ -82,8 +82,11 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
     int numChamadasMip = 0;
     *ultimaAtualizacaoIls = 0;
 
+    list<Solucao::Solucao*> listaSolucao;
 
-    while(((alvoTempo&&!alvoTempo->antingilTodosAlvos()) || alvoTempo==NULL ) && (timeIls.count() <= tempoLimite) && (( (*interacoesIls > 1400) && (*interacoesIls - *ultimaAtualizacaoIls) < numInteracoesMaxSemMelhora) || (*interacoesIls <= 1400)) && (*interacoesIls < numInteracoesMax))
+
+    while(((alvoTempo&&!alvoTempo->antingilTodosAlvos()) || alvoTempo==NULL ) && (timeIls.count() <= tempoLimite) && (( (*interacoesIls > 1400) &&
+         (*interacoesIls - *ultimaAtualizacaoIls) < numInteracoesMaxSemMelhora) || (*interacoesIls <= 1400)) && (*interacoesIls < numInteracoesMax))
     {
 
 
@@ -109,7 +112,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
             if((*solucao)->poluicao < poluicao)
             {
                 *ultimaAtualizacaoIls = *interacoesIls;
-                listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, true, tempoStartIls));
+                listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, true, tempoStartIls, (*solucao)->poluicao));
 
             }
 
@@ -125,7 +128,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
 
         //Receta a solucao
-        if(((opcao == OpcaoIlsMip && *interacoesIls > NumInteracoes && (*interacoesIls - *ultimaAtualizacaoIls) == 600) ||
+        if(((opcao == OpcaoIlsMip && *interacoesIls > NumInteracoes && (*interacoesIls - *ultimaAtualizacaoIls) == 700) ||
            ((opcao == OpcaoGraspIlsMip || opcao == OpcaoGraspComIlsMip) && (*interacoesIls - *ultimaAtualizacaoIls) == 150)) && !(*solucao)->veiculoFicticil)
         {
 
@@ -153,26 +156,33 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         for(auto veiculo : solucaoCorrente->vetorVeiculos)
             (*veiculo->listaClientes.begin())->rotaMip = false;
 
+
         Movimentos::ResultadosRota resultadosRota =  Movimentos::mv_2optSwapInterRotas(instancia, solucaoCorrente, vetVetorClienteRota[0] , vetVetorClienteRota[1],
                                                                                        vetVetorClienteRota[2], vetVetorClienteRota[3], true, true, vetLimiteTempo,
-                                                                                       modelo, hashRotas, vetGuardaRota[0], vetGuardaRota[1]);
+                                                                                       NULL, NULL, vetGuardaRota[0], vetGuardaRota[1]); //5
 
 
 
+/*
+        Movimentos::ResultadosRota resultadosRota = Movimentos::mvInterRotasShift(instancia, solucaoCorrente, vetVetorClienteRota[0] , vetVetorClienteRota[1],
+                                                                                  vetVetorClienteRota[2], true, true, vetLimiteTempo,
+                                                                                  modelo, hashRotas, vetGuardaRota[0], vetGuardaRota[1]);
+*/
         if(resultadosRota.viavel)
         {
-
-            Movimentos::atualizaSolucao(resultadosRota, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[2], instancia, 5);
+           // cout<<" v \n";
+            Movimentos::atualizaSolucao(resultadosRota, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[2], instancia, -1);
 
         }
 
         //fase de busca local rvnd
 
-        if((*interacoesIls - *ultimaAtualizacaoIls) != numInteracoesMaxSemMelhora-2)
+        //if((*interacoesIls - *ultimaAtualizacaoIls) != numInteracoesMaxSemMelhora-2)
         {
 
-            Vnd::vnd(instancia, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[1], false, vetVetorClienteRota[2], vetVetorClienteRota[3], 0,
-                     vetEstatistica, vetLimiteTempo, NULL, hashRotas, vetGuardaRota[0],vetGuardaRota[1], 5);
+            Vnd::vnd(instancia, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[1], false,
+                     vetVetorClienteRota[2], vetVetorClienteRota[3], 0,
+                     vetEstatistica, vetLimiteTempo, NULL, hashRotas, vetGuardaRota[0], vetGuardaRota[1], 5);
 
         }
 
@@ -181,57 +191,149 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         //MIP uma rota
 
         bool chamadaMip = false;
+        bool deletaSolucaoCorrente = true;
 
         //if((*interacoesIls >= 100) && (opcao == OpcaoGraspIlsMip || opcao == OpcaoIlsMip || opcao == OpcaoGraspComIlsMip) && !solucaoCorrente->veiculoFicticil)
         if((((opcao == OpcaoIlsMip && *interacoesIls > NumInteracoes && (*interacoesIls - *ultimaAtualizacaoIls) >= 300) || ((opcao == OpcaoGraspIlsMip || opcao == OpcaoGraspComIlsMip) &&
-                numChamadasMip < numInteracoesMaxSemMelhora && (*interacoesIls - *ultimaAtualizacaoIls) >= 50)) || (solucaoCorrente->poluicao < (*solucao)->poluicao &&  *interacoesIls > NumInteracoes)) && !solucaoCorrente->veiculoFicticil )
+                numChamadasMip < numInteracoesMaxSemMelhora && (*interacoesIls - *ultimaAtualizacaoIls) >= 50)) || (solucaoCorrente->poluicao < (*solucao)->poluicao &&  *interacoesIls > NumInteracoes)) && !solucaoCorrente->veiculoFicticil && opcao == OpcaoIlsMip)
         {
 
             static bool mip = false;
 
-            if(!mip && (*interacoesIls - *ultimaAtualizacaoIls) % 50  == 0)
-                mip = true;
+
 
 
 
 
             double  poluicaoHeuriAux = calculaSolucaoHeuristica(instancia, solucaoCorrente,hashRotas, vetVetorClienteRota[0], vetVetorClienteRota[1], vetLimiteTempo);
 
-            double gap = (poluicaoHeuriAux - poluicaoBestHeuristica)/poluicaoBestHeuristica;
+            double gap = (solucaoCorrente->poluicao - (*solucao)->poluicao)/(*solucao)->poluicao;
 
-            if(gap <= 0.15 && mip)
+            if(gap <= 0.15)
             {
-
 
 
                 #if Debug
 
-                cout<<"MIP i "<<*interacoesIls<<" gap <= 15 \n";
+               // cout<<"MIP i "<<*interacoesIls<<" gap <= 15 \n";
 
 
                 #endif
 
                 const static int p = 100 - 40;
-                ++numChamadasMip;
 
 
                 int valA = rand_u32() % 100;
 
-                if ((p <= valA) || ((*solucao)->veiculoFicticil) || (poluicaoHeuriAux - poluicaoBestHeuristica  < -0.001) || (solucaoCorrente->poluicao - (*solucao)->poluicao < -0.001) || (gap <= 0.1))
+                if ((p <= valA) || ((*solucao)->veiculoFicticil) ||
+                    (gap *100 <= -0.1))
                 {
+
+                    if (gap < -0.01)
+                    {
+                        ++numChamadasMip;
+                        Modelo_1_rota::geraRotasOtimas(solucaoCorrente, modelo1Rota, vetVetorClienteRota[0], instancia,
+                                                       hashRotas, vetGuardaRota[0]);
+
+
+                        auto start = std::chrono::high_resolution_clock::now();
+
+                        Modelo2Rotas::geraRotas_comb_2Rotas(solucaoCorrente, modelo, vetVetorClienteRota[0],
+                                                            vetVetorClienteRota[1],
+                                                            instancia, hashRotas, vetGuardaRota[0], matRotas,
+                                                            vetGuardaRota[1]);
+
+
+                        auto end = std::chrono::high_resolution_clock::now();
+
+                        auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+                        *tempoModelo2Rotas += tempo_.count();
+                        chamadaMip = true;
+
+                        if (!listaSolucao.empty())
+                        {
+                            for (auto it:listaSolucao)
+                                delete it;
+
+                            listaSolucao.clear();
+                        }
+                    } else
+                    {
+                        deletaSolucaoCorrente = false;
+                        listaSolucao.push_back(solucaoCorrente);
+                    }
+
                     mip = false;
                     #if Debug
 
-                    cout<<"MIP i "<<*interacoesIls<<"\n";
+                    //cout<<"MIP i "<<*interacoesIls<<"\n";
 
                     if(solucaoCorrente->poluicao - (*solucao)->poluicao < -0.001 || poluicaoHeuriAux - poluicaoBestHeuristica  < -0.001)
                     {
-                        cout<<"Atualizacao Entrou MIP\n";
+                        //cout<<"Atualizacao Entrou MIP\n";
                     }
 
                     #endif
 
 
+                }
+            }
+
+            if(!chamadaMip && ((*interacoesIls - *ultimaAtualizacaoIls) % 200  == 0) && !listaSolucao.empty() && (*interacoesIls - *ultimaAtualizacaoIls)>300)
+            {
+                    deletaSolucaoCorrente = true;
+
+                    auto itBest = listaSolucao.begin();
+
+                    int tam =  ceil(0.1*listaSolucao.size());
+
+                    int escolhido  = rand_u32() % tam;
+
+
+
+                    listaSolucao.sort(Solucao::Solucao::compare);
+
+                    //cout<<"Bloco, gap das solucoes: \n";
+
+                    //for(auto it:listaSolucao)
+                    //    cout<<(it->poluicao - (*solucao)->poluicao)/(*solucao)->poluicao * 100.0<<" ";
+
+                    //cout<<" \n\n ";
+
+                    auto end = listaSolucao.end();
+                    --end;
+
+
+
+                    int i  = 0;
+                    for(itBest = listaSolucao.begin(); i != escolhido; ++itBest,++i);
+
+                    itBest = listaSolucao.begin();
+
+
+
+
+//                    listaSolucao.remove(*itBest);
+                    auto ptrAux = *itBest;
+                    listaSolucao.erase(itBest);
+
+
+
+                    for(auto it:listaSolucao)
+                    {
+                        if(it == solucaoCorrente)
+                            solucaoCorrente = NULL;
+
+                        delete it;
+                    }
+
+                    if(solucaoCorrente)
+                        delete solucaoCorrente;
+
+                    solucaoCorrente = ptrAux;
+                    listaSolucao.clear();
+
+                    ++numChamadasMip;
 
                     Modelo_1_rota::geraRotasOtimas(solucaoCorrente, modelo1Rota, vetVetorClienteRota[0], instancia, hashRotas,vetGuardaRota[0]);
 
@@ -244,21 +346,26 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
 
 
-                    auto end = std::chrono::high_resolution_clock::now();
+                    auto endTime = std::chrono::high_resolution_clock::now();
 
-                    auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+                    auto tempo_ = std::chrono::duration_cast<std::chrono::seconds>(endTime - start);
                     *tempoModelo2Rotas += tempo_.count();
-                    chamadaMip = true;
 
 
 
-                }
+
+
             }
+
 
         }
 
-        if((solucaoCorrente->poluicao - (*solucao)->poluicao  < -0.001) || ((*solucao)->veiculoFicticil == true && !solucaoCorrente->veiculoFicticil))
+        if((((solucaoCorrente->poluicao - (*solucao)->poluicao)/(*solucao)->poluicao)*100  < -0.1) || ((*solucao)->veiculoFicticil == true && !solucaoCorrente->veiculoFicticil))
         {
+
+
+
+            listaSolucao.clear();
 
 
             delete *solucao;
@@ -271,7 +378,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
             if(alvoTempo&&!((*solucao)->veiculoFicticil))
                 alvoTempo->novaSolucao((*solucao)->poluicao);
 
-            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip, tempoStartIls));
+            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip, tempoStartIls, solucaoCorrente->poluicao));
 
 #           if Debug
 
@@ -280,21 +387,38 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 #           endif
 
         }
+        else
+        {   
+
+            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip, tempoStartIls, solucaoCorrente->poluicao));
+
+            if(!deletaSolucaoCorrente)
+                solucaoCorrente = new Solucao::Solucao(solucaoCorrente);
+        }
 
         tempoEndIls   = std::chrono::high_resolution_clock::now();
         timeIls = std::chrono::duration_cast<std::chrono::seconds>(tempoEndIls - tempoStartIls);
 
-/*
-        if((interacoesIls - ultimaAtualizacaoIls) == 20 )
+
+        if((interacoesIls - ultimaAtualizacaoIls) == 50 )
         {
             delete solucaoCorrente;
             solucaoCorrente = new Solucao::Solucao(*solucao);
 
         }
-*/
+
 
         ++(*interacoesIls);
 
+    }
+
+    if(!listaSolucao.empty())
+    {
+        for(auto it:listaSolucao)
+            delete it;
+
+
+        listaSolucao.clear();
     }
 
     if(opcao==OpcaoGraspComIlsMip && numChamadasMip == numInteracoesMaxSemMelhora && ((alvoTempo && !alvoTempo->antingilTodosAlvos()) || alvoTempo == NULL))
@@ -337,7 +461,7 @@ double Ils::calculaSolucaoHeuristica(const Instancia::Instancia *instancia, Solu
                                      Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorAux, double *vetorLimiteTempo)
 {
 
-
+    return solucao->poluicao;
 
     double poluicaoHeuriAux = 0.0;
     HashRotas::HashNo *hashNo;

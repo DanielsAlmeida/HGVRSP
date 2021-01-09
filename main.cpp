@@ -174,8 +174,7 @@ int main(int num, char **agrs)
 
 
 
-    if(alvo < 0)
-        alvo = HUGE_VALF;
+
 
     if(opcao < 0 || opcao > 6)
     {
@@ -259,13 +258,19 @@ int main(int num, char **agrs)
     Construtivo::GuardaCandInteracoes *vetCandInteracoes = new Construtivo::GuardaCandInteracoes[instancia->numClientes+2];
     double vetLimiteTempo[20];
 
+
+
     GRBEnv env;
+
     env.set(GRB_IntParam_OutputFlag, 0);
     GRBModel grb_modelo = GRBModel(env);
     GRBModel grb_modelo1Rota = GRBModel(env);
 
+
+
     Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
     Modelo_1_rota::Modelo *modelo1Rota = new Modelo_1_rota::Modelo(instancia, &grb_modelo1Rota, false);
+
     double tempoMip2Rotas;
     u_int64_t totalInteracoes;
 
@@ -276,13 +281,20 @@ int main(int num, char **agrs)
     Solucao::Solucao *solucao;
 
     Alvo::Alvo *alvoTempo = NULL;
+    
+
+    
     if(alvo > 0)
         alvoTempo = new Alvo::Alvo(alvo, c_start,  3);
-
-
+    
+    
+    if(alvo < 0)
+        alvo = HUGE_VALF;
+        
+            
 
     const int numInteracoes = 3000;
-    const double tempoTotal= 50;
+    const double tempoTotal= 9999999;
 
 
 
@@ -308,15 +320,21 @@ int main(int num, char **agrs)
         int alfa =  rand_u32() % 5;
         Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
 
-        solucao = Construtivo::geraSolucao(instancia, vetAlfas[alfa], vetSolucaoClienteRota[0], vetSolucaoClienteRota[1], nullptr, false,
-                                             vetorCandidatos, vetHeuristicas[0], vetParametro, matrixClienteBest,
-                                             &tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
+
+
+        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 500, 150, logAtivo, &strLog,
+                                     vetHeuristicas,
+                                     TamVetH, vetParametro, vetEstatisticaMv,
+                                     matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
+                                     modelo1Rota, c_start, &tempoMip2Rotas, &totalInteracoes, OpcaoGrasp, tempoTotal, alvo,
+                                     alvoTempo, listaEstQual);
+
+        listaEstQual.clear();
 
         u_int64_t ultimaAtualizacao = 0;
         totalInteracoes = 0;
 
-
-        Ils::ils(instancia, &solucao, numInteracoes, UINT64_MAX, tempoTotal, opcao, vetSolucaoClienteRota,
+        Ils::ils(instancia, &solucao, numInteracoes, 900, tempoTotal, opcao, vetSolucaoClienteRota,
                  &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
                  &tempoMip2Rotas,
                  &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
@@ -340,7 +358,7 @@ int main(int num, char **agrs)
     }
     else
     {
-    solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, numInteracoes, 150, logAtivo, &strLog,
+        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, numInteracoes, 150, logAtivo, &strLog,
                                      vetHeuristicas,
                                      TamVetH, vetParametro, vetEstatisticaMv,
                                      matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
@@ -685,7 +703,7 @@ a
     else
     {
 
-        file.open(saidaCompleta, ios::out);
+        file.open(saidaCompleta, ios::out); // |ios::app
 
         if(!file.is_open())
         {
@@ -697,7 +715,10 @@ a
 
         if(true)
         {
-            file<<"Poluicao\tInteracao\t\tTempo\t\tInteracaoMip\t\ttempoMip\n\n";
+            file << texto;
+            file<<"\n\n************************************************************\n\n";
+
+            file<<"Poluicao\tInteracao\t\tTempo\t\tInteracaoMip\t\ttempoMip\t\tPoluicaoCorrente\n\n";
 
             for(auto it:listaEstQual)
             {
@@ -706,9 +727,9 @@ a
 
 
                 if(it.mip)
-                    file<<"\t\t"<<it.interacao<<"\t\t"<<it.tempo<<'\n';
+                    file<<"\t\t"<<it.interacao<<"\t\t"<<it.tempo<<"\t\t"<<it.poluicaoCorrente<<'\n';
                 else
-                    file<<"\t\t$ $\n";
+                    file<<"\t\t$ $\t\t"<<it.poluicaoCorrente<<'\n';
 
             }
         }
@@ -806,7 +827,7 @@ a
 
             if (!file.is_open())
             {
-                cout << "Caminho nao existe : " << saidaCompleta << '\n';
+                cout << "Caminho nao existe : " << saidaParcial << '\n';
 
                 return 1;
 

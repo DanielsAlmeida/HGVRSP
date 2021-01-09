@@ -235,6 +235,11 @@ namespace Solucao
             }
         }
 
+        static bool compare(const Veiculo *veiculo0 , const Veiculo *veiculo1)
+        {
+            return veiculo0->poluicao < veiculo1->poluicao;
+        }
+
     private:
         void inicialisaVeiculo(int tipo);
 
@@ -263,6 +268,11 @@ namespace Solucao
         double getPoluicaoTotal()
         {
             return poluicao + poluicaoPenalidades;
+        }
+
+        static bool compare(const Solucao *solucao0, const Solucao *solucao1)
+        {
+            return solucao0->poluicao < solucao1->poluicao;
         }
 
         ~Solucao();

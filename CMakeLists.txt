@@ -76,7 +76,7 @@ set(    SOURCE_FILES
         Ils.cpp
         Ils.h
         Alvo.h
-        EstatisticasQualidade.h)
+        EstatisticasQualidade.h Pertubacao.cpp Pertubacao.h)
 
 add_executable(HGVRSP ${SOURCE_FILES})
         
