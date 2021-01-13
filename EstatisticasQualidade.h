@@ -23,10 +23,15 @@ namespace EstatisticasQualidadeN
         double poluicaoCorrente = -1.0;
         bool mip;
 
-        EstatisticasQualidade(double p, u_int64_t i, bool m, high_resolution_clock::time_point c_start, double p2)
+        EstatisticasQualidade(double p, u_int64_t i, bool m, high_resolution_clock::time_point c_start, double p2, bool viavel)
         {
             poluicao = p;
-            poluicaoCorrente = p2;
+
+            if(viavel)
+                poluicaoCorrente = p2;
+            else
+                poluicaoCorrente = 0;
+
             interacao = i;
 
             auto end = high_resolution_clock::now();

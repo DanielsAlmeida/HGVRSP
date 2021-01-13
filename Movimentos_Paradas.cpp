@@ -11,6 +11,7 @@
 #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <chrono>
+#include "Pertubacao.h"
 
 constexpr const bool Debug = false;
 
@@ -785,7 +786,8 @@ bool
 Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam,
                              const int peso, const int tipoVeiculo, double *combustivel, double *poluicao,
                              double *folga, TempoCriaRota *tempoCriaRota, double *vetLimiteTempo,
-                             Solucao::ClienteRota *vetClienteRotaAux)
+                             Solucao::ClienteRota *vetClienteRotaAux,
+                             PertubacaoInviabilidade *inviabilidadeEstatisticas)
 {
 
 
@@ -813,7 +815,10 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
     auto c_start = std::chrono::high_resolution_clock::now();
 
     if (vetClienteRota[0].cliente != 0 || vetClienteRota[tam - 1].cliente != 0)
+    {
+        cout<<"0: "<<vetClienteRota[0].cliente<<". "<<tam-1<<" "<<vetClienteRota[tam-1].cliente<<"\n";
         throw ExceptionRota();
+    }
 
     int pesoParcial = peso;
 
@@ -838,6 +843,8 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
         if(!Construtivo::determinaHorario(&vetClienteRota[i], &vetClienteRota[i + 1], instancia, pesoParcial, tipoVeiculo, NULL, NULL))
         {
 
+            //Janela de tempo
+
             if(tempoCriaRota)
             {
                 auto c_end = std::chrono::high_resolution_clock::now();
@@ -845,6 +852,9 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
                 std::chrono::duration<double> tempoCpu = c_end - c_start;
                 tempoCriaRota->tempoCpu += tempoCpu.count();
             }
+
+            if(inviabilidadeEstatisticas)
+                inviabilidadeEstatisticas->janelaTempo += 1;
 
             return false;
 
@@ -1467,6 +1477,10 @@ Movimentos_Paradas::criaRota(const Instancia::Instancia *const instancia, Soluca
             //Não existe solucao!!!
             //cout<<"Nao existe solucao\n\n";
             funcLiberaMemoria();
+
+            if(inviabilidadeEstatisticas)
+                inviabilidadeEstatisticas->combustivel += 1;
+
             return false;
 
         }

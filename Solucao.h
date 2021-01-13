@@ -11,6 +11,21 @@
 #include <iostream>
 
 
+
+struct PertubacaoInviabilidade
+{
+    int peso;
+    int janelaTempo;
+    int combustivel;
+
+    PertubacaoInviabilidade()
+    {
+        peso = 0;
+        janelaTempo = 0;
+        combustivel = 0;
+    }
+};
+
 namespace Solucao
 {
 
@@ -32,6 +47,7 @@ namespace Solucao
         long double produtoCarga;
         long double distanciaAteCliente;
         bool rotaMip;
+
 
         ClienteRota(){}
         ClienteRota(const ClienteRota &outro)
@@ -261,6 +277,16 @@ namespace Solucao
         double tempoVnd;
         double tempoViabilizador;
         bool rotasMip;
+
+        PertubacaoInviabilidade *inviabilidadeEstatatisticas;
+
+        int totalInteracoesILS;
+        int solucoesInviaveis;
+
+        Solucao()
+        {
+
+        }
 
         Solucao(int numVeiculos);
         Solucao(Solucao *outro);

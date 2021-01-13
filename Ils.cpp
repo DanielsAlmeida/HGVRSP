@@ -2,13 +2,18 @@
 // Created by igor on 20/10/2020.
 //
 
+// Instancia inviavel UK_15x5_18
+
 #include "Ils.h"
 #include "Modelo2Rotas.h"
 #include "Constantes.h"
 #include "Construtivo.h"
 #include "mersenne-twister.h"
-using namespace Ils;
+#include "Pertubacao.h"
 #include "Alvo.h"
+
+using namespace Ils;
+
 
 #define NumInteracoes 1000
 #define Debug false
@@ -36,7 +41,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
     }
 
-
+    PertubacaoInviabilidade *inviabilidadeEstatisticas = new PertubacaoInviabilidade();
 
     if(!(*solucao)->veiculoFicticil)
     {   double poluicao = (*solucao)->poluicao;
@@ -84,6 +89,9 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
     list<Solucao::Solucao*> listaSolucao;
 
+    int ultimaSolucaoViavel = 0;
+
+    int solucoesInviaveis = 0;
 
     while(((alvoTempo&&!alvoTempo->antingilTodosAlvos()) || alvoTempo==NULL ) && (timeIls.count() <= tempoLimite) && (( (*interacoesIls > 1400) &&
          (*interacoesIls - *ultimaAtualizacaoIls) < numInteracoesMaxSemMelhora) || (*interacoesIls <= 1400)) && (*interacoesIls < numInteracoesMax))
@@ -112,7 +120,8 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
             if((*solucao)->poluicao < poluicao)
             {
                 *ultimaAtualizacaoIls = *interacoesIls;
-                listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, true, tempoStartIls, (*solucao)->poluicao));
+                listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, true, tempoStartIls,
+                                                             (*solucao)->poluicao, true));
 
             }
 
@@ -144,47 +153,60 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         }
 
 
-        if((solucaoCorrente->veiculoFicticil) && vetorCandidatos)
+        if((solucaoCorrente->veiculoFicticil) && vetorCandidatos && ((*interacoesIls - ultimaSolucaoViavel)==10))
         {
             delete solucaoCorrente;
+
+            /*
             solucaoCorrente = Construtivo::geraSolucao(instancia, vetAlfas[rand_u32()%5], vetVetorClienteRota[0],
                                                        vetVetorClienteRota[1], nullptr, false, vetorCandidatos,
                                                        {2,1}, vetorParametors, matrixClienteBest, tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
+            */
+
+            solucaoCorrente = new Solucao::Solucao(*solucao);
+            ultimaSolucaoViavel = *interacoesIls;
 
         }
 
         for(auto veiculo : solucaoCorrente->vetorVeiculos)
             (*veiculo->listaClientes.begin())->rotaMip = false;
 
-
+/*
         Movimentos::ResultadosRota resultadosRota =  Movimentos::mv_2optSwapInterRotas(instancia, solucaoCorrente, vetVetorClienteRota[0] , vetVetorClienteRota[1],
                                                                                        vetVetorClienteRota[2], vetVetorClienteRota[3], true, true, vetLimiteTempo,
                                                                                        NULL, NULL, vetGuardaRota[0], vetGuardaRota[1]); //5
 
 
-
-/*
-        Movimentos::ResultadosRota resultadosRota = Movimentos::mvInterRotasShift(instancia, solucaoCorrente, vetVetorClienteRota[0] , vetVetorClienteRota[1],
-                                                                                  vetVetorClienteRota[2], true, true, vetLimiteTempo,
-                                                                                  modelo, hashRotas, vetGuardaRota[0], vetGuardaRota[1]);
-*/
         if(resultadosRota.viavel)
         {
            // cout<<" v \n";
             Movimentos::atualizaSolucao(resultadosRota, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[2], instancia, -1);
 
         }
+*/
+//        std::cout<<"Antes pertubacao\n";
+        bool resultado = Pertubacao::pertubacao_k_swap(instancia, solucaoCorrente, 1, vetVetorClienteRota[0], vetVetorClienteRota[1],
+                                                       vetLimiteTempo, inviabilidadeEstatisticas);
+
+//        std::cout<<"Depois pertubacao\n";
+
+        //if(resultado)
+        //    std::cout<<"Pertubacao viavel - Linha: "<<__LINE__<<"\n";
 
         //fase de busca local rvnd
+        Vnd::vnd(instancia, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[1], false, vetVetorClienteRota[2],
+                 vetVetorClienteRota[3], 0, vetEstatistica, vetLimiteTempo, NULL, hashRotas, vetGuardaRota[0], vetGuardaRota[1],
+                 3); //3
 
-        //if((*interacoesIls - *ultimaAtualizacaoIls) != numInteracoesMaxSemMelhora-2)
-        {
 
-            Vnd::vnd(instancia, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[1], false,
-                     vetVetorClienteRota[2], vetVetorClienteRota[3], 0,
-                     vetEstatistica, vetLimiteTempo, NULL, hashRotas, vetGuardaRota[0], vetGuardaRota[1], 5);
+        if(solucaoCorrente->veiculoFicticil)
+            ++solucoesInviaveis;
 
-        }
+        //if(!resultado && !solucaoCorrente->veiculoFicticil)
+        //    std::cout<<"VND viabilizou solucao - Linha: "<<__LINE__<<"\n";
+
+        if(!solucaoCorrente->veiculoFicticil)
+            ultimaSolucaoViavel = *interacoesIls;
 
 
 
@@ -225,8 +247,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
                 int valA = rand_u32() % 100;
 
-                if ((p <= valA) || ((*solucao)->veiculoFicticil) ||
-                    (gap *100 <= -0.1))
+                if ((p <= valA) || ((*solucao)->veiculoFicticil) || (gap *100 <= -0.1))
                 {
 
                     if (gap < -0.01)
@@ -260,7 +281,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
                     } else
                     {
                         deletaSolucaoCorrente = false;
-                        listaSolucao.push_back(solucaoCorrente);
+                        listaSolucao.push_back(new Solucao::Solucao(solucaoCorrente));
                     }
 
                     mip = false;
@@ -360,7 +381,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
         }
 
-        if((((solucaoCorrente->poluicao - (*solucao)->poluicao)/(*solucao)->poluicao)*100  < -0.1) || ((*solucao)->veiculoFicticil == true && !solucaoCorrente->veiculoFicticil))
+        if(((((solucaoCorrente->poluicao - (*solucao)->poluicao)/(*solucao)->poluicao)*100  < -0.1) || ((*solucao)->veiculoFicticil == true && !solucaoCorrente->veiculoFicticil)) && !solucaoCorrente->veiculoFicticil)
         {
 
 
@@ -378,7 +399,8 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
             if(alvoTempo&&!((*solucao)->veiculoFicticil))
                 alvoTempo->novaSolucao((*solucao)->poluicao);
 
-            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip, tempoStartIls, solucaoCorrente->poluicao));
+            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip,
+                                                         tempoStartIls, solucaoCorrente->poluicao, !solucaoCorrente->veiculoFicticil));
 
 #           if Debug
 
@@ -390,10 +412,11 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         else
         {   
 
-            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip, tempoStartIls, solucaoCorrente->poluicao));
+            listaEstQual.push_back(EstatisticasQualidade((*solucao)->poluicao, *interacoesIls, chamadaMip,
+                                                         tempoStartIls, solucaoCorrente->poluicao, !solucaoCorrente->veiculoFicticil));
 
-            if(!deletaSolucaoCorrente)
-                solucaoCorrente = new Solucao::Solucao(solucaoCorrente);
+            //if(!deletaSolucaoCorrente)
+            //    solucaoCorrente = new Solucao::Solucao(solucaoCorrente);
         }
 
         tempoEndIls   = std::chrono::high_resolution_clock::now();
@@ -456,6 +479,9 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
     delete solucaoCorrente;
 
     (*solucao)->ultimaAtualizacao = *ultimaAtualizacaoIls;
+    (*solucao)->solucoesInviaveis = solucoesInviaveis;
+    (*solucao)->totalInteracoesILS = *interacoesIls;
+    (*solucao)->inviabilidadeEstatatisticas = inviabilidadeEstatisticas;
 }
 double Ils::calculaSolucaoHeuristica(const Instancia::Instancia *instancia, Solucao::Solucao *solucao, HashRotas::HashRotas *hashRotas,
                                      Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorAux, double *vetorLimiteTempo)
@@ -509,7 +535,7 @@ double Ils::calculaSolucaoHeuristica(const Instancia::Instancia *instancia, Solu
                                                                   veiclulo->listaClientes.size(),
                                                                   veiclulo->carga, veiclulo->tipo, &aux,
                                                                   &aux2, NULL, NULL, vetorLimiteTempo,
-                                                                  vetorAux);
+                                                                  vetorAux, NULL);
 
                     if (!resultado)
                     {

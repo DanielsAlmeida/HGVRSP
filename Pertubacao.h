@@ -11,7 +11,14 @@
 namespace Pertubacao
 {
 
-    bool pertubacao_k_swap(Instancia::Instancia *instancia, Solucao::Solucao *solucao, const int k);
+
+
+    bool pertubacao_k_swap(const Instancia::Instancia *const instancia, Solucao::Solucao *solucao, const int k,
+                           Solucao::ClienteRota *vetClienteRota, Solucao::ClienteRota *vetClienteRotaAux,
+                           double *vetLimiteTempo, PertubacaoInviabilidade *inviabilidadeEstatisticas);
+
+
+
 
 }
 

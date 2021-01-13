@@ -715,8 +715,8 @@ a
 
         if(true)
         {
-            file << texto;
-            file<<"\n\n************************************************************\n\n";
+            //file << texto;
+            //file<<"\n\n************************************************************\n\n";
 
             file<<"Poluicao\tInteracao\t\tTempo\t\tInteracaoMip\t\ttempoMip\t\tPoluicaoCorrente\n\n";
 
@@ -833,12 +833,20 @@ a
 
             }
 
-            //tempo cpu     poluicao    ultimaAtualizacao
+//tempo cpu     poluicao    ultimaAtualizacao    total interacoes ILS     solucoes inviaveis   inviaveis peso   inviaveis janela tempo      inviaveis combustivel
 
             if (solucao->veiculoFicticil)
-                file << "-1.0 -1.0 -1.0\n";
+                file << "-1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0\n";
             else
-                file << tempoCpu.count() << ' ' << solucao->poluicao << ' ' << solucao->ultimaAtualizacao << '\n';
+            {
+                file << tempoCpu.count() << ' ' << solucao->poluicao << ' ' << solucao->ultimaAtualizacao << ' ' << solucao->totalInteracoesILS << ' ' << solucao->solucoesInviaveis << ' ';
+
+                if(solucao->inviabilidadeEstatatisticas)
+                    file<<solucao->inviabilidadeEstatatisticas->peso << ' '<<solucao->inviabilidadeEstatatisticas->janelaTempo<<' '<<solucao->inviabilidadeEstatatisticas->combustivel<<'\n';
+                else
+                    file<<"-1.0 -1.0 -1.0 \n";
+
+            }
 
             file.close();
 

@@ -9,6 +9,7 @@
 #include <boost/heap/fibonacci_heap.hpp>
 #include "Instancia.h"
 #include "Solucao.h"
+#include "Pertubacao.h"
 
 namespace Movimentos_Paradas
 {
@@ -202,7 +203,8 @@ namespace Movimentos_Paradas
     bool criaRota(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, int tam,
                   const int peso, const int tipoVeiculo, double *combustivel, double *poluicao,
                   double *folga, TempoCriaRota *tempoCriaRota, double *vetLimiteTempo,
-                  Solucao::ClienteRota *vetClienteRotaAux);
+                  Solucao::ClienteRota *vetClienteRotaAux,
+                  PertubacaoInviabilidade *inviabilidadeEstatisticas);
 
     void geraLimiteTempo(const Instancia::Instancia *const instancia, Solucao::ClienteRota *vetClienteRota, const int tam, const int tipoVeiculo, double *vetLimiteTempo);
 

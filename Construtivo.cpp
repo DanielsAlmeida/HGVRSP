@@ -521,7 +521,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                                                           veiclulo->listaClientes.size(),
                                                                           veiclulo->carga, veiclulo->tipo, &aux,
                                                                           &aux2, NULL, NULL, vetLimiteTempo,
-                                                                          vetClienteRotaSecundAux);
+                                                                          vetClienteRotaSecundAux, NULL);
 
                             if (!resultado)
                             {
@@ -1706,7 +1706,7 @@ void Construtivo::insereCandidato(Candidato *candidato, const Instancia::Instanc
     }
 
     if(!Movimentos_Paradas::criaRota(instancia, vetCliente, posicaoVetor, peso, candidato->veiculo->tipo, &combustivel,
-                                     &poluicao, NULL, tempoCriaRota, nullptr, nullptr))
+                                     &poluicao, NULL, tempoCriaRota, nullptr, nullptr, NULL))
     {
         cout<<"Erro. func Construtivo::insereCandidato.\nRota deveria ser viavel\n";
         exit(-1);
@@ -1980,7 +1980,8 @@ TupleBID Construtivo::viabilidadeInserirCandidato(Solucao::ClienteRota *vetorCli
 
 
     bool resultado = Movimentos_Paradas::criaRota(instancia, vetorClientes, i + 1, peso, veiculo->tipo, &combustivel,
-                                                  &poluicao, folga, tempoCriaRota, vetLimiteTempo, vetClienteRotaAux);
+                                                  &poluicao, folga, tempoCriaRota, vetLimiteTempo, vetClienteRotaAux,
+                                                  NULL);
 
 
 
