@@ -28,7 +28,7 @@ namespace Modelo2Rotas
     void geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Modelo *modelo,
                                Solucao::ClienteRota *vetClienteRota, Solucao::ClienteRota *vetClienteRota2,
                                const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
-                               int *vetRotasAux, int **matRotas, int *vetRotasAux2);
+                               int *vetRotasAux, int **matRotas, int *vetRotasAux2, int numMaximoRotas);
 
 }
 

@@ -258,7 +258,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                             cout << "Inicio Mip i 1000 *****\n";
                         #endif
 
-                        Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+                        Modelo2Rotas::geraRotas_comb_2Rotas(best, modelo, vetorClienteBest, vetClienteBestSecund,
+                                                            instancia, &hashRotas, guardaRota, matRotas, guardaRota2,
+                                                            0);
 
                         #if Debug
                             cout << "Fim Mip i 1000 *****\n";
@@ -310,7 +312,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
             Ils::ils(instancia, &best, 200, 2, 2 * 60, opcao, vetVetClienteRota, &hashRotas, vetGuardaRotas,
                      vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo, &tempoModelo2Rotas,
                      &interacoesIls, &ultimaAtualizacaoIls, NULL, NULL, NULL, NULL, NULL, alvo, alvoTempos,
-                     listaEstQual);
+                     listaEstQual, 0, Ils::Parametros());
 
 
 
@@ -583,7 +585,9 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                             auto start = std::chrono::high_resolution_clock::now();
                             try
                             {
-                                Modelo2Rotas::geraRotas_comb_2Rotas(solucaoAux, modelo, vetorClienteBest, vetClienteBestSecund, instancia, &hashRotas, guardaRota, matRotas, guardaRota2);
+                                Modelo2Rotas::geraRotas_comb_2Rotas(solucaoAux, modelo, vetorClienteBest,
+                                                                    vetClienteBestSecund, instancia, &hashRotas,
+                                                                    guardaRota, matRotas, guardaRota2, 0);
 
                             }
                             catch (GRBException e)
@@ -618,7 +622,7 @@ Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instanci
                                      vetGuardaRotas,
                                      vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
                                      &tempoModelo2Rotas, &interacoesIls, &ultimaAtualizacaoIls, NULL, NULL, NULL, NULL,
-                                     NULL, alvo, alvoTempos, listaEstQual);
+                                     NULL, alvo, alvoTempos, listaEstQual, 0, Ils::Parametros());
 
 
 #                           if Debug

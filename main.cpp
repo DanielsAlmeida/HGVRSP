@@ -16,6 +16,11 @@
 #include <fstream>
 #include "HashRotas.h"
 #include "Ils.h"
+#include "stdio.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 //#include "EstatisticasQualidade.h"
 
 
@@ -158,9 +163,10 @@ int main(int num, char **agrs)
 
     bool logAtivo = false;
 
-    if(num != 7)
+    if(num != 5)
     {
         cout<<"Numero incorreto de parametros.\n";
+        cout<<"./HGVRSP instancia.dat saidaCompleta.txt saidaParcial.txt semente \n";
         exit(-1);
     }
 
@@ -168,9 +174,98 @@ int main(int num, char **agrs)
     strInstancia = agrs[1];
     saidaCompleta = agrs[2];
     saidaParcial = agrs[3];
+    
+    //string saidaIrace = agrs[3];
 
-    int opcao = atoi(agrs[5]);
-    double alvo = atof(agrs[6]);
+    Ils::Parametros parametros;
+
+    parametros.interacoesGrasp = 500;
+    parametros.interacoesIls = 2500;
+    parametros.numRotasMip = 7;
+    parametros.intervaloResetarSolucao = 700;
+    parametros.interacoesSemMelhora = 500;
+    parametros.numSolucoesMip = 50;
+    parametros.intervaloEsperaMip = 50;
+    parametros.interacaoInicioMip = 500;
+
+
+
+    //Leitura de parametros
+
+    /*
+    for(int i = 4; i < 19; i+=2)
+    {
+
+        string strParametro = agrs[i];
+
+        if(strParametro == "--1chamadaMip")
+            parametros.interacaoInicioMip = atoi(agrs[i+1]);
+
+        else if(strParametro == "--esperaMip")
+            parametros.intervaloEsperaMip = atoi(agrs[i+1]);
+
+        else if(strParametro == "--numSolMip")
+            parametros.numSolucoesMip = atoi(agrs[i+1]);
+
+        else if(strParametro == "--intSemMelhora")
+            parametros.interacoesSemMelhora = atoi(agrs[i+1]);
+
+        else if(strParametro == "--resetSol")
+            parametros.intervaloResetarSolucao = atoi(agrs[i+1]);
+
+        else if(strParametro == "--rotasMip")
+            parametros.numRotasMip = atoi(agrs[i+1]);
+
+        else if(strParametro == "--intIls")
+            parametros.interacoesIls = atoi(agrs[i+1]);
+
+        else if(strParametro == "--intGrasp")
+            parametros.interacoesGrasp = atoi(agrs[i+1]);
+
+        else
+        {
+            cout<<"Erro parametro "<<strParametro<<" nao existe\n";
+            exit(-1);
+        }
+
+    }
+
+    */
+
+
+    //int stdout_copy = dup(STDOUT_FILENO);
+    //close(STDOUT_FILENO);
+
+    /*
+    freopen("new_stdout","r",stdout);
+    freopen("new_stderr","r",stderr);
+    */
+
+    /*
+    std::streambuf* cout_sbuf = std::cout.rdbuf(); // save original sbuf
+    std::streambuf* clog_sbuf = std::clog.rdbuf();
+
+    std::ofstream   fout("/dev/null");
+    std::ofstream   fout2("/dev/null");
+
+    std::cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
+    std::clog.rdbuf(fout2.rdbuf());
+    */
+
+    /*
+
+    cout<<"Parametros:\n";
+
+    cout<<"1 chamada mip: "<<parametros.interacaoInicioMip<<"\nesera mip: "<<parametros.intervaloEsperaMip<<"\n";
+    cout<<"solucoes mip: "<<parametros.numSolucoesMip<<"\ninteracoes sem melhora: "<<parametros.interacoesSemMelhora;
+    cout<<"\nreseta solucao: "<<parametros.intervaloResetarSolucao<<"\nnum rotas mip "<<parametros.numRotasMip;
+    cout<<"\ninteracoes ils: "<<parametros.interacoesIls<<"\ninteracao grasp: "<<parametros.interacoesGrasp<<"\n";
+    //exit(-1);
+    */
+
+    int opcao = 3;                          //ILS 2-opt
+    double alvo = 0;
+    int k_pertubacao = 1;//atoi(agrs[7]);   // nao se aplica
 
 
 
@@ -203,7 +298,7 @@ int main(int num, char **agrs)
     auto semente  = time(NULL);
 
     if(std::atoll(agrs[4]) != 0)
-        semente = std::atoll(agrs[4]);
+        semente = std::atoll(agrs[5]);
 
     cout<<"Semente = "<<semente<<'\n';
 
@@ -259,14 +354,22 @@ int main(int num, char **agrs)
     double vetLimiteTempo[20];
 
 
+    freopen("new_stdout","r",stdout);
+    freopen("new_stderr","r",stderr);
 
     GRBEnv env;
 
     env.set(GRB_IntParam_OutputFlag, 0);
+
+
+    freopen("/dev/tty","w",stdout);
+    freopen("/dev/tty","w",stderr);
+
     GRBModel grb_modelo = GRBModel(env);
     GRBModel grb_modelo1Rota = GRBModel(env);
 
-
+    grb_modelo.set(GRB_IntParam_Threads, 4);
+    grb_modelo1Rota.set(GRB_IntParam_Threads, 4);
 
     Modelo::Modelo *modelo = new Modelo::Modelo(instancia, &grb_modelo, false);
     Modelo_1_rota::Modelo *modelo1Rota = new Modelo_1_rota::Modelo(instancia, &grb_modelo1Rota, false);
@@ -288,12 +391,12 @@ int main(int num, char **agrs)
         alvoTempo = new Alvo::Alvo(alvo, c_start,  3);
     
     
-    if(alvo < 0)
+    if(alvo <= 0)
         alvo = HUGE_VALF;
         
             
 
-    const int numInteracoes = 3000;
+    const int numInteracoes = parametros.interacoesIls;
     const double tempoTotal= 9999999;
 
 
@@ -322,7 +425,7 @@ int main(int num, char **agrs)
 
 
 
-        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, 500, 150, logAtivo, &strLog,
+        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, parametros.interacoesGrasp, 150, logAtivo, &strLog,
                                      vetHeuristicas,
                                      TamVetH, vetParametro, vetEstatisticaMv,
                                      matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
@@ -334,11 +437,11 @@ int main(int num, char **agrs)
         u_int64_t ultimaAtualizacao = 0;
         totalInteracoes = 0;
 
-        Ils::ils(instancia, &solucao, numInteracoes, 900, tempoTotal, opcao, vetSolucaoClienteRota,
+        Ils::ils(instancia, &solucao, numInteracoes, parametros.interacoesSemMelhora, tempoTotal, opcao, vetSolucaoClienteRota,
                  &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
                  &tempoMip2Rotas,
                  &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
-                 vetCandInteracoes, alvo, alvoTempo, listaEstQual);
+                 vetCandInteracoes, alvo, alvoTempo, listaEstQual, k_pertubacao, parametros);
 
 
         solucao->ultimaAtualizacao = ultimaAtualizacao;
@@ -696,7 +799,7 @@ a
 
     //cout<<"Tempo cpu: " << ((1000.0*c_end-c_start) / CLOCKS_PER_SEC/1000.0) << " S\n";
 
-    if(num == 1)
+    if(false)
     {
 
     }
@@ -715,8 +818,8 @@ a
 
         if(true)
         {
-            //file << texto;
-            //file<<"\n\n************************************************************\n\n";
+            file << texto;
+            file<<"\n\n************************************************************\n\n";
 
             file<<"Poluicao\tInteracao\t\tTempo\t\tInteracaoMip\t\ttempoMip\t\tPoluicaoCorrente\n\n";
 
@@ -738,7 +841,7 @@ a
 
         file.close();
 
-/*
+
 
         file.open(saidaParcial, ios::out | ios::app);
 
@@ -790,7 +893,7 @@ a
              " "<<std::to_string(solucao->ultimaAtualizacao)<<" " <<std::to_string(solucao->numSolucoesInv) <<" "<<std::to_string(tempoViagem*60.)<<" "<<std::to_string(distanciaTotal)<<'\n';
 
         file.close();
-        */
+
 
         if(alvoTempo)
         {
@@ -883,6 +986,38 @@ a
 
     #endif
 
+    //dup2(stdout_copy, STDOUT_FILENO);
+
+    /*
+    freopen("/dev/tty","w",stdout);
+    freopen("/dev/tty","w",stderr);
+    */
+    //close(stdout_copy);
+
+    //std::cout.rdbuf(cout_sbuf);
+    //std::clog.rdbuf(clog_sbuf);
+
+    /*
+    file.open(saidaIrace, ios::out); // |ios::app
+
+    if(!file.is_open())
+    {
+            
+        cout << "Caminho nao existe : " << saidaIrace << '\n';
+        return 1;
+
+    }
+
+
+    if(solucao->veiculoFicticil)
+        file<<solucao->getPoluicaoTotal()<<'\n';
+    else
+        file<<solucao->poluicao<<'\n';
+        
+    file.close();
+    */
+
+    /*
     if(num == 5)
     {
         file.open(log, ios::out | ios::app);
@@ -895,6 +1030,7 @@ a
         file.close();
 
     }
+     */
 
     /* ********************************************************************************************************************************************************************************** */
 
@@ -937,6 +1073,9 @@ a
     delete []vetClienteRota;*/
 
 /* ********************************************************************************************************************************************************************************** */
+
+    if(solucao->inviabilidadeEstatatisticas)
+        delete solucao->inviabilidadeEstatatisticas;
 
     delete solucao;
     delete instancia;

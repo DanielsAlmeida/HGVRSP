@@ -17,6 +17,17 @@
 namespace Ils
 {
 
+    struct Parametros
+    {
+        int interacaoInicioMip;
+        int intervaloEsperaMip;
+        int interacoesSemMelhora;
+        int intervaloResetarSolucao;
+        int numRotasMip;
+        int interacoesIls;
+        int numSolucoesMip;
+        int interacoesGrasp;
+    };
 
     void ils(const Instancia::Instancia *const instancia, Solucao::Solucao **solucao, const u_int64_t numInteracoesMax,
              const u_int64_t numInteracoesMaxSemMelhora, const double tempoLimite, const int opcao,
@@ -27,10 +38,13 @@ namespace Ils
              u_int64_t *ultimaAtualizacaoIls,
              Construtivo::Candidato *vetorCandidatos, double *vetorParametors, Solucao::ClienteRota **matrixClienteBest,
              Movimentos_Paradas::TempoCriaRota *tempoCriaRota, Construtivo::GuardaCandInteracoes *vetCandInteracoes,
-             const double alvo, Alvo::Alvo *alvoTempo, list<EstatisticasQualidade> &listaEstQual);
+             const double alvo, Alvo::Alvo *alvoTempo, list<EstatisticasQualidade> &listaEstQual, int k_pertubacao,
+             Parametros parametros);
 
     double calculaSolucaoHeuristica(const Instancia::Instancia *instancia, Solucao::Solucao *solucao, HashRotas::HashRotas *hashRotas,
                                     Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorAux, double *vetorLimiteTempo);
+
+
 
 }
 

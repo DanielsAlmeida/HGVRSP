@@ -32,24 +32,32 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
         mvNaoUtilizado = -1;
     }
 
-    for(int i = inicio; i < Num; ++i)
-    {
-        int mv = rand_u32() % Num;
+    bool solucaoInviavel = solucao->veiculoFicticil;
 
-        for(int j = 0; j < i; )
+    auto funcSorteiaMv = [&](){
+
+        for (int i = inicio; i < Num; ++i)
         {
-            if(vetMovimentos[j] == mv)
+            int mv = rand_u32() % Num;
+
+            for (int j = 0; j < i;)
             {
-                mv = (mv+1) % Num;
-                j = 0;
-                continue;
+                if (vetMovimentos[j] == mv)
+                {
+                    mv = (mv + 1) % Num;
+                    j = 0;
+                    continue;
+                }
+
+                ++j;
             }
 
-            ++j;
+            vetMovimentos[i] = mv;
         }
 
-        vetMovimentos[i] = mv;
-    }
+    };
+
+    funcSorteiaMv();
 
     Movimentos::ResultadosRota resultadosRota;
 
@@ -96,6 +104,14 @@ void Vnd::vnd(const Instancia::Instancia *const instancia, Solucao::Solucao *sol
                     posicao++;
             } else
                 posicao++;
+
+
+            if(solucaoInviavel && !solucao->veiculoFicticil)
+            {
+                inicio = 0;
+                funcSorteiaMv();
+                solucaoInviavel = false;
+            }
 
 
 

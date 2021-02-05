@@ -44,7 +44,7 @@ Solucao::Solucao::Solucao(Solucao *outro)
     ultimaAtualizacao = outro->ultimaAtualizacao;
     numSolucoesInv = outro->numSolucoesInv;
     rotasMip = outro->rotasMip;
-
+    inviabilidadeEstatatisticas = NULL;
 
     Veiculo *veiculo;
     Veiculo *veiculoOutro = outro->vetorVeiculos[0];
@@ -71,6 +71,7 @@ Solucao::Solucao::~Solucao()
     }
 
     vetorVeiculos.erase(vetorVeiculos.begin(), vetorVeiculos.end());
+
 
 }
 

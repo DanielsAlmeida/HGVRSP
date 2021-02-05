@@ -7,8 +7,10 @@
 
 using namespace Modelo2Rotas;
 
-void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Modelo *modelo, Solucao::ClienteRota *vetClienteRota, Solucao::ClienteRota *vetClienteRota2,
-                                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas, int *vetRotasAux, int **matRotas, int *vetRotasAux2)
+void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Modelo *modelo,
+                                         Solucao::ClienteRota *vetClienteRota, Solucao::ClienteRota *vetClienteRota2,
+                                         const Instancia::Instancia *const instancia, HashRotas::HashRotas *hashRotas,
+                                         int *vetRotasAux, int **matRotas, int *vetRotasAux2, int numMaximoRotas)
 {
 
     //Zera a matriz matRotas
@@ -21,7 +23,7 @@ void Modelo2Rotas::geraRotas_comb_2Rotas(Solucao::Solucao *solucao, Modelo::Mode
     }
 
     const int NumMaximoRotasGrupo = ((instancia->numVeiculos) * (instancia->numVeiculos - 1))/2;
-    const int  NumMaximoRotasMip =  (10 < NumMaximoRotasGrupo) ? 10 : NumMaximoRotasGrupo;
+    const int  NumMaximoRotasMip =  (numMaximoRotas < NumMaximoRotasGrupo) ? numMaximoRotas : NumMaximoRotasGrupo;
 
 
     //Variaveis

@@ -28,7 +28,8 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
               Construtivo::Candidato *vetorCandidatos, double *vetorParametors,
               Solucao::ClienteRota **matrixClienteBest,
               Movimentos_Paradas::TempoCriaRota *tempoCriaRota, Construtivo::GuardaCandInteracoes *vetCandInteracoes,
-              const double alvo, Alvo::Alvo *alvoTempo, list<EstatisticasQualidade> &listaEstQual)
+              const double alvo, Alvo::Alvo *alvoTempo, list<EstatisticasQualidade> &listaEstQual, int k_pertubacao,
+              Parametros parametros)
 {
 
 
@@ -93,12 +94,12 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
     int solucoesInviaveis = 0;
 
-    while(((alvoTempo&&!alvoTempo->antingilTodosAlvos()) || alvoTempo==NULL ) && (timeIls.count() <= tempoLimite) && (( (*interacoesIls > 1400) &&
-         (*interacoesIls - *ultimaAtualizacaoIls) < numInteracoesMaxSemMelhora) || (*interacoesIls <= 1400)) && (*interacoesIls < numInteracoesMax))
+    while(((alvoTempo&&!alvoTempo->antingilTodosAlvos()) || alvoTempo==NULL ) && (timeIls.count() <= tempoLimite) && (( (*interacoesIls > (parametros.interacaoInicioMip + parametros.intervaloEsperaMip)) &&
+         (*interacoesIls - *ultimaAtualizacaoIls) < parametros.interacoesIls) || (*interacoesIls <= (parametros.interacaoInicioMip + parametros.intervaloEsperaMip))) && (*interacoesIls < numInteracoesMax))
     {
 
 
-        if(*interacoesIls == NumInteracoes && !(*solucao)->veiculoFicticil && opcao == OpcaoIlsMip)
+        if(*interacoesIls == parametros.interacaoInicioMip && !(*solucao)->veiculoFicticil && opcao == OpcaoIlsMip)
         {
 
             double poluicao = (*solucao)->poluicao;
@@ -109,7 +110,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
             auto start = std::chrono::high_resolution_clock::now();
 
             Modelo2Rotas::geraRotas_comb_2Rotas(*solucao, modelo, vetVetorClienteRota[0], vetVetorClienteRota[1],
-                                                instancia, hashRotas, vetGuardaRota[0], matRotas, vetGuardaRota[1]);
+                                                instancia, hashRotas, vetGuardaRota[0], matRotas, vetGuardaRota[1], 0);
 
 
             auto end = std::chrono::high_resolution_clock::now();
@@ -136,9 +137,8 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
 
 
-        //Receta a solucao
-        if(((opcao == OpcaoIlsMip && *interacoesIls > NumInteracoes && (*interacoesIls - *ultimaAtualizacaoIls) == 700) ||
-           ((opcao == OpcaoGraspIlsMip || opcao == OpcaoGraspComIlsMip) && (*interacoesIls - *ultimaAtualizacaoIls) == 150)) && !(*solucao)->veiculoFicticil)
+        //Reseta a solucao
+        if(((opcao == OpcaoIlsMip && *interacoesIls > parametros.interacaoInicioMip && (*interacoesIls - *ultimaAtualizacaoIls) == parametros.intervaloResetarSolucao) && !(*solucao)->veiculoFicticil))
         {
 
 
@@ -152,51 +152,45 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
         }
 
-
+        /*
         if((solucaoCorrente->veiculoFicticil) && vetorCandidatos && ((*interacoesIls - ultimaSolucaoViavel)==10))
         {
             delete solucaoCorrente;
 
-            /*
+
             solucaoCorrente = Construtivo::geraSolucao(instancia, vetAlfas[rand_u32()%5], vetVetorClienteRota[0],
                                                        vetVetorClienteRota[1], nullptr, false, vetorCandidatos,
                                                        {2,1}, vetorParametors, matrixClienteBest, tempoCriaRota, vetCandInteracoes, vetLimiteTempo);
-            */
+
 
             solucaoCorrente = new Solucao::Solucao(*solucao);
             ultimaSolucaoViavel = *interacoesIls;
 
         }
+        */
 
         for(auto veiculo : solucaoCorrente->vetorVeiculos)
             (*veiculo->listaClientes.begin())->rotaMip = false;
 
-/*
+
         Movimentos::ResultadosRota resultadosRota =  Movimentos::mv_2optSwapInterRotas(instancia, solucaoCorrente, vetVetorClienteRota[0] , vetVetorClienteRota[1],
                                                                                        vetVetorClienteRota[2], vetVetorClienteRota[3], true, true, vetLimiteTempo,
                                                                                        NULL, NULL, vetGuardaRota[0], vetGuardaRota[1]); //5
-
-
         if(resultadosRota.viavel)
-        {
-           // cout<<" v \n";
-            Movimentos::atualizaSolucao(resultadosRota, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[2], instancia, -1);
+            Movimentos::aplicaMovimento(5, instancia, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[1], true,
+                                        vetVetorClienteRota[2], vetVetorClienteRota[3], vetLimiteTempo, NULL, NULL,
+                                        vetGuardaRota[0], vetGuardaRota[1]);
 
-        }
-*/
-//        std::cout<<"Antes pertubacao\n";
-        bool resultado = Pertubacao::pertubacao_k_swap(instancia, solucaoCorrente, 1, vetVetorClienteRota[0], vetVetorClienteRota[1],
+        /*
+        bool resultado = Pertubacao::pertubacao_k_swap(instancia, solucaoCorrente, k_pertubacao, vetVetorClienteRota[0], vetVetorClienteRota[1],
                                                        vetLimiteTempo, inviabilidadeEstatisticas);
+        */
 
-//        std::cout<<"Depois pertubacao\n";
-
-        //if(resultado)
-        //    std::cout<<"Pertubacao viavel - Linha: "<<__LINE__<<"\n";
 
         //fase de busca local rvnd
         Vnd::vnd(instancia, solucaoCorrente, vetVetorClienteRota[0], vetVetorClienteRota[1], false, vetVetorClienteRota[2],
                  vetVetorClienteRota[3], 0, vetEstatistica, vetLimiteTempo, NULL, hashRotas, vetGuardaRota[0], vetGuardaRota[1],
-                 3); //3
+                 5); //3
 
 
         if(solucaoCorrente->veiculoFicticil)
@@ -216,14 +210,10 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         bool deletaSolucaoCorrente = true;
 
         //if((*interacoesIls >= 100) && (opcao == OpcaoGraspIlsMip || opcao == OpcaoIlsMip || opcao == OpcaoGraspComIlsMip) && !solucaoCorrente->veiculoFicticil)
-        if((((opcao == OpcaoIlsMip && *interacoesIls > NumInteracoes && (*interacoesIls - *ultimaAtualizacaoIls) >= 300) || ((opcao == OpcaoGraspIlsMip || opcao == OpcaoGraspComIlsMip) &&
-                numChamadasMip < numInteracoesMaxSemMelhora && (*interacoesIls - *ultimaAtualizacaoIls) >= 50)) || (solucaoCorrente->poluicao < (*solucao)->poluicao &&  *interacoesIls > NumInteracoes)) && !solucaoCorrente->veiculoFicticil && opcao == OpcaoIlsMip)
+        if((((opcao == OpcaoIlsMip && *interacoesIls > parametros.interacaoInicioMip && (*interacoesIls - *ultimaAtualizacaoIls) >= parametros.intervaloEsperaMip) ||(solucaoCorrente->poluicao < (*solucao)->poluicao &&  *interacoesIls > parametros.interacaoInicioMip)) && !solucaoCorrente->veiculoFicticil && opcao == OpcaoIlsMip))
         {
 
             static bool mip = false;
-
-
-
 
 
 
@@ -247,10 +237,10 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
                 int valA = rand_u32() % 100;
 
-                if ((p <= valA) || ((*solucao)->veiculoFicticil) || (gap *100 <= -0.1))
+                if ((p <= valA) || (gap *100 <= -0.1))
                 {
 
-                    if (gap < -0.01)
+                    if (gap <= -0.01)
                     {
                         ++numChamadasMip;
                         Modelo_1_rota::geraRotasOtimas(solucaoCorrente, modelo1Rota, vetVetorClienteRota[0], instancia,
@@ -262,7 +252,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
                         Modelo2Rotas::geraRotas_comb_2Rotas(solucaoCorrente, modelo, vetVetorClienteRota[0],
                                                             vetVetorClienteRota[1],
                                                             instancia, hashRotas, vetGuardaRota[0], matRotas,
-                                                            vetGuardaRota[1]);
+                                                            vetGuardaRota[1], parametros.numRotasMip);
 
 
                         auto end = std::chrono::high_resolution_clock::now();
@@ -281,7 +271,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
                     } else
                     {
                         deletaSolucaoCorrente = false;
-                        listaSolucao.push_back(new Solucao::Solucao(solucaoCorrente));
+                        listaSolucao.push_back(new Solucao::Solucao(solucaoCorrente));    //leak
                     }
 
                     mip = false;
@@ -300,7 +290,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
                 }
             }
 
-            if(!chamadaMip && ((*interacoesIls - *ultimaAtualizacaoIls) % 200  == 0) && !listaSolucao.empty() && (*interacoesIls - *ultimaAtualizacaoIls)>300)
+            if(!chamadaMip && ((*interacoesIls - *ultimaAtualizacaoIls) % parametros.numSolucoesMip  == 0) && !listaSolucao.empty() && (*interacoesIls - *ultimaAtualizacaoIls)>parametros.intervaloEsperaMip)
             {
                     deletaSolucaoCorrente = true;
 
@@ -362,8 +352,10 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
 
                     auto start = std::chrono::high_resolution_clock::now();
 
-                    Modelo2Rotas::geraRotas_comb_2Rotas(solucaoCorrente, modelo, vetVetorClienteRota[0], vetVetorClienteRota[1],
-                                                        instancia, hashRotas, vetGuardaRota[0], matRotas, vetGuardaRota[1]);
+                Modelo2Rotas::geraRotas_comb_2Rotas(solucaoCorrente, modelo, vetVetorClienteRota[0],
+                                                    vetVetorClienteRota[1],
+                                                    instancia, hashRotas, vetGuardaRota[0], matRotas,
+                                                    vetGuardaRota[1], parametros.numRotasMip);
 
 
 
@@ -422,16 +414,22 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         tempoEndIls   = std::chrono::high_resolution_clock::now();
         timeIls = std::chrono::duration_cast<std::chrono::seconds>(tempoEndIls - tempoStartIls);
 
-
+        /*
         if((interacoesIls - ultimaAtualizacaoIls) == 50 )
         {
             delete solucaoCorrente;
             solucaoCorrente = new Solucao::Solucao(*solucao);
 
         }
+        */
 
 
         ++(*interacoesIls);
+
+        if((*interacoesIls > parametros.interacaoInicioMip + parametros.intervaloEsperaMip) && ((*interacoesIls - *ultimaAtualizacaoIls) > parametros.interacoesSemMelhora))
+        {
+            break;
+        }
 
     }
 
@@ -444,6 +442,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         listaSolucao.clear();
     }
 
+    /*
     if(opcao==OpcaoGraspComIlsMip && numChamadasMip == numInteracoesMaxSemMelhora && ((alvoTempo && !alvoTempo->antingilTodosAlvos()) || alvoTempo == NULL))
     {
 
@@ -456,7 +455,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         auto start = std::chrono::high_resolution_clock::now();
 
         Modelo2Rotas::geraRotas_comb_2Rotas(solucaoCorrente, modelo, vetVetorClienteRota[0], vetVetorClienteRota[1],
-                                            instancia, hashRotas, vetGuardaRota[0], matRotas, vetGuardaRota[1]);
+                                            instancia, hashRotas, vetGuardaRota[0], matRotas, vetGuardaRota[1], 0);
 
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -474,7 +473,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
         }
 
     }
-
+    */
 
     delete solucaoCorrente;
 
