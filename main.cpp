@@ -96,7 +96,8 @@ using namespace EstatisticasQualidadeN;
 int main(int num, char **agrs)
 {
 
-
+    try
+    {
 
     std::map<int, double> parametroHeur0;
     std::map<int, double> parametroHeur1;
@@ -298,7 +299,7 @@ int main(int num, char **agrs)
     auto semente  = time(NULL);
 
     if(std::atoll(agrs[4]) != 0)
-        semente = std::atoll(agrs[5]);
+        semente = std::stoll(agrs[5]);
 
     cout<<"Semente = "<<semente<<'\n';
 
@@ -315,8 +316,9 @@ int main(int num, char **agrs)
     seed(semente);
 
     texto += "Semente: " + std::to_string(semente) + "\n\n";
-
+    std::cout<<"Antes\n";
     Instancia::Instancia *instancia = new Instancia::Instancia(strInstancia);
+    std::cout<<"Instancia criada!\n\n";
 
     double vetParametro[7] = {parametroHeur0[instancia->numClientes - 1], parametroHeur1[instancia->numClientes - 1], 0.0, parametroHeur3[instancia->numClientes - 1],
                                     parametroHeur4[instancia->numClientes - 1], parametroHeur5[instancia->numClientes -1], parametroHeur6[instancia->numClientes - 1]};
@@ -354,16 +356,16 @@ int main(int num, char **agrs)
     double vetLimiteTempo[20];
 
 
-    freopen("new_stdout","r",stdout);
-    freopen("new_stderr","r",stderr);
+    //freopen("new_stdout","r",stdout);
+    //freopen("new_stderr","r",stderr);
 
     GRBEnv env;
 
     env.set(GRB_IntParam_OutputFlag, 0);
 
 
-    freopen("/dev/tty","w",stdout);
-    freopen("/dev/tty","w",stderr);
+    //freopen("/dev/tty","w",stdout);
+    //freopen("/dev/tty","w",stderr);
 
     GRBModel grb_modelo = GRBModel(env);
     GRBModel grb_modelo1Rota = GRBModel(env);
@@ -399,7 +401,7 @@ int main(int num, char **agrs)
     const int numInteracoes = parametros.interacoesIls;
     const double tempoTotal= 9999999;
 
-
+    std::cout<<"IF OPCAO\n";
 
     if(opcao == OpcaoIlsMip || opcao == OpcaoIls)
     {
@@ -1082,6 +1084,13 @@ a
     delete modelo;
     delete modelo1Rota;
     //muntrace();
+
+    }
+    catch(GRBException& exp)
+    {
+        std::cout<<exp.getMessage()<<"\nERROR CODE: "<<exp.getErrorCode()<<"\n";
+        exit(-1);
+    }
 
     return 0;
 }

@@ -22,7 +22,7 @@ set(GUROBI_LIB_DIRECTORY $ENV{LD_LIBRARY_PATH})
 link_directories(${GUROBI_LIB_DIRECTORY})
 
 set (CMAKE_CXX_FLAGS " -std=c++2a")
-set(CMAKE_CXX_FLAGS " -m64")
+#set(CMAKE_CXX_FLAGS " -m64")
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS "-g")
@@ -81,7 +81,7 @@ set(    SOURCE_FILES
 add_executable(HGVRSP ${SOURCE_FILES})
         
 target_link_libraries (HGVRSP gurobi_c++)
-target_link_libraries (HGVRSP gurobi90)
+target_link_libraries (HGVRSP gurobi)
 #target_link_libraries (HGVRSP gurobi81)
 
 #target_link_libraries(HGVRSP ${GUROBI_LIBRARY})

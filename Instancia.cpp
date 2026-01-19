@@ -11,6 +11,7 @@ using namespace std;
 
 Instancia::Instancia::Instancia(std::string arquivo)
 {
+    std::cout<<"LEITURA INSTANCIA!";
     numPeriodos = 5;
     std::string clientes;
 
@@ -131,19 +132,22 @@ Instancia::Instancia::Instancia(std::string arquivo)
         int i,j;
         float distancia;
         int p = 0;
-        while(lixo[0] != ';')
+        while(!lixo.empty() && lixo[0] != ';')
         {
             file.seekg(posicao);
             file>>i>>j>>distancia;
+            //std::cout<<i<<"\t"<<j<<"\t"<<": "<<distancia<<"\n";
 
             matrizDistancias[i][j] = distancia;
             posicao = file.tellg();
             getline(file, lixo, '\n');
 
-            if(lixo.size()==1)
+            //if(lixo.size()==1)
                 getline(file, lixo);
+        //std::cout<<lixo<<"\n";
         }
 
+        //std::cout<<"\n\nLEITURA VELOCIDADES\n";
         //Leitura das velocidades
 
         //Aloca matriz
@@ -173,13 +177,13 @@ Instancia::Instancia::Instancia(std::string arquivo)
         {
             file.seekg(posicao);
             file>>i>>j>>k>>velocidade;
-
+            //std::printf("%d, %d, %d: %d\n", i, j, k, velocidade);
             matrizVelocidade[i][j][k-1] = velocidade;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');
 
-            if(lixo.size()==1)
+            //if(lixo.size()==1)
             {
                 getline(file, lixo);
 
@@ -192,8 +196,6 @@ Instancia::Instancia::Instancia(std::string arquivo)
         getline(file, lixo);
 
         //Matriz de co2
-
-
         matrizCo2 = new double***[numClientes];
 
         for(i = 0; i < numClientes; ++i)
@@ -225,26 +227,27 @@ Instancia::Instancia::Instancia(std::string arquivo)
 
         posicao = file.tellg();
         getline(file, lixo);
-
+//std::cout<<"CO2\n\n";
         while(lixo[0] != ';')
         {
             file.seekg(posicao);
             file>>i>>j>>k>>r>>g;
 
-
+            //std::printf("%d %d %d %d: %f\n", i, j, k, r, g);
 
             matrizCo2[i][j][k-1][r-1] = g;
 
             posicao = file.tellg();
             getline(file, lixo, '\n');
 
-            if(lixo.size()==1)
-            {
+            //if(lixo.size()==1)
+            //{
                 getline(file, lixo);
 
 
-            }
+            //}
 
+            //std::cout<<lixo;
 
         }
 
@@ -318,7 +321,7 @@ Instancia::Instancia::Instancia(std::string arquivo)
     tempoMedias[100] = 1561.8;
 
 
-
+    /*
     ifstream fileTempo;
     fileTempo.open(arquivoTempo, ios::out);
 
@@ -330,14 +333,14 @@ Instancia::Instancia::Instancia(std::string arquivo)
         fileTempo>>tempo;
 
     fileTempo.close();
-
+    */
     double tempoL = tempoLiteratura[numClientes-1];
 
    // cout<<"Tempo literaturua: "<<tempoL<<"\n"<<"tempo instancancia: "<<tempo<<"\n tempo media: "<<tempoMedias[numClientes-1]<<"\n";
 
-    tempoCpuPermitido = (tempoL * tempo) / tempoMedias[numClientes-1];
+    tempoCpuPermitido = 99999999.0;//(tempoL * tempo) / tempoMedias[numClientes-1];
 
-
+    std::cout<<"FIM LEITURA INSTANCIA\n\n";
 
 }
 
