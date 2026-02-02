@@ -43,10 +43,10 @@ vector<int> Construtivo::vetorInicioRotas(Solucao::Solucao *solucao, int p){
         for (auto cliente : veiculo->listaClientes) 
             seq.push_back(cliente->cliente);}
 
-    cout << "sequencia "<< p << ": ";
+    cout << "Sequencia "<< p << ": ";
     for(const auto& element : seq)
         cout << element << " ";
-
+    cout << endl;
     // Registra os depósitos na sequência 1
     for (size_t i = 0; i < seq.size(); ++i) 
         if (seq[i] == 0) {
@@ -54,23 +54,23 @@ vector<int> Construtivo::vetorInicioRotas(Solucao::Solucao *solucao, int p){
             numdeposits++;
         }
     vector <int> inicioRotas;
-    cout << "\n ID depositos rota seq: ";
-    for(const auto& element : depositosRota)
-        cout << element << " ";
+    // cout << "\n ID depositos rota seq: ";
+    // for(const auto& element : depositosRota)
+    //     cout << element << " ";
 
     for (size_t i = 0; i < depositosRota.size(); i+=2) 
         inicioRotas.push_back(depositosRota[i]);
 
-    cout << "\n Numero depositos: " << numdeposits << endl;
+    // cout << "\n Numero depositos: " << numdeposits << endl;
     
     for(int i = 1; i < inicioRotas.size(); ++i){
         if(inicioRotas[i] == inicioRotas[i-1]+2)
             inicioRotas.erase(inicioRotas.begin() + i-1);
     }
-    cout << "\n ID inicios rotas seq: ";
-    for(const auto& element : inicioRotas)
-        cout << element << " ";
-    cout << endl;
+    // cout << "\n ID inicios rotas seq: ";
+    // for(const auto& element : inicioRotas)
+    //     cout << element << " ";
+    // cout << endl;
 
     return inicioRotas;
 }
@@ -126,6 +126,7 @@ void Construtivo::completaPopulacaoInicial(
         inicioRotas1.clear();
         inicioRotas2.clear();
         
+        cout << endl;
         inicioRotas1 = vetorInicioRotas(populacaoInicial[p1], 1);
         inicioRotas2 = vetorInicioRotas(populacaoInicial[p2], 2);
 
@@ -206,36 +207,56 @@ void Construtivo::completaPopulacaoInicial(
             
             //pontos de corte para pai 1
             int c1_1 = resultado[0];
-            int c2_1 = resultado[1];
+            int c2_1 = resultado[1]+c1_1;
 
             //pontos de corte para pai 2
             int c1_2 = resultado[2];
-            int c2_2 = resultado[3];
+            int c2_2 = resultado[3]+c1_2;
 
             novaSeq.clear();
 
-            if(novaSeq.size()<c1 && bloco1P1)
-                for (int j = 0; j < c1_1; ++j) 
+            novaSeq.clear();
+
+            // Bloco 1
+            if (bloco1P1) 
+                for (int j = 0; j < c1_1; ++j)
                     novaSeq.push_back(seq1[j]);
             else
-                for (int j = 0; j < c1_2; ++j) 
-                    novaSeq.push_back(seq2[j]);
-            if(novaSeq.size()>=c1 && bloco2P1)
-                for (int j = c1; j < c2_1; ++j) 
-                    novaSeq.push_back(seq1[j]);
-            else if (novaSeq.size()>=c1 && !bloco2P1)
-                for (int j = c1; j < c2_2; ++j) 
-                    novaSeq.push_back(seq2[j]);
-            if(novaSeq.size() >= c2 && bloco3P1)
-                for (int j = c2; j < seq1.size(); ++j) 
-                    novaSeq.push_back(seq1[j]);
-            else if(novaSeq.size() >= c2 && !bloco3P1)
-                for (int j = c2; j < seq2.size(); ++j) 
+                for (int j = 0; j < c1_2; ++j)
                     novaSeq.push_back(seq2[j]);
             
+
+            // Bloco 2
+            if (bloco2P1)
+                for (int j = c1_1; j < c2_1; ++j)
+                    novaSeq.push_back(seq1[j]);
+            else
+                for (int j = c1_2; j < c2_2; ++j)
+                    novaSeq.push_back(seq2[j]);
+            
+
+            // Bloco 3
+            if (bloco3P1)
+                for (int j = c2_1; j < n1; ++j)
+                    novaSeq.push_back(seq1[j]);
+             else
+                for (int j = c2_2; j < n2; ++j)
+                    novaSeq.push_back(seq2[j]);
+            
+
+            // for (int j = 0; j < n1; ++j) {
+            //     if (j < c1_1) 
+            //         novaSeq.push_back(bloco1P1 ? seq1[j] : seq2[j]);
+            //     else if (j < c2_1) 
+            //         novaSeq.push_back(bloco2P1 ? seq1[j] : seq2[j]);
+            //     else 
+            //         novaSeq.push_back(bloco3P1 ? seq1[j] : seq2[j]);
+            // }
+
+
         }       
 
-        cout << "\n \n Sequencia apos cruzamento: ";
+        cout << "\n\nPos cruzamento: ";
         for(const auto& element : novaSeq)
             cout << element << " ";
         cout << endl << endl;
@@ -259,9 +280,9 @@ void Construtivo::completaPopulacaoInicial(
 
         novaSeq.swap(novaSeqSemDuplicatas);
 
-        for(const auto& element : novaSeqSemDuplicatas)
-            cout << element << " ";
-            cout << endl;
+        // for(const auto& element : novaSeqSemDuplicatas)
+        //     cout << element << " ";
+        //     cout << endl;
 
         vector<int> clientesFaltantes;
         
@@ -317,7 +338,8 @@ void Construtivo::completaPopulacaoInicial(
     std::sort(populacaoInicial, populacaoInicial+tamanhoPopulacao,[](const Solucao::Solucao* a, const Solucao::Solucao* b) {
               return a->poluicao < b->poluicao;
           });
-    cout << "Menor poluicao: " << populacaoInicial[0]->poluicao << endl;
+
+    cout << "Menor poluicao: " << populacaoInicial[0]->poluicao;
 }
 
 
