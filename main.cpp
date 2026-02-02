@@ -396,9 +396,10 @@ u_int64_t ultimaAtualizacao = 0;
     if(alvo <= 0)
         alvo = HUGE_VALF;
         
-    
-    int numGeracoes = 5;
-    int tamP0  = 10; //tamanho da populacao inicial
+    // ----------------------------------
+    // Parametros relacionados ao numero de individuos e geracoes
+    int numGeracoes = 10;
+    int tamP0  = 5; //tamanho da populacao inicial
 
     //Vetor com a população (de solucoes) inicial
     Solucao::Solucao **populacaoInicial = new Solucao::Solucao*[2*tamP0];

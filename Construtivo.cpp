@@ -338,7 +338,8 @@ void Construtivo::completaPopulacaoInicial(
     std::sort(populacaoInicial, populacaoInicial+tamanhoPopulacao,[](const Solucao::Solucao* a, const Solucao::Solucao* b) {
               return a->poluicao < b->poluicao;
           });
-
+    
+    cout << "--------------------------------" << endl;
     cout << "Menor poluicao: " << populacaoInicial[0]->poluicao;
 }
 
