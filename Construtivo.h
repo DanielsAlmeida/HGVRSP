@@ -61,6 +61,19 @@ namespace Construtivo
     int compCandidatoDist(const void* cand1, const void* cand2);
     int compCandidatoDistanciaRota(const void* cand1, const void* cand2);
 
+    void completaPopulacaoInicial(
+            Solucao::Solucao **populacaoInicial, int tamanhoPopulacao, int metadePreenchida, const Instancia::Instancia *instancia,
+            float alfa, Solucao::ClienteRota *vetorClienteBest, Solucao::ClienteRota *vetorClienteAux, string *sequencia,
+            Construtivo::Candidato *vetorCandidatos, boost::tuple<int,int>* heuristica, const double *const vetorParametros,
+            Solucao::ClienteRota **matrixClienteBest, Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
+            GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo, HashRotas::HashRotas *hashRotas);
+    
+    int extraiSequenciaClientes(
+    Solucao::Solucao *sol,
+    vector<int> &sequencia);
+    
+    vector<int> vetorInicioRotas(Solucao::Solucao *solucao, int p);
+
     Solucao::Solucao *
     grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa, const int numInteracoes,
           const int numIntAtualizarProb, bool log, stringstream *strLog, boost::tuple<int, int> *VetHeuristica,

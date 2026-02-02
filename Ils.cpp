@@ -98,7 +98,7 @@ void Ils::ils(const Instancia::Instancia *const instancia, Solucao::Solucao **so
          (*interacoesIls - *ultimaAtualizacaoIls) < parametros.interacoesIls) || (*interacoesIls <= (parametros.interacaoInicioMip + parametros.intervaloEsperaMip))) && (*interacoesIls < numInteracoesMax))
     {
 
-	std::cout<<"It:  "<<*interacoesIls<<"\n"; 
+	// std::cout<<"It:  "<<*interacoesIls<<"\n"; 
         if(*interacoesIls == parametros.interacaoInicioMip && !(*solucao)->veiculoFicticil && opcao == OpcaoIlsMip)
         {
 

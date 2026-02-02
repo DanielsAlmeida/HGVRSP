@@ -180,14 +180,14 @@ int main(int num, char **agrs)
 
     Ils::Parametros parametros;
 
-    parametros.interacoesGrasp = 500;
-    parametros.interacoesIls = 2500;
+    parametros.interacoesGrasp = 50;
+    parametros.interacoesIls = 25;
     parametros.numRotasMip = 7;
-    parametros.intervaloResetarSolucao = 700;
-    parametros.interacoesSemMelhora = 500;
-    parametros.numSolucoesMip = 50;
+    parametros.intervaloResetarSolucao = 7;
+    parametros.interacoesSemMelhora = 5;
+    parametros.numSolucoesMip = 5;
     parametros.intervaloEsperaMip = 50;
-    parametros.interacaoInicioMip = 500;
+    parametros.interacaoInicioMip = 50;
 
 
 
@@ -304,7 +304,7 @@ int main(int num, char **agrs)
     cout<<"Semente = "<<semente<<'\n';
 
 
-
+u_int64_t ultimaAtualizacao = 0;
     string texto;
     std::time_t result = std::time(nullptr);
     auto data = std::asctime(std::localtime(&result));
@@ -383,11 +383,11 @@ int main(int num, char **agrs)
 
     list<EstatisticasQualidade> listaEstQual;
 
-    Solucao::Solucao *solucao;
+    
 
     Alvo::Alvo *alvoTempo = NULL;
     
-
+    
     
     if(alvo > 0)
         alvoTempo = new Alvo::Alvo(alvo, c_start,  3);
@@ -397,72 +397,117 @@ int main(int num, char **agrs)
         alvo = HUGE_VALF;
         
             
+    int tamP0  = 4; //tamanho da populacao inicial
+
+    //Vetor com a população de solucoes inicial
+    Solucao::Solucao **populacaoInicial = new Solucao::Solucao*[2*tamP0];
+
+    Construtivo::Candidato *vetorCandidatos =
+    new Construtivo::Candidato[instancia->numClientes];
+
+    Solucao::ClienteRota *vetorClienteBest =
+    new Solucao::ClienteRota[MaxTamVetClientesMatrix];
+
+    Solucao::ClienteRota *vetorClienteAux =
+    new Solucao::ClienteRota[MaxTamVetClientesMatrix];
 
     const int numInteracoes = parametros.interacoesIls;
     const double tempoTotal= 9999999;
 
     std::cout<<"IF OPCAO\n";
-
+    Solucao::Solucao *solucao;
+    
     if(opcao == OpcaoIlsMip || opcao == OpcaoIls)
     {
-        Solucao::ClienteRota *vetSolucaoClienteRota[4];
+        //loop para preencher a populção inicial
+        for(int p =0; p<tamP0; p++){
+            Solucao::Solucao *temporario = nullptr;
+            Solucao::ClienteRota *vetSolucaoClienteRota[4];
 
-        for(int i = 0; i < 4; ++i)
-            vetSolucaoClienteRota[i] = new Solucao::ClienteRota[instancia->numClientes+2];
+            for(int i = 0; i < 4; ++i)
+                vetSolucaoClienteRota[i] = new Solucao::ClienteRota[instancia->numClientes+2];
 
-        int *vetGuardaRotas[2];
+            int *vetGuardaRotas[2];
 
-        for(int i = 0; i < 2; ++i)
-            vetGuardaRotas[i] = new int[MaxTamVetClientesMatrix];
+            for(int i = 0; i < 2; ++i)
+                vetGuardaRotas[i] = new int[MaxTamVetClientesMatrix];
 
-        HashRotas::HashRotas hashRotas(instancia->numClientes);
+            HashRotas::HashRotas hashRotas(instancia->numClientes);
 
-        int **matRotas = new int*[instancia->numVeiculos];
+            int **matRotas = new int*[instancia->numVeiculos];
 
-        for(int i = 0; i < instancia->numVeiculos; ++i)
-            matRotas[i] = new int[instancia->numVeiculos];
+            for(int i = 0; i < instancia->numVeiculos; ++i)
+                matRotas[i] = new int[instancia->numVeiculos];
 
-        int alfa =  rand_u32() % 5;
-        Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
+            int alfa =  rand_u32() % 5;
+            Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
 
-
-
-        solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, parametros.interacoesGrasp, 150, logAtivo, &strLog,
+    // solucao =
+            temporario = Construtivo::grasp(instancia, vetAlfas, numAlfas, parametros.interacoesGrasp, 150, logAtivo, &strLog,
                                      vetHeuristicas,
                                      TamVetH, vetParametro, vetEstatisticaMv,
                                      matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
                                      modelo1Rota, c_start, &tempoMip2Rotas, &totalInteracoes, OpcaoGrasp, tempoTotal, alvo,
                                      alvoTempo, listaEstQual);
 
-        listaEstQual.clear();
+            listaEstQual.clear();
 
-        u_int64_t ultimaAtualizacao = 0;
-        totalInteracoes = 0;
+            // u_int64_t ultimaAtualizacao = 0;
+            totalInteracoes = 0;
+    // &solucao
+            Ils::ils(instancia, &temporario, numInteracoes, parametros.interacoesSemMelhora, tempoTotal, opcao, vetSolucaoClienteRota,
+                    &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
+                    &tempoMip2Rotas,
+                    &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
+                    vetCandInteracoes, alvo, alvoTempo, listaEstQual, k_pertubacao, parametros);
+    cout << "Ils concluido\n";
 
-        Ils::ils(instancia, &solucao, numInteracoes, parametros.interacoesSemMelhora, tempoTotal, opcao, vetSolucaoClienteRota,
-                 &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
-                 &tempoMip2Rotas,
-                 &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
-                 vetCandInteracoes, alvo, alvoTempo, listaEstQual, k_pertubacao, parametros);
+            // cout << populacaoInicial[p] << endl;
+            populacaoInicial[p] = temporario;
+            // cout << "Salvou uma sol" << endl;
+        // solucao->ultimaAtualizacao = ultimaAtualizacao;
 
+            // solucao->ultimaAtualizacao = ultimaAtualizacao;
+            // cout << "print1" << endl;
+            delete []vetorCandidatos;
+            // cout << "print2" << endl;
+            
+            for(int i = 0; i < 4; ++i)
+                delete []vetSolucaoClienteRota[i];
+            // cout << "print3" << endl;
 
+            for(int i = 0; i < 2; ++i)
+                delete []vetGuardaRotas[i];
+            // cout << "print4" << endl;
+
+            for(int i = 0; i < instancia->numVeiculos; ++i)
+                delete []matRotas[i];
+            // cout << "print5" << endl;
+
+            delete []matRotas;
+            // cout << "print6" << endl;
+            //fecha loop de preencher P0
+            // delete solucao;
+            // solucao = nullptr;
+        cout << "Indivíduo " << p << " salvo" << endl;
+            temporario=nullptr;
+                // cout << "deletou \n";
+        }
+        HashRotas::HashRotas hashRotas(instancia->numClientes);
+        Construtivo::completaPopulacaoInicial(populacaoInicial,tamP0*2,tamP0,instancia, 0.5,
+                                                vetorClienteBest,vetorClienteAux,nullptr,vetorCandidatos,
+                                                vetHeuristicas,vetParametro,matrixClienteBest,
+                                                &tempoCriaRota,vetCandInteracoes,vetLimiteTempo, &hashRotas
+);
+        solucao = populacaoInicial[0];
         solucao->ultimaAtualizacao = ultimaAtualizacao;
-
-        delete []vetorCandidatos;
-
-        for(int i = 0; i < 4; ++i)
-            delete []vetSolucaoClienteRota[i];
-
-        for(int i = 0; i < 2; ++i)
-            delete []vetGuardaRotas[i];
-
-        for(int i = 0; i < instancia->numVeiculos; ++i)
-            delete []matRotas[i];
-
-        delete []matRotas;
+        // cout <<"salvou em sol" << endl;
+        for (int i = 0; i < 2*tamP0; i++)
+            populacaoInicial[i] = nullptr;
     }
     else
     {
+        Solucao::Solucao *solucao;
         solucao = Construtivo::grasp(instancia, vetAlfas, numAlfas, numInteracoes, 150, logAtivo, &strLog,
                                      vetHeuristicas,
                                      TamVetH, vetParametro, vetEstatisticaMv,
@@ -472,6 +517,8 @@ int main(int num, char **agrs)
     }
 
     auto c_end = std::chrono::high_resolution_clock::now();
+
+    // cout << "qq tem na populacao P0 " << populacaoInicial[0]->vetorVeiculos.size() << '\n';
 
     /*
     cout<<"poluicao\ttempo\tinteracao\tmip\n\n";
@@ -521,7 +568,7 @@ int main(int num, char **agrs)
 
     delete []vetCandInteracoes;
 
-
+    // std::cout << "Chegou aqui 0 \n";
     //desaloca matrix
     for(int i = 0; i < instancia->numClientes; ++i)
         delete []matrixClienteBest[i];
@@ -564,18 +611,22 @@ a
     }(solucao);
 
     strLog<<logAux;
-    //strLog<<"\n\nRota:\n";
-
+    strLog<<"\n\nRota:\n";
+// cout << "dale61"<<endl;
     cout << fixed << setprecision(2);
     texto += std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
-    //strLog<<std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
+    strLog<<std::to_string(solucao->vetorVeiculos.size()) + "\n\n";
 
     double tempoViagem = 0.0;
     double inicio;
     bool fim = false;
+    
+    // std::cout << "Chegou aqui 1\n";
+    
 
     for(auto veiculo : solucao->vetorVeiculos)
-    {
+    {   
+        // cout << "dale 0"<<endl;
         fim = false;
 
         texto += std::to_string(veiculo->listaClientes.size()-2) + '\n';
@@ -583,8 +634,8 @@ a
         for (auto it : (*veiculo).listaClientes)
         {
             texto += std::to_string((*it).cliente) + " ";
-            strLog<<std::to_string((*it).cliente) + " ";
 
+            strLog<<std::to_string((*it).cliente) + " ";
             if(((*it).cliente==0) && (!fim))
             {
                 fim = true;
@@ -596,9 +647,11 @@ a
                 tempoViagem += it->tempoChegada - inicio;
             }
         }
-
         texto += "\n";
+// cout << "dale 5"<<endl;
+
         strLog<<"\n\n";
+// cout << "dale 5"<<endl;
 
 
 
@@ -614,15 +667,19 @@ a
 
             if(cliente->cliente != 0)
             {
+
                 texto += std::to_string(cliente->cliente) +" " + std::to_string(cliente->tempoChegada) + " " + std::to_string(cliente->tempoSaida) + "\n";
-                strLog<< std::to_string(cliente->cliente) +"\t\t\t\t" + std::to_string(cliente->tempoChegada) + "\t\t\t" + std::to_string(cliente->tempoSaida) + "\n";
+
+                // strLog<< std::to_string(cliente->cliente) +"\t\t\t\t" + std::to_string(cliente->tempoChegada) + "\t\t\t" + std::to_string(cliente->tempoSaida) + "\n";
 
             }
         }
 
     }
+// cout << "dale 7"<<endl;
+
     texto += '\n';
-    strLog<<'\n';
+    // strLog<<'\n';
 
     double distanciaTotal;
 
@@ -630,7 +687,7 @@ a
 
     /*if(!solucao->veiculoFicticil)
         Veificacao = VerificaSolucao::verificaSolucao(instancia, solucao, &texto, &distanciaTotal);*/
-
+    // cout << "dale 8"<<endl;
     if(!solucao->veiculoFicticil)
     {
         for (auto veiculo : solucao->vetorVeiculos)
@@ -702,7 +759,9 @@ a
 
         }
     }
+
     string erro;
+// cout << "dale6"<<endl;
 
     if(!solucao->veiculoFicticil)
     {
@@ -724,26 +783,29 @@ a
     }
 
     texto += '\n';
+// cout << "dale62"<<endl;
 
     std::setprecision(2);
 
-    strLog<<"CLIENTE\t\tINICIO JANELA\t\tFIMJANELA\t\tTEMPO SERVICO\n";
-
+    // strLog<<"CLIENTE\t\tINICIO JANELA\t\tFIMJANELA\t\tTEMPO SERVICO\n";
+// cout << "dale61"<<endl;
     for(int i = 1; i < instancia->numClientes; ++i)
     {
         texto += std::to_string(vet[i].cliente) + " " + std::to_string(vet[i].inicioJanela) + " " + std::to_string(vet[i].fimJanela) + "\n";
-        strLog<< std::to_string(vet[i].cliente) + "\t\t\t\t" + std::to_string(vet[i].inicioJanela) + "\t\t" + std::to_string(vet[i].fimJanela) + "\t\t" + std::to_string(vet[i].tempoServico)+'\n';
+// cout << "dale62"<<endl;
+
+        // strLog<< std::to_string(vet[i].cliente) + "\t\t\t\t" + std::to_string(vet[i].inicioJanela) + "\t\t" + std::to_string(vet[i].fimJanela) + "\t\t" + std::to_string(vet[i].tempoServico)+'\n';
     }
 
     texto += "-1\n\n\n";
-    strLog<<"\n\n";
+    // strLog<<"\n\n";
     //string tempo;
 
     std::stringstream tempo;
     tempo << std::fixed << std::setprecision(2); //    std::string s = stream.str();
+// cout << "dale62"<<endl;
 
     std::chrono::duration<double> tempoCpu = c_end-c_start;
-
     for(int i = 0; i < 9 ; ++i)
     {
         if(vetEstatisticaMv[i].num > 0)
@@ -753,14 +815,16 @@ a
             vetEstatisticaMv[i].tempo /= vetEstatisticaMv[i].numTempo;
         }
     }
+// cout << "dale62"<<endl;
 
     tempo << "Tempo total cpu: " << tempoCpu.count()<< " S\n";
     tempo <<"Tempo total construtivo: "<<solucao->tempoConstrutivo<<" S\n";
     tempo <<"Tempo total viabilizador: "<<solucao->tempoViabilizador<<" S\n";
     tempo <<"Tempo total Vnd: "<<solucao->tempoVnd<<" S\n";
-    tempo << "Tempo MIP duas rotas " << tempoMip2Rotas << "\n";
-    tempo<<"Total interacoes Grasp: "<<totalInteracoes<<"\n\n";
+    // tempo << "Tempo MIP duas rotas " << tempoMip2Rotas << "\n";
+    // tempo<<"Total interacoes Grasp: "<<totalInteracoes<<"\n\n";
 
+// cout << "dale62"<<endl;
 
     tempo<<"Tamanho medio vetor: "<<double(tempoCriaRota.tamVet)/ tempoCriaRota.num<<'\n';
     tempo<<"Numero chamadas: "<<tempoCriaRota.num<<"\n";
@@ -775,6 +839,7 @@ a
 
     int numVeiculosUsados = 0;
 
+// cout << "dale62"<<endl;
 
     for(auto veiculo : solucao->vetorVeiculos)
     {
@@ -903,7 +968,7 @@ a
             {
                 //string strAlvo = saidaParcial + "Alvo_"+to_string(t) + "/solucoesParciais/saidaParcial_alg_"+to_string(opcao) + "_.txt";
 //                string strAlvo = saidaParcial + "Alvo_" + to_string(t) + "/solucoesParciais/saidaParcial_alg_" +
-                                 to_string(opcao) + "_.txt";
+                                //  to_string(opcao) + "_.txt";
 
                 string strAlvo = saidaParcial + "/Alvo_"+to_string(t)+".txt";
                 file.open(strAlvo, ios::out | ios::app);
@@ -1802,3 +1867,43 @@ int main(int num, char **args)
 
 }
 #endif
+
+// Function to mix solutions and populate populacaoInicial
+// void mixAndPopulateSolutions(Solucao::Solucao **populacaoInicial, int numSolutions, 
+//                               const Instancia::Instancia *instancia, float *vetAlfas, int numAlfas, 
+//                               const int numInteracoes, const int numIntAtualizarProb, bool log, 
+//                               stringstream *strLog, boost::tuple<int, int> *vetHeuristicas, const int tamVetH, 
+//                               const double *vetParametros, Vnd::EstatisticaMv *vetEstatisticaMv, 
+//                               Solucao::ClienteRota **matrixClienteBest, Movimentos_Paradas::TempoCriaRota *tempoCriaRota, 
+//                               Construtivo::GuardaCandInteracoes *vetCandInteracoes, double *vetLimiteTempo, 
+//                               Modelo::Modelo *modelo, Modelo_1_rota::Modelo *modelo1Rota, const Instancia::TimeType timeStart, 
+//                               double *tempoMip2Rotas, u_int64_t *totalInteracoes, const int opcao, const double tempoMax, 
+//                               const double alvo, Alvo::Alvo *alvoTempos, list<EstatisticasQualidade> &listaEstQual) {
+//     for (int i = 0; i < numSolutions; ++i) {
+//         // Select two random solutions to mix
+//         int sol1Idx = rand() % numSolutions;
+//         int sol2Idx = rand() % numSolutions;
+
+//         Solucao::Solucao *sol1 = populacaoInicial[sol1Idx];
+//         Solucao::Solucao *sol2 = populacaoInicial[sol2Idx];
+
+//         // Create a new solution by mixing sol1 and sol2
+//         Solucao::Solucao *newSolution = new Solucao::Solucao(instancia->numVeiculos);
+
+//         // Example mixing logic: combine vehicles from both solutions
+//         for (size_t j = 0; j < sol1->vetorVeiculos.size() / 2; ++j) {
+//             newSolution->vetorVeiculos.push_back(sol1->vetorVeiculos[j]);
+//         }
+//         for (size_t j = sol2->vetorVeiculos.size() / 2; j < sol2->vetorVeiculos.size(); ++j) {
+//             newSolution->vetorVeiculos.push_back(sol2->vetorVeiculos[j]);
+//         }
+
+//         // Check if the new solution is viable
+//         if (VerificaSolucao::isSolutionViable(newSolution, instancia)) {
+//             // Add the new solution to populacaoInicial
+//             populacaoInicial[i] = newSolution;
+//         } else {
+//             delete newSolution; // Discard invalid solutions
+//         }
+//     }
+// }

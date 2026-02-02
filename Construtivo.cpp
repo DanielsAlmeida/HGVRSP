@@ -31,6 +31,247 @@ class ExceptioMvShifit: public std::exception
     }
 } exceptioMvShifit;
 
+vector<int> Construtivo::vetorInicioRotas(Solucao::Solucao *solucao, int p){
+    
+    vector<int> seq1, seq2, depositosRota;
+    int numdeposits1 = 0, numdeposits2 = 0;
+
+    depositosRota.clear();
+
+    seq1.clear();
+    for (auto veiculo : solucao->vetorVeiculos) {
+        for (auto cliente : veiculo->listaClientes) 
+            seq1.push_back(cliente->cliente);}
+
+    cout << "sequencia "<< p << ": ";
+    for(const auto& element : seq1)
+        cout << element << " ";
+
+    // Registra os depósitos na sequência 1
+    for (size_t i = 0; i < seq1.size(); ++i) 
+        if (seq1[i] == 0) {
+            depositosRota.push_back(i);
+            numdeposits1++;
+        }
+    vector <int> inicioRotas1;
+    cout << "\n ID depositos rota seq1: ";
+    for(const auto& element : depositosRota)
+        cout << element << " ";
+
+    for (size_t i = 0; i < depositosRota.size(); i+=2) 
+        inicioRotas1.push_back(depositosRota[i]);
+
+    cout << "\n Numero depositos seq1: " << numdeposits1 << endl;
+    
+    cout << "\n ID inicios rotas seq1: ";
+    for(const auto& element : inicioRotas1)
+        cout << element << " ";
+    cout << endl;
+
+    for(int i = 1; i < inicioRotas1.size(); ++i){
+        if(inicioRotas1[i] == inicioRotas1[i-1]+2)
+            inicioRotas1.erase(inicioRotas1.begin() + i-1);
+    }
+    cout << "\n ID inicios rotas seq1: ";
+    for(const auto& element : inicioRotas1)
+        cout << element << " ";
+    cout << endl;
+
+    return inicioRotas1;
+}
+
+int Construtivo::extraiSequenciaClientes(
+    Solucao::Solucao *sol,
+    vector<int> &sequencia
+) {
+    int numdeposits = 0;
+    sequencia.clear();
+    for (auto veiculo : sol->vetorVeiculos) {
+        for (auto cliente : veiculo->listaClientes) {
+            if (cliente->cliente == 0)
+                numdeposits++;
+            else
+                sequencia.push_back(cliente->cliente);
+        }
+    }
+    return numdeposits;
+}
+
+void Construtivo::completaPopulacaoInicial(
+    Solucao::Solucao **populacaoInicial,
+    int tamanhoPopulacao,
+    int metadePreenchida,
+    const Instancia::Instancia *instancia,
+    float alfa,
+    Solucao::ClienteRota *vetorClienteBest,
+    Solucao::ClienteRota *vetorClienteAux,
+    string *sequenciaStr,
+    Construtivo::Candidato *vetorCandidatos,
+    boost::tuple<int,int>* heuristica,
+    const double *const vetorParametros,
+    Solucao::ClienteRota **matrixClienteBest,
+    Movimentos_Paradas::TempoCriaRota *tempoCriaRota,
+    GuardaCandInteracoes *vetCandInteracoes,
+    double *vetLimiteTempo,
+    HashRotas::HashRotas *hashRotas
+) {
+    vector<int> seq1, seq2, novaSeq, inicioRotas1, inicioRotas2;
+
+    int numRotas = hashRotas->numRotas;
+
+    for (int i = metadePreenchida; i < tamanhoPopulacao; ++i) {
+
+        //    Seleção dos pais
+        int p1, p2;
+        do {
+            p1 = rand() % metadePreenchida;
+            p2 = rand() % metadePreenchida;
+        } while (p1 == p2);
+
+        int numdeposits1 = 0, numdeposits2 = 0;
+
+        inicioRotas1.clear();
+        inicioRotas2.clear();
+        
+        inicioRotas1 = vetorInicioRotas(populacaoInicial[p1], p1);
+        inicioRotas2 = vetorInicioRotas(populacaoInicial[p1], p1);
+
+        seq1.clear();
+        for (auto veiculo : populacaoInicial[p1]->vetorVeiculos) 
+            for (auto cliente : veiculo->listaClientes) 
+                seq1.push_back(cliente->cliente);
+
+
+        seq2.clear();
+        for (auto veiculo : populacaoInicial[p2]->vetorVeiculos) 
+            for (auto cliente : veiculo->listaClientes) 
+                seq2.push_back(cliente->cliente);
+    
+        
+        if (seq1.size() == 0 || seq2.size() == 0) {
+            i--;
+            continue;
+        }
+
+        // revisar esses cortes
+        int n = seq1.size();
+        int c1 = static_cast<int>(0.3 * n);
+        int c2 = static_cast<int>(0.7 * n);
+// cout << "quebra 1: " << c1 << " quebra 2:" << c2 << endl;
+        //    Sorteio do pai de cada bloco
+        bool bloco1P1 = rand() % 2;
+        bool bloco2P1 = rand() % 2;
+        bool bloco3P1 = rand() % 2;
+
+        // Evita clone total
+        if ((bloco1P1 && bloco2P1 && bloco3P1) ||
+            (!bloco1P1 && !bloco2P1 && !bloco3P1)) {
+            bloco2P1 = !bloco2P1;
+        }
+
+
+
+        //    Crossover 30–40–30
+        
+        novaSeq.clear();
+
+        for (int j = 0; j < n; ++j) {
+            if (j < c1) {
+                novaSeq.push_back(bloco1P1 ? seq1[j] : seq2[j]);
+            }
+            else if (j < c2) {
+                novaSeq.push_back(bloco2P1 ? seq1[j] : seq2[j]);
+            }
+            else {
+                novaSeq.push_back(bloco3P1 ? seq1[j] : seq2[j]);
+            }
+        }
+
+        vector<bool> clienteUsado(instancia->numClientes + 1, false);
+        vector<int> novaSeqSemDuplicatas;
+        
+        
+        
+        int clientesAtendidos = 0;
+
+        for (int c : novaSeq) {
+            if (c > 0 && c <= instancia->numClientes) {
+                if (!clienteUsado[c]) {
+                    clienteUsado[c] = true;
+                    novaSeqSemDuplicatas.push_back(c);
+                    clientesAtendidos++;
+                }
+            }
+        }
+// cout << "sem duplicata " << novaSeqSemDuplicatas << endl;
+        // Substitui a sequência original pela limpa
+        novaSeq.swap(novaSeqSemDuplicatas);
+
+for(const auto& element : novaSeqSemDuplicatas)
+    cout << element << " ";
+    cout << endl;
+
+        vector<int> clientesFaltantes;
+        
+        std::string sequenciaLocal;
+        sequenciaLocal.reserve(instancia->numClientes * 3);
+
+        for (int c = 1; c <= instancia->numClientes; ++c) {
+            if (!clienteUsado[c]) {
+                clientesFaltantes.push_back(c);
+            }
+        }
+
+
+        for (int c : novaSeq) {
+            sequenciaLocal += std::to_string(c);
+            sequenciaLocal += ' ';
+        }
+
+        for (int c : clientesFaltantes) {
+            sequenciaLocal += std::to_string(c);
+            sequenciaLocal += ' ';
+        }
+        //    Reconstrução via GRASP
+        Solucao::Solucao *novaSol = geraSolucao(
+            instancia,
+            alfa,
+            vetorClienteBest,
+            vetorClienteAux,
+            &sequenciaLocal,
+            // sequenciaStr,
+            true,
+            vetorCandidatos,
+            *heuristica,
+            vetorParametros,
+            matrixClienteBest,
+            tempoCriaRota,
+            vetCandInteracoes,
+            vetLimiteTempo
+        );
+
+
+    //    Se tiver usado veiculo ficticio, desconsidera sol e
+    //    gera outra
+        if (novaSol->veiculoFicticil) {
+            delete novaSol;
+            i--;
+            continue;
+        }
+
+        populacaoInicial[i] = novaSol;
+    }
+    int menorPoluicao = 0;
+    for (int i = 1; i < tamanhoPopulacao; ++i) {
+        if (populacaoInicial[i]->poluicao < populacaoInicial[menorPoluicao]->poluicao) {
+            menorPoluicao = i;
+        }
+    }
+    populacaoInicial[0] = populacaoInicial[menorPoluicao];
+    cout << "Menor poluicao: " << populacaoInicial[menorPoluicao]->poluicao << endl;
+}
+
+
 Solucao::Solucao * Construtivo::grasp(const Instancia::Instancia *const instancia, float *vetorAlfa, int tamAlfa,
                                       const int numInteracoes,
                                       const int numIntAtualizarProb, bool log, stringstream *strLog,
