@@ -398,9 +398,9 @@ u_int64_t ultimaAtualizacao = 0;
         
     
     int numGeracoes = 5;
-    int tamP0  = 4; //tamanho da populacao inicial
+    int tamP0  = 10; //tamanho da populacao inicial
 
-    //Vetor com a população de solucoes inicial
+    //Vetor com a população (de solucoes) inicial
     Solucao::Solucao **populacaoInicial = new Solucao::Solucao*[2*tamP0];
 
     Construtivo::Candidato *vetorCandidatos =
@@ -419,10 +419,8 @@ u_int64_t ultimaAtualizacao = 0;
     Solucao::Solucao *solucao;
     
     if(opcao == OpcaoIlsMip || opcao == OpcaoIls)
-    {
-        for(int g = 0; g < numGeracoes; g++){
-            //loop para preencher a populção inicial
-            for(int p =0; p<tamP0; p++){
+    {   
+        for(int p =0; p<tamP0; p++){
                 Solucao::Solucao *temporario = nullptr;
                 Solucao::ClienteRota *vetSolucaoClienteRota[4];
 
@@ -459,7 +457,7 @@ u_int64_t ultimaAtualizacao = 0;
                         &tempoMip2Rotas,
                         &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
                         vetCandInteracoes, alvo, alvoTempo, listaEstQual, k_pertubacao, parametros);
-                cout << "Ils concluido\n";
+                // cout << "Ils concluido\n";
 
                 populacaoInicial[p] = temporario;
 
@@ -476,16 +474,19 @@ u_int64_t ultimaAtualizacao = 0;
 
                 delete []matRotas;
     
-                cout << "Indivíduo " << p << " salvo" << endl;
+                cout << "Indivíduo " << p+1 << " salvo" << endl;
                 temporario=nullptr;
                     // cout << "deletou \n";
             }
+        for(int g = 0; g < numGeracoes; g++){
+            //loop para preencher a populção inicial
             HashRotas::HashRotas hashRotas(instancia->numClientes);
             Construtivo::completaPopulacaoInicial(populacaoInicial,tamP0*2,tamP0,instancia, 0.5,
                                                     vetorClienteBest,vetorClienteAux,nullptr,vetorCandidatos,
                                                     vetHeuristicas,vetParametro,matrixClienteBest,
                                                     &tempoCriaRota,vetCandInteracoes,vetLimiteTempo, &hashRotas);
-                
+            cout << " da geracao " << g+1 << endl;
+            cout << "--------------------------------" << endl;
             
             for (int i = tamP0; i < 2*tamP0; i++)
                 populacaoInicial[i] = nullptr;
