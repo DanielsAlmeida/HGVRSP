@@ -396,7 +396,8 @@ u_int64_t ultimaAtualizacao = 0;
     if(alvo <= 0)
         alvo = HUGE_VALF;
         
-            
+    
+    int numGeracoes = 5;
     int tamP0  = 4; //tamanho da populacao inicial
 
     //Vetor com a população de solucoes inicial
@@ -419,91 +420,78 @@ u_int64_t ultimaAtualizacao = 0;
     
     if(opcao == OpcaoIlsMip || opcao == OpcaoIls)
     {
-        //loop para preencher a populção inicial
-        for(int p =0; p<tamP0; p++){
-            Solucao::Solucao *temporario = nullptr;
-            Solucao::ClienteRota *vetSolucaoClienteRota[4];
+        for(int g = 0; g < numGeracoes; g++){
+            //loop para preencher a populção inicial
+            for(int p =0; p<tamP0; p++){
+                Solucao::Solucao *temporario = nullptr;
+                Solucao::ClienteRota *vetSolucaoClienteRota[4];
 
-            for(int i = 0; i < 4; ++i)
-                vetSolucaoClienteRota[i] = new Solucao::ClienteRota[instancia->numClientes+2];
+                for(int i = 0; i < 4; ++i)
+                    vetSolucaoClienteRota[i] = new Solucao::ClienteRota[instancia->numClientes+2];
 
-            int *vetGuardaRotas[2];
+                int *vetGuardaRotas[2];
 
-            for(int i = 0; i < 2; ++i)
-                vetGuardaRotas[i] = new int[MaxTamVetClientesMatrix];
+                for(int i = 0; i < 2; ++i)
+                    vetGuardaRotas[i] = new int[MaxTamVetClientesMatrix];
 
+                HashRotas::HashRotas hashRotas(instancia->numClientes);
+
+                int **matRotas = new int*[instancia->numVeiculos];
+
+                for(int i = 0; i < instancia->numVeiculos; ++i)
+                    matRotas[i] = new int[instancia->numVeiculos];
+
+                int alfa =  rand_u32() % 5;
+                Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
+
+                temporario = Construtivo::grasp(instancia, vetAlfas, numAlfas, parametros.interacoesGrasp, 150, logAtivo, &strLog,
+                                        vetHeuristicas,
+                                        TamVetH, vetParametro, vetEstatisticaMv,
+                                        matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
+                                        modelo1Rota, c_start, &tempoMip2Rotas, &totalInteracoes, OpcaoGrasp, tempoTotal, alvo,
+                                        alvoTempo, listaEstQual);
+
+                listaEstQual.clear();
+
+                totalInteracoes = 0;
+                Ils::ils(instancia, &temporario, numInteracoes, parametros.interacoesSemMelhora, tempoTotal, opcao, vetSolucaoClienteRota,
+                        &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
+                        &tempoMip2Rotas,
+                        &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
+                        vetCandInteracoes, alvo, alvoTempo, listaEstQual, k_pertubacao, parametros);
+                cout << "Ils concluido\n";
+
+                populacaoInicial[p] = temporario;
+
+                delete []vetorCandidatos;
+                
+                for(int i = 0; i < 4; ++i)
+                    delete []vetSolucaoClienteRota[i];
+
+                for(int i = 0; i < 2; ++i)
+                    delete []vetGuardaRotas[i];
+
+                for(int i = 0; i < instancia->numVeiculos; ++i)
+                    delete []matRotas[i];
+
+                delete []matRotas;
+    
+                cout << "Indivíduo " << p << " salvo" << endl;
+                temporario=nullptr;
+                    // cout << "deletou \n";
+            }
             HashRotas::HashRotas hashRotas(instancia->numClientes);
-
-            int **matRotas = new int*[instancia->numVeiculos];
-
-            for(int i = 0; i < instancia->numVeiculos; ++i)
-                matRotas[i] = new int[instancia->numVeiculos];
-
-            int alfa =  rand_u32() % 5;
-            Construtivo::Candidato *vetorCandidatos = new Construtivo::Candidato[instancia->numClientes];
-
-    // solucao =
-            temporario = Construtivo::grasp(instancia, vetAlfas, numAlfas, parametros.interacoesGrasp, 150, logAtivo, &strLog,
-                                     vetHeuristicas,
-                                     TamVetH, vetParametro, vetEstatisticaMv,
-                                     matrixClienteBest, &tempoCriaRota, vetCandInteracoes, vetLimiteTempo, modelo,
-                                     modelo1Rota, c_start, &tempoMip2Rotas, &totalInteracoes, OpcaoGrasp, tempoTotal, alvo,
-                                     alvoTempo, listaEstQual);
-
-            listaEstQual.clear();
-
-            // u_int64_t ultimaAtualizacao = 0;
-            totalInteracoes = 0;
-    // &solucao
-            Ils::ils(instancia, &temporario, numInteracoes, parametros.interacoesSemMelhora, tempoTotal, opcao, vetSolucaoClienteRota,
-                    &hashRotas, vetGuardaRotas, vetEstatisticaMv, vetLimiteTempo, matRotas, modelo1Rota, modelo,
-                    &tempoMip2Rotas,
-                    &totalInteracoes, &ultimaAtualizacao, vetorCandidatos, vetParametro, matrixClienteBest, &tempoCriaRota,
-                    vetCandInteracoes, alvo, alvoTempo, listaEstQual, k_pertubacao, parametros);
-    cout << "Ils concluido\n";
-
-            // cout << populacaoInicial[p] << endl;
-            populacaoInicial[p] = temporario;
-            // cout << "Salvou uma sol" << endl;
-        // solucao->ultimaAtualizacao = ultimaAtualizacao;
-
-            // solucao->ultimaAtualizacao = ultimaAtualizacao;
-            // cout << "print1" << endl;
-            delete []vetorCandidatos;
-            // cout << "print2" << endl;
+            Construtivo::completaPopulacaoInicial(populacaoInicial,tamP0*2,tamP0,instancia, 0.5,
+                                                    vetorClienteBest,vetorClienteAux,nullptr,vetorCandidatos,
+                                                    vetHeuristicas,vetParametro,matrixClienteBest,
+                                                    &tempoCriaRota,vetCandInteracoes,vetLimiteTempo, &hashRotas);
+                
             
-            for(int i = 0; i < 4; ++i)
-                delete []vetSolucaoClienteRota[i];
-            // cout << "print3" << endl;
-
-            for(int i = 0; i < 2; ++i)
-                delete []vetGuardaRotas[i];
-            // cout << "print4" << endl;
-
-            for(int i = 0; i < instancia->numVeiculos; ++i)
-                delete []matRotas[i];
-            // cout << "print5" << endl;
-
-            delete []matRotas;
-            // cout << "print6" << endl;
-            //fecha loop de preencher P0
-            // delete solucao;
-            // solucao = nullptr;
-        cout << "Indivíduo " << p << " salvo" << endl;
-            temporario=nullptr;
-                // cout << "deletou \n";
+            for (int i = tamP0; i < 2*tamP0; i++)
+                populacaoInicial[i] = nullptr;
         }
-        HashRotas::HashRotas hashRotas(instancia->numClientes);
-        Construtivo::completaPopulacaoInicial(populacaoInicial,tamP0*2,tamP0,instancia, 0.5,
-                                                vetorClienteBest,vetorClienteAux,nullptr,vetorCandidatos,
-                                                vetHeuristicas,vetParametro,matrixClienteBest,
-                                                &tempoCriaRota,vetCandInteracoes,vetLimiteTempo, &hashRotas
-);
         solucao = populacaoInicial[0];
         solucao->ultimaAtualizacao = ultimaAtualizacao;
-        // cout <<"salvou em sol" << endl;
-        for (int i = 0; i < 2*tamP0; i++)
-            populacaoInicial[i] = nullptr;
     }
     else
     {

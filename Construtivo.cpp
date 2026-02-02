@@ -313,14 +313,11 @@ void Construtivo::completaPopulacaoInicial(
 
         populacaoInicial[i] = novaSol;
     }
-    int menorPoluicao = 0;
-    for (int i = 1; i < tamanhoPopulacao; ++i) {
-        if (populacaoInicial[i]->poluicao < populacaoInicial[menorPoluicao]->poluicao) {
-            menorPoluicao = i;
-        }
-    }
-    populacaoInicial[0] = populacaoInicial[menorPoluicao];
-    cout << "Menor poluicao: " << populacaoInicial[menorPoluicao]->poluicao << endl;
+// ordena candidatos baseado na poluicao
+    std::sort(populacaoInicial, populacaoInicial+tamanhoPopulacao,[](const Solucao::Solucao* a, const Solucao::Solucao* b) {
+              return a->poluicao < b->poluicao;
+          });
+    cout << "Menor poluicao: " << populacaoInicial[0]->poluicao << endl;
 }
 
 
