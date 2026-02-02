@@ -33,51 +33,46 @@ class ExceptioMvShifit: public std::exception
 
 vector<int> Construtivo::vetorInicioRotas(Solucao::Solucao *solucao, int p){
     
-    vector<int> seq1, seq2, depositosRota;
-    int numdeposits1 = 0, numdeposits2 = 0;
+    vector<int> seq, depositosRota;
+    int numdeposits = 0;
 
     depositosRota.clear();
 
-    seq1.clear();
+    seq.clear();
     for (auto veiculo : solucao->vetorVeiculos) {
         for (auto cliente : veiculo->listaClientes) 
-            seq1.push_back(cliente->cliente);}
+            seq.push_back(cliente->cliente);}
 
     cout << "sequencia "<< p << ": ";
-    for(const auto& element : seq1)
+    for(const auto& element : seq)
         cout << element << " ";
 
     // Registra os depósitos na sequência 1
-    for (size_t i = 0; i < seq1.size(); ++i) 
-        if (seq1[i] == 0) {
+    for (size_t i = 0; i < seq.size(); ++i) 
+        if (seq[i] == 0) {
             depositosRota.push_back(i);
-            numdeposits1++;
+            numdeposits++;
         }
-    vector <int> inicioRotas1;
-    cout << "\n ID depositos rota seq1: ";
+    vector <int> inicioRotas;
+    cout << "\n ID depositos rota seq: ";
     for(const auto& element : depositosRota)
         cout << element << " ";
 
     for (size_t i = 0; i < depositosRota.size(); i+=2) 
-        inicioRotas1.push_back(depositosRota[i]);
+        inicioRotas.push_back(depositosRota[i]);
 
-    cout << "\n Numero depositos seq1: " << numdeposits1 << endl;
+    cout << "\n Numero depositos: " << numdeposits << endl;
     
-    cout << "\n ID inicios rotas seq1: ";
-    for(const auto& element : inicioRotas1)
-        cout << element << " ";
-    cout << endl;
-
-    for(int i = 1; i < inicioRotas1.size(); ++i){
-        if(inicioRotas1[i] == inicioRotas1[i-1]+2)
-            inicioRotas1.erase(inicioRotas1.begin() + i-1);
+    for(int i = 1; i < inicioRotas.size(); ++i){
+        if(inicioRotas[i] == inicioRotas[i-1]+2)
+            inicioRotas.erase(inicioRotas.begin() + i-1);
     }
-    cout << "\n ID inicios rotas seq1: ";
-    for(const auto& element : inicioRotas1)
+    cout << "\n ID inicios rotas seq: ";
+    for(const auto& element : inicioRotas)
         cout << element << " ";
     cout << endl;
 
-    return inicioRotas1;
+    return inicioRotas;
 }
 
 int Construtivo::extraiSequenciaClientes(
@@ -117,8 +112,6 @@ void Construtivo::completaPopulacaoInicial(
 ) {
     vector<int> seq1, seq2, novaSeq, inicioRotas1, inicioRotas2;
 
-    int numRotas = hashRotas->numRotas;
-
     for (int i = metadePreenchida; i < tamanhoPopulacao; ++i) {
 
         //    Seleção dos pais
@@ -133,8 +126,8 @@ void Construtivo::completaPopulacaoInicial(
         inicioRotas1.clear();
         inicioRotas2.clear();
         
-        inicioRotas1 = vetorInicioRotas(populacaoInicial[p1], p1);
-        inicioRotas2 = vetorInicioRotas(populacaoInicial[p1], p1);
+        inicioRotas1 = vetorInicioRotas(populacaoInicial[p1], 1);
+        inicioRotas2 = vetorInicioRotas(populacaoInicial[p2], 2);
 
         seq1.clear();
         for (auto veiculo : populacaoInicial[p1]->vetorVeiculos) 
@@ -153,39 +146,99 @@ void Construtivo::completaPopulacaoInicial(
             continue;
         }
 
-        // revisar esses cortes
-        int n = seq1.size();
-        int c1 = static_cast<int>(0.3 * n);
-        int c2 = static_cast<int>(0.7 * n);
-// cout << "quebra 1: " << c1 << " quebra 2:" << c2 << endl;
-        //    Sorteio do pai de cada bloco
+        // definir cortes baseado na quantidade de rotas
+        
         bool bloco1P1 = rand() % 2;
         bool bloco2P1 = rand() % 2;
         bool bloco3P1 = rand() % 2;
-
-        // Evita clone total
-        if ((bloco1P1 && bloco2P1 && bloco3P1) ||
-            (!bloco1P1 && !bloco2P1 && !bloco3P1)) {
-            bloco2P1 = !bloco2P1;
-        }
-
-
-
-        //    Crossover 30–40–30
         
-        novaSeq.clear();
+        // Evita clone total
+        if ((bloco1P1 && bloco2P1 && bloco3P1) || (!bloco1P1 && !bloco2P1 && !bloco3P1))
+            bloco2P1 = !bloco2P1;
+        
+        float numRotas = (seq1.size()+seq2.size())/2;
+        float numRotas1 = inicioRotas1.size();
+        float numRotas2 = inicioRotas2.size();
+        int c1, c2;
+        int n1 = seq1.size(), n2 = seq2.size();
 
-        for (int j = 0; j < n; ++j) {
-            if (j < c1) {
-                novaSeq.push_back(bloco1P1 ? seq1[j] : seq2[j]);
+        if(numRotas == 1){
+            
+            c1 = static_cast<int>(0.3 * n1);
+            c2 = static_cast<int>(0.7 * n1);
+
+            novaSeq.clear();
+
+            for (int j = 0; j < n1; ++j) {
+                if (j < c1) 
+                    novaSeq.push_back(bloco1P1 ? seq1[j] : seq2[j]);
+                else if (j < c2) 
+                    novaSeq.push_back(bloco2P1 ? seq1[j] : seq2[j]);
+                else 
+                    novaSeq.push_back(bloco3P1 ? seq1[j] : seq2[j]);
             }
-            else if (j < c2) {
-                novaSeq.push_back(bloco2P1 ? seq1[j] : seq2[j]);
-            }
-            else {
-                novaSeq.push_back(bloco3P1 ? seq1[j] : seq2[j]);
+
+        }
+        else if(numRotas == 2){
+
+            novaSeq.clear();
+
+            for (int j = 0; j < n1; ++j) {
+                if (j < inicioRotas1[1]) 
+                    novaSeq.push_back(bloco1P1 ? seq1[j] : seq2[j]);
+                else 
+                    novaSeq.push_back(bloco2P1 ? seq1[j] : seq2[j]);
             }
         }
+        else{
+            int resultado[4], aux1, aux2;
+            for(int i = 0; i<2;++i){
+                aux1 = static_cast<int>(0.2 * n1);
+                aux2 = static_cast<int>(0.4 * n1);
+                if (aux1 > aux2) std::swap(aux1, aux2);
+                resultado[i] = aux1 + rand() % (aux2 - aux1 + 1);
+
+                aux1 = static_cast<int>(0.2 * n2);
+                aux2 = static_cast<int>(0.4 * n2);
+                if (aux1 > aux2) std::swap(aux1, aux2);
+                resultado[i+2] = aux1 + rand() % (aux2 - aux1 + 1);
+            }
+            
+            //pontos de corte para pai 1
+            int c1_1 = resultado[0];
+            int c2_1 = resultado[1];
+
+            //pontos de corte para pai 2
+            int c1_2 = resultado[2];
+            int c2_2 = resultado[3];
+
+            novaSeq.clear();
+
+            if(novaSeq.size()<c1 && bloco1P1)
+                for (int j = 0; j < c1_1; ++j) 
+                    novaSeq.push_back(seq1[j]);
+            else
+                for (int j = 0; j < c1_2; ++j) 
+                    novaSeq.push_back(seq2[j]);
+            if(novaSeq.size()>=c1 && bloco2P1)
+                for (int j = c1; j < c2_1; ++j) 
+                    novaSeq.push_back(seq1[j]);
+            else if (novaSeq.size()>=c1 && !bloco2P1)
+                for (int j = c1; j < c2_2; ++j) 
+                    novaSeq.push_back(seq2[j]);
+            if(novaSeq.size() >= c2 && bloco3P1)
+                for (int j = c2; j < seq1.size(); ++j) 
+                    novaSeq.push_back(seq1[j]);
+            else if(novaSeq.size() >= c2 && !bloco3P1)
+                for (int j = c2; j < seq2.size(); ++j) 
+                    novaSeq.push_back(seq2[j]);
+            
+        }       
+
+        cout << "\n \n Sequencia apos cruzamento: ";
+        for(const auto& element : novaSeq)
+            cout << element << " ";
+        cout << endl << endl;
 
         vector<bool> clienteUsado(instancia->numClientes + 1, false);
         vector<int> novaSeqSemDuplicatas;
@@ -203,13 +256,12 @@ void Construtivo::completaPopulacaoInicial(
                 }
             }
         }
-// cout << "sem duplicata " << novaSeqSemDuplicatas << endl;
-        // Substitui a sequência original pela limpa
+
         novaSeq.swap(novaSeqSemDuplicatas);
 
-for(const auto& element : novaSeqSemDuplicatas)
-    cout << element << " ";
-    cout << endl;
+        for(const auto& element : novaSeqSemDuplicatas)
+            cout << element << " ";
+            cout << endl;
 
         vector<int> clientesFaltantes;
         
